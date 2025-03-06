@@ -80,6 +80,25 @@ logs/
 tmp/
 temp/
 
+# Development planning artifacts
+AGENT_NOTES.md
+CLAUDE.md
+CONSOLIDATION_SUMMARY.md
+update_summary.md
+*IMPLEMENTATION_PLAN.md
+fix_*.py
+clean_*.py
+debug/
+workspace/
+
+# Scripts used for development
+remove_duplicate.py
+cleanup_package.py
+fix_implicit_optional.py
+fix_imports.py
+fix_missing_return.py
+fix_sys_path.py
+
 # Build artifacts
 *.so
 *.dylib
