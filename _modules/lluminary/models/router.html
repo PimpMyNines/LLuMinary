@@ -87,7 +87,7 @@
 <span class="n">PROVIDER_REGISTRY</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">LLM</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
 <span class="c1"># Mapping of friendly names to model providers and their specific model names</span>
-<span class="n">MODEL_MAPPINGS</span> <span class="o">=</span> <span class="p">{</span>
+<span class="n">MODEL_MAPPINGS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="c1"># OpenAI Models</span>
     <span class="s2">&quot;gpt-4.5&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gpt-4.5-preview&quot;</span><span class="p">},</span>
     <span class="s2">&quot;gpt-4o&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gpt-4o&quot;</span><span class="p">},</span>
@@ -95,7 +95,8 @@
     <span class="s2">&quot;o1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;o1&quot;</span><span class="p">},</span>
     <span class="s2">&quot;o3-mini&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;o3-mini&quot;</span><span class="p">},</span>
     <span class="c1"># Anthropic Models</span>
-    <span class="s2">&quot;claude-haiku-3.5&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;anthropic&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;claude-3-5-haiku-20241022&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;claude-haiku-3.5&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;anthropic&quot;</span><span class="p">,</span>
+                         <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;claude-3-5-haiku-20241022&quot;</span><span class="p">},</span>
     <span class="s2">&quot;claude-sonnet-3.5&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;anthropic&quot;</span><span class="p">,</span>
         <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;claude-3-5-sonnet-20241022&quot;</span><span class="p">,</span>
@@ -127,7 +128,8 @@
         <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;google&quot;</span><span class="p">,</span>
         <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gemini-2.0-flash-lite-preview-02-05&quot;</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;gemini-2.0-pro&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;google&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gemini-2.0-pro-exp-02-05&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;gemini-2.0-pro&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;google&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gemini-2.0-pro-exp-02-05&quot;</span><span class="p">},</span>
     <span class="s2">&quot;gemini-2.0-flash-thinking&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;google&quot;</span><span class="p">,</span>
         <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gemini-2.0-flash-thinking-exp-01-21&quot;</span><span class="p">,</span>
@@ -236,7 +238,8 @@
 
 <div class="viewcode-block" id="register_model">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.router.register_model">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">register_model</span><span class="p">(</span><span class="n">friendly_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">provider_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_model</span><span class="p">(</span><span class="n">friendly_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">provider_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                   <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Register a new model with the system.</span>
 
@@ -257,7 +260,8 @@
             <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> not registered. Available providers: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">PROVIDER_REGISTRY</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
-    <span class="n">MODEL_MAPPINGS</span><span class="p">[</span><span class="n">friendly_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider_name</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">}</span></div>
+    <span class="n">MODEL_MAPPINGS</span><span class="p">[</span><span class="n">friendly_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider_name</span><span class="p">,</span>
+                                     <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">}</span></div>
 
 </pre></div>
 
