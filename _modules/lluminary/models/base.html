@@ -92,14 +92,14 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">LLM</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="n">CONTEXT_WINDOW</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">COST_PER_MODEL</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">SUPPORTED_MODELS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">THINKING_MODELS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">EMBEDDING_MODELS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Models that support embeddings</span>
-    <span class="n">RERANKING_MODELS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Models that support reranking</span>
+    <span class="n">SUPPORTED_MODELS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">THINKING_MODELS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">EMBEDDING_MODELS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Models that support embeddings</span>
+    <span class="n">RERANKING_MODELS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Models that support reranking</span>
 
 <div class="viewcode-block" id="LLM.__init__">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.__init__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the LLM provider with the specified model.</span>
 
@@ -676,7 +676,7 @@
         <span class="n">working_messages</span> <span class="o">=</span> <span class="p">[</span><span class="n">message</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">]</span>
 
         <span class="c1"># Handle tool conversion for different providers</span>
-        <span class="n">tools</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">functions</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">functions</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
@@ -686,7 +686,8 @@
 
             <span class="c1"># Different handling for Gemini vs. other models</span>
             <span class="k">if</span> <span class="s2">&quot;gemini&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">:</span>
-                <span class="n">tools</span> <span class="o">=</span> <span class="n">functions</span>
+                <span class="c1"># Cast to expected type for Gemini</span>
+                <span class="n">tools</span> <span class="o">=</span> <span class="n">functions</span>  <span class="c1"># type: ignore</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">tools</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_functions_to_tools</span><span class="p">(</span><span class="n">functions</span><span class="p">)</span>
                 <span class="n">validate_tools</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span>
@@ -977,12 +978,12 @@
 
 <div class="viewcode-block" id="LLM.get_supported_models">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.get_supported_models">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_supported_models</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_supported_models</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a list of model names supported by this provider.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            list[str]: List of supported model names</span>
+<span class="sd">            List[str]: List of supported model names</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUPPORTED_MODELS</span></div>
 

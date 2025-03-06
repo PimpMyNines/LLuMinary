@@ -84,20 +84,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#anthropic">Anthropic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#openai">OpenAI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#google">Google</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#cohere">Cohere</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.models.providers.cohere.CohereLLM"><code class="docutils literal notranslate"><span class="pre">CohereLLM</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#bedrock">Bedrock</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id3">}</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id6">}</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.models.providers.bedrock.BedrockLLM"><code class="docutils literal notranslate"><span class="pre">BedrockLLM</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#provider-template">Provider Template</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.models.providers.provider_template.ProviderNameLLM"><code class="docutils literal notranslate"><span class="pre">ProviderNameLLM</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#cohere">Cohere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bedrock">Bedrock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#provider-template">Provider Template</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#router">Router</a><ul>
@@ -441,7 +430,7 @@ If not specified, uses the default provider.</p>
 <li><p><strong>provider</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Optional provider to use</p></li>
 <li><p><strong>max_tokens</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Maximum number of tokens to generate</p></li>
 <li><p><strong>temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Temperature for generation</p></li>
-<li><p><strong>functions</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>] </em><em>| </em><em>None</em>) – List of functions the LLM can use</p></li>
+<li><p><strong>functions</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>[</em><em>[</em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – List of functions the LLM can use</p></li>
 <li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>]</em><em>, </em><em>None</em><em>] </em><em>| </em><em>None</em>) – Optional callback function to call with each chunk</p></li>
 </ul>
 </dd>
@@ -453,6 +442,9 @@ If not specified, uses the default provider.</p>
 <li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If streaming is not supported</p></li>
 <li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><strong>Exception</strong></a> – If streaming fails</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -528,7 +520,10 @@ All provider-specific implementations should inherit from this class.</p>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>)</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py attribute">
@@ -543,22 +538,22 @@ All provider-specific implementations should inherit from this class.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="lluminary.models.base.LLM.SUPPORTED_MODELS">
-<span class="sig-name descname"><span class="pre">SUPPORTED_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#lluminary.models.base.LLM.SUPPORTED_MODELS" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">SUPPORTED_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#lluminary.models.base.LLM.SUPPORTED_MODELS" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="lluminary.models.base.LLM.THINKING_MODELS">
-<span class="sig-name descname"><span class="pre">THINKING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#lluminary.models.base.LLM.THINKING_MODELS" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">THINKING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#lluminary.models.base.LLM.THINKING_MODELS" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="lluminary.models.base.LLM.EMBEDDING_MODELS">
-<span class="sig-name descname"><span class="pre">EMBEDDING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#lluminary.models.base.LLM.EMBEDDING_MODELS" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">EMBEDDING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#lluminary.models.base.LLM.EMBEDDING_MODELS" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="lluminary.models.base.LLM.RERANKING_MODELS">
-<span class="sig-name descname"><span class="pre">RERANKING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#lluminary.models.base.LLM.RERANKING_MODELS" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">RERANKING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#lluminary.models.base.LLM.RERANKING_MODELS" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -569,11 +564,14 @@ All provider-specific implementations should inherit from this class.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Name of the model to use</p></li>
-<li><p><strong>**kwargs</strong> – Additional provider-specific configuration</p></li>
+<li><p><strong>**kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>) – Additional provider-specific configuration</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#lluminary.exceptions.LLMValidationError" title="lluminary.exceptions.LLMValidationError"><strong>LLMValidationError</strong></a> – If the model is not supported or configuration is invalid</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -887,7 +885,7 @@ For accurate counts, implement provider-specific token counting.</p>
 <dd class="field-odd"><p>List of supported model names</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>]</p>
+<dd class="field-even"><p>List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1209,693 +1207,12 @@ For accurate counts, implement provider-specific token counting.</p>
 </section>
 <section id="cohere">
 <h3>Cohere<a class="headerlink" href="#cohere" title="Link to this heading"></a></h3>
-<p id="module-lluminary.models.providers.cohere">Implementation of the LLM interface for the Cohere API.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lluminary.models.providers.cohere.</span></span><span class="sig-name descname"><span class="pre">CohereLLM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/cohere.html#CohereLLM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#lluminary.models.base.LLM" title="lluminary.models.base.LLM"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLM</span></code></a></p>
-<p>Implementation of the LLM interface for the Cohere API.
-Supports Cohere’s command and chat models.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.CONTEXT_WINDOW">
-<span class="sig-name descname"><span class="pre">CONTEXT_WINDOW</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'command':</span> <span class="pre">4096,</span> <span class="pre">'command-light':</span> <span class="pre">4096,</span> <span class="pre">'command-r':</span> <span class="pre">128000,</span> <span class="pre">'command-r-plus':</span> <span class="pre">128000}</span></em><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.CONTEXT_WINDOW" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.COST_PER_MODEL">
-<span class="sig-name descname"><span class="pre">COST_PER_MODEL</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'command':</span> <span class="pre">{'image_token':</span> <span class="pre">1e-05,</span> <span class="pre">'read_token':</span> <span class="pre">1.5e-06,</span> <span class="pre">'write_token':</span> <span class="pre">1.5e-06},</span> <span class="pre">'command-light':</span> <span class="pre">{'image_token':</span> <span class="pre">2e-06,</span> <span class="pre">'read_token':</span> <span class="pre">3e-07,</span> <span class="pre">'write_token':</span> <span class="pre">3e-07},</span> <span class="pre">'command-r':</span> <span class="pre">{'image_token':</span> <span class="pre">1e-05,</span> <span class="pre">'read_token':</span> <span class="pre">1.5e-06,</span> <span class="pre">'write_token':</span> <span class="pre">1.5e-06},</span> <span class="pre">'command-r-plus':</span> <span class="pre">{'image_token':</span> <span class="pre">2e-05,</span> <span class="pre">'read_token':</span> <span class="pre">3e-06,</span> <span class="pre">'write_token':</span> <span class="pre">3e-06}}</span></em><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.COST_PER_MODEL" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.SUPPORTED_MODELS">
-<span class="sig-name descname"><span class="pre">SUPPORTED_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['command',</span> <span class="pre">'command-light',</span> <span class="pre">'command-r',</span> <span class="pre">'command-r-plus']</span></em><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.SUPPORTED_MODELS" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.EMBEDDING_MODELS">
-<span class="sig-name descname"><span class="pre">EMBEDDING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['embed-english-v3.0',</span> <span class="pre">'embed-multilingual-v3.0',</span> <span class="pre">'embed-english-light-v3.0',</span> <span class="pre">'embed-multilingual-light-v3.0']</span></em><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.EMBEDDING_MODELS" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.RERANKING_MODELS">
-<span class="sig-name descname"><span class="pre">RERANKING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['rerank-english-v3.0',</span> <span class="pre">'rerank-multilingual-v3.0']</span></em><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.RERANKING_MODELS" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.DEFAULT_EMBEDDING_MODEL">
-<span class="sig-name descname"><span class="pre">DEFAULT_EMBEDDING_MODEL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'embed-english-v3.0'</span></em><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.DEFAULT_EMBEDDING_MODEL" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.DEFAULT_RERANKING_MODEL">
-<span class="sig-name descname"><span class="pre">DEFAULT_RERANKING_MODEL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'rerank-english-v3.0'</span></em><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.DEFAULT_RERANKING_MODEL" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.embedding_costs">
-<span class="sig-name descname"><span class="pre">embedding_costs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'embed-english-light-v3.0':</span> <span class="pre">1e-06,</span> <span class="pre">'embed-english-v3.0':</span> <span class="pre">1e-05,</span> <span class="pre">'embed-multilingual-light-v3.0':</span> <span class="pre">1e-06,</span> <span class="pre">'embed-multilingual-v3.0':</span> <span class="pre">1e-05}</span></em><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.embedding_costs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.reranking_costs">
-<span class="sig-name descname"><span class="pre">reranking_costs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'rerank-english-v3.0':</span> <span class="pre">1e-05,</span> <span class="pre">'rerank-multilingual-v3.0':</span> <span class="pre">1e-05}</span></em><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.reranking_costs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.THINKING_MODELS">
-<span class="sig-name descname"><span class="pre">THINKING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.THINKING_MODELS" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/cohere.html#CohereLLM.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.__init__" title="Link to this definition"></a></dt>
-<dd><p>Initialize the Cohere client.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.auth">
-<span class="sig-name descname"><span class="pre">auth</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/cohere.html#CohereLLM.auth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.auth" title="Link to this definition"></a></dt>
-<dd><p>Authenticate with the Cohere API.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.supports_image_input">
-<span class="sig-name descname"><span class="pre">supports_image_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/cohere.html#CohereLLM.supports_image_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.supports_image_input" title="Link to this definition"></a></dt>
-<dd><p>Check if the current model supports image inputs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.supports_embeddings">
-<span class="sig-name descname"><span class="pre">supports_embeddings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/cohere.html#CohereLLM.supports_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.supports_embeddings" title="Link to this definition"></a></dt>
-<dd><p>Check if this provider supports embeddings.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>True if embeddings are supported, False otherwise</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.embed">
-<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/cohere.html#CohereLLM.embed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.embed" title="Link to this definition"></a></dt>
-<dd><p>Get embeddings for a list of texts using Cohere’s embedding models.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>texts</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – List of texts to embed</p></li>
-<li><p><strong>model</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – Specific embedding model to use</p></li>
-<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of texts to embed in each batch</p></li>
-<li><p><strong>**kwargs</strong> – Additional arguments to pass to the embedding API</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>List of embedding vectors (one per input text)</p></li>
-<li><p>Usage data including:
-- total_tokens: Total tokens used
-- total_cost: Cost incurred
-- model: Model used</p></li>
-</ul>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple[List[List[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a>]], Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, Any]]</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ImportError" title="(in Python v3.13)"><strong>ImportError</strong></a> – If cohere package is not installed</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If embedding fails or model is invalid</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.supports_reranking">
-<span class="sig-name descname"><span class="pre">supports_reranking</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/cohere.html#CohereLLM.supports_reranking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.supports_reranking" title="Link to this definition"></a></dt>
-<dd><p>Check if this provider and model supports document reranking.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>True if reranking is supported, False otherwise</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.cohere.CohereLLM.rerank">
-<span class="sig-name descname"><span class="pre">rerank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/cohere.html#CohereLLM.rerank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.cohere.CohereLLM.rerank" title="Link to this definition"></a></dt>
-<dd><p>Rerank documents using Cohere’s dedicated reranking API.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>query</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The search query to rank documents against</p></li>
-<li><p><strong>documents</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – List of document texts to rerank</p></li>
-<li><p><strong>top_n</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Number of top documents to return</p></li>
-<li><p><strong>return_scores</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to include relevance scores</p></li>
-<li><p><strong>**kwargs</strong> – Additional provider-specific parameters
-- model (str, optional): Specific reranking model to use</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dictionary with ranked documents, indices, scores, and usage info</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, Any]</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 <section id="bedrock">
 <h3>Bedrock<a class="headerlink" href="#bedrock" title="Link to this heading"></a></h3>
-<p id="module-lluminary.models.providers.bedrock">AWS Bedrock LLM provider implementation.</p>
-<p>This module implements support for AWS Bedrock’s models within the LLM handler framework.
-It handles authentication, message formatting, image processing, and cost tracking for
-AWS Bedrock models, primarily focusing on Claude models hosted on Bedrock.</p>
-<p>## AWS Bedrock Messaging System Overview</p>
-<p>AWS Bedrock uses a structured content format with specific requirements:</p>
-<ol class="arabic simple">
-<li><p>Messages are organized as an array with roles (user, assistant)</p></li>
-<li><p>Each message contains “content” which is an array of content parts that can include:
-- Text (represented as simple text objects)
-- Images (represented as image objects with PNG format)
-- Tool use (represented as toolUse objects)
-- Tool results (represented as toolResult objects)
-- Reasoning content (represented as reasoningContent objects)</p></li>
-</ol>
-<p>### Message Conversion Process
-This implementation converts the standard LLM handler message format:
-<a href="#id1"><span class="problematic" id="id2">``</span></a>`
-{</p>
-<blockquote>
-<div><p>“message_type”: “human”|”ai”|”tool”,
-“message”: “text content”,
-“image_paths”: [“local/path/to/image.jpg”],
-“image_urls”: [”<a class="reference external" href="https://example.com/image.jpg">https://example.com/image.jpg</a>”],
-“tool_use”: {“id”: “id”, “name”: “func_name”, “input”: {…}},
-“tool_result”: {“tool_id”: “id”, “success”: bool, “result”: any, “error”: str},
-“thinking”: {“thinking”: “thought process”, “thinking_signature”: “signature”}</p>
-</div></blockquote>
-<section id="id3">
-<h4>}<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
-<p>Into AWS Bedrock’s format:
-<a href="#id4"><span class="problematic" id="id5">``</span></a>`
-{</p>
-<blockquote>
-<div><p>“role”: “user”|”assistant”,
-“content”: [</p>
-<blockquote>
-<div><dl class="simple">
-<dt>{</dt><dd><p>“text”: “text content”</p>
-</dd>
-</dl>
-<p>},
-{</p>
-<blockquote>
-<div><dl>
-<dt>“image”: {</dt><dd><p>“format”: “png”,
-“source”: {</p>
-<blockquote>
-<div><p>“bytes”: raw_binary_data</p>
-</div></blockquote>
-<p>}</p>
-</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
-<p>},
-{</p>
-<blockquote>
-<div><dl class="simple">
-<dt>“toolUse”: {</dt><dd><p>“toolUseId”: “id”,
-“name”: “func_name”,
-“input”: {…}</p>
-</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
-<p>},
-{</p>
-<blockquote>
-<div><dl class="simple">
-<dt>“toolResult”: {</dt><dd><p>“toolUseId”: “id”,
-“content”: [{“text”: “result”}],
-“status”: “error”  # Optional, for errors only</p>
-</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
-<p>},
-{</p>
-<blockquote>
-<div><dl>
-<dt>“reasoningContent”: {</dt><dd><dl class="simple">
-<dt>“reasoningText”: {</dt><dd><p>“text”: “thought process”,
-“signature”: “signature”</p>
-</dd>
-</dl>
-<p>}</p>
-</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
-<p>}</p>
-</div></blockquote>
-<p>]</p>
-</div></blockquote>
-</section>
-<section id="id6">
-<h4>}<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
-<p>### Key Features
-- Full support for text, images, and function calling
-- Special support for Claude 3.7 thinking capabilities as reasoningContent
-- PNG format with preserved transparency for images
-- Smart retry mechanism for AWS API throttling
-- Direct integration with AWS SDK for authentication and API calls</p>
-</section>
-<dl class="py class">
-<dt class="sig sig-object py" id="lluminary.models.providers.bedrock.BedrockLLM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lluminary.models.providers.bedrock.</span></span><span class="sig-name descname"><span class="pre">BedrockLLM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/bedrock.html#BedrockLLM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.bedrock.BedrockLLM" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#lluminary.models.base.LLM" title="lluminary.models.base.LLM"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLM</span></code></a></p>
-<p>Implementation of AWS Bedrock LLM models.</p>
-<p>This class provides methods for authentication, message formatting, image processing,
-and interaction with AWS Bedrock’s API. It converts between the standardized
-LLM handler message format and Bedrock’s specific structure.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.bedrock.BedrockLLM.THINKING_MODELS">
-<span class="sig-name descname"><span class="pre">THINKING_MODELS</span></span><a class="headerlink" href="#lluminary.models.providers.bedrock.BedrockLLM.THINKING_MODELS" title="Link to this definition"></a></dt>
-<dd><p>List of models supporting the “thinking/reasoning” capability</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.bedrock.BedrockLLM.SUPPORTED_MODELS">
-<span class="sig-name descname"><span class="pre">SUPPORTED_MODELS</span></span><a class="headerlink" href="#lluminary.models.providers.bedrock.BedrockLLM.SUPPORTED_MODELS" title="Link to this definition"></a></dt>
-<dd><p>List of Bedrock models supported by this implementation</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.bedrock.BedrockLLM.CONTEXT_WINDOW">
-<span class="sig-name descname"><span class="pre">CONTEXT_WINDOW</span></span><a class="headerlink" href="#lluminary.models.providers.bedrock.BedrockLLM.CONTEXT_WINDOW" title="Link to this definition"></a></dt>
-<dd><p>Maximum token limits for each model</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.bedrock.BedrockLLM.COST_PER_MODEL">
-<span class="sig-name descname"><span class="pre">COST_PER_MODEL</span></span><a class="headerlink" href="#lluminary.models.providers.bedrock.BedrockLLM.COST_PER_MODEL" title="Link to this definition"></a></dt>
-<dd><p>Cost information per token for each model</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a> | None]]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">THINKING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['us.anthropic.claude-3-7-sonnet-20250219-v1:0']</span></em><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id7">
-<span class="sig-name descname"><span class="pre">SUPPORTED_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['us.anthropic.claude-3-5-haiku-20241022-v1:0',</span> <span class="pre">'us.anthropic.claude-3-5-sonnet-20240620-v1:0',</span> <span class="pre">'us.anthropic.claude-3-5-sonnet-20241022-v2:0',</span> <span class="pre">'us.anthropic.claude-3-7-sonnet-20250219-v1:0']</span></em><a class="headerlink" href="#id7" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id8">
-<span class="sig-name descname"><span class="pre">CONTEXT_WINDOW</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'us.anthropic.claude-3-5-haiku-20241022-v1:0':</span> <span class="pre">200000,</span> <span class="pre">'us.anthropic.claude-3-5-sonnet-20240620-v1:0':</span> <span class="pre">200000,</span> <span class="pre">'us.anthropic.claude-3-5-sonnet-20241022-v2:0':</span> <span class="pre">200000,</span> <span class="pre">'us.anthropic.claude-3-7-sonnet-20250219-v1:0':</span> <span class="pre">200000}</span></em><a class="headerlink" href="#id8" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id9">
-<span class="sig-name descname"><span class="pre">COST_PER_MODEL</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'us.anthropic.claude-3-5-haiku-20241022-v1:0':</span> <span class="pre">{'image_cost':</span> <span class="pre">0.024,</span> <span class="pre">'read_token':</span> <span class="pre">1e-06,</span> <span class="pre">'write_token':</span> <span class="pre">5e-06},</span> <span class="pre">'us.anthropic.claude-3-5-sonnet-20240620-v1:0':</span> <span class="pre">{'image_cost':</span> <span class="pre">0.024,</span> <span class="pre">'read_token':</span> <span class="pre">3e-06,</span> <span class="pre">'write_token':</span> <span class="pre">1.5e-05},</span> <span class="pre">'us.anthropic.claude-3-5-sonnet-20241022-v2:0':</span> <span class="pre">{'image_cost':</span> <span class="pre">0.024,</span> <span class="pre">'read_token':</span> <span class="pre">3e-06,</span> <span class="pre">'write_token':</span> <span class="pre">1.5e-05},</span> <span class="pre">'us.anthropic.claude-3-7-sonnet-20250219-v1:0':</span> <span class="pre">{'image_cost':</span> <span class="pre">0.024,</span> <span class="pre">'read_token':</span> <span class="pre">3e-06,</span> <span class="pre">'write_token':</span> <span class="pre">1.5e-05}}</span></em><a class="headerlink" href="#id9" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.bedrock.BedrockLLM.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/bedrock.html#BedrockLLM.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.bedrock.BedrockLLM.__init__" title="Link to this definition"></a></dt>
-<dd><p>Initialize a Bedrock LLM instance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Name of the AWS Bedrock model to use</p></li>
-<li><p><strong>**kwargs</strong> – Additional arguments passed to the base LLM class</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.bedrock.BedrockLLM.auth">
-<span class="sig-name descname"><span class="pre">auth</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/bedrock.html#BedrockLLM.auth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.bedrock.BedrockLLM.auth" title="Link to this definition"></a></dt>
-<dd><p>Verify AWS credentials can access Bedrock.</p>
-<p>This method uses the AWS SDK to create a Bedrock runtime client,
-which automatically uses AWS credentials from the environment,
-AWS configuration files, or IAM roles.</p>
-<p>Authentication methods are tried in this order:
-1. Explicitly provided AWS credentials in config
-2. Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-3. AWS configuration files (~/.aws/credentials)
-4. IAM role attached to the instance (EC2, Lambda, etc.)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>AuthenticationError</strong> – If authentication fails or Bedrock access is denied</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.bedrock.BedrockLLM.get_supported_models">
-<span class="sig-name descname"><span class="pre">get_supported_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/bedrock.html#BedrockLLM.get_supported_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.bedrock.BedrockLLM.get_supported_models" title="Link to this definition"></a></dt>
-<dd><p>Get the list of supported model identifiers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>List of supported model identifiers</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.bedrock.BedrockLLM.validate_model">
-<span class="sig-name descname"><span class="pre">validate_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/bedrock.html#BedrockLLM.validate_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.bedrock.BedrockLLM.validate_model" title="Link to this definition"></a></dt>
-<dd><p>Check if a model name is supported by this provider.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The model name to validate</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>True if the model is supported, False otherwise</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.bedrock.BedrockLLM.supports_image_input">
-<span class="sig-name descname"><span class="pre">supports_image_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/bedrock.html#BedrockLLM.supports_image_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.bedrock.BedrockLLM.supports_image_input" title="Link to this definition"></a></dt>
-<dd><p>Check if the current model supports image input.</p>
-<p>All Bedrock Claude models support images with PNG format.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>True for all Bedrock Claude models</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 <section id="provider-template">
 <h3>Provider Template<a class="headerlink" href="#provider-template" title="Link to this heading"></a></h3>
-<p id="module-lluminary.models.providers.provider_template">Template for creating new LLM provider integration.
-Copy and adapt this template to implement a new provider.</p>
-<p>This template includes all the required methods and configurations needed to
-implement a new provider in LLuMinary. Provider implementations should define
-their capabilities, supported models, and implement the required methods.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lluminary.models.providers.provider_template.</span></span><span class="sig-name descname"><span class="pre">ProviderNameLLM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#lluminary.models.base.LLM" title="lluminary.models.base.LLM"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLM</span></code></a></p>
-<p>Implementation of the LLM interface for the Provider Name API.
-Replace ProviderName with your provider’s name (e.g., CohereLLM).</p>
-<dl class="simple">
-<dt>Capabilities:</dt><dd><ul class="simple">
-<li><p>Define which capabilities your provider supports by registering them
-in the CapabilityRegistry or by overriding the _initialize_capabilities method.</p></li>
-<li><p>Common capabilities include: TEXT_GENERATION, TEXT_EMBEDDINGS, IMAGE_INPUT,
-STREAMING, FUNCTIONS, RERANKING, etc.</p></li>
-</ul>
-</dd>
-<dt>Authentication:</dt><dd><ul class="simple">
-<li><p>Implement the auth method to handle provider-specific authentication.</p></li>
-<li><p>Support both environment variables and AWS Secrets Manager.</p></li>
-</ul>
-</dd>
-<dt>Required Methods:</dt><dd><ul class="simple">
-<li><p>_raw_generate: Main generation method</p></li>
-<li><p>_format_messages_for_model: Convert standard messages to provider format</p></li>
-<li><p>auth: Authentication method</p></li>
-</ul>
-</dd>
-<dt>Optional Methods:</dt><dd><ul class="simple">
-<li><p>embed: If your provider supports embeddings</p></li>
-<li><p>rerank: If your provider supports document reranking</p></li>
-<li><p>stream_generate: If your provider supports streaming</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.CONTEXT_WINDOW">
-<span class="sig-name descname"><span class="pre">CONTEXT_WINDOW</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'provider-model-1':</span> <span class="pre">16000,</span> <span class="pre">'provider-model-2':</span> <span class="pre">32000}</span></em><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.CONTEXT_WINDOW" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.COST_PER_MODEL">
-<span class="sig-name descname"><span class="pre">COST_PER_MODEL</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'provider-model-1':</span> <span class="pre">{'image_token':</span> <span class="pre">4e-05,</span> <span class="pre">'read_token':</span> <span class="pre">1e-05,</span> <span class="pre">'write_token':</span> <span class="pre">3e-05},</span> <span class="pre">'provider-model-2':</span> <span class="pre">{'image_token':</span> <span class="pre">8e-05,</span> <span class="pre">'read_token':</span> <span class="pre">2e-05,</span> <span class="pre">'write_token':</span> <span class="pre">6e-05}}</span></em><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.COST_PER_MODEL" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.SUPPORTED_MODELS">
-<span class="sig-name descname"><span class="pre">SUPPORTED_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['provider-model-1',</span> <span class="pre">'provider-model-2']</span></em><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.SUPPORTED_MODELS" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.THINKING_MODELS">
-<span class="sig-name descname"><span class="pre">THINKING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['provider-model-2']</span></em><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.THINKING_MODELS" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.EMBEDDING_DIMENSIONS">
-<span class="sig-name descname"><span class="pre">EMBEDDING_DIMENSIONS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'provider-model-1':</span> <span class="pre">1536,</span> <span class="pre">'provider-model-2':</span> <span class="pre">3072}</span></em><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.EMBEDDING_DIMENSIONS" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.RERANKING_MODELS">
-<span class="sig-name descname"><span class="pre">RERANKING_MODELS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['provider-model-2']</span></em><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.RERANKING_MODELS" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.__init__" title="Link to this definition"></a></dt>
-<dd><p>Initialize the provider-specific client.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.auth">
-<span class="sig-name descname"><span class="pre">auth</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM.auth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.auth" title="Link to this definition"></a></dt>
-<dd><p>Authenticate with the provider’s API.</p>
-<p>This method retrieves the API key from one of these sources, in order:
-1. Environment variable PROVIDER_API_KEY
-2. Constructor config parameter “api_key”
-3. AWS Secrets Manager with key “provider_api_key”</p>
-<dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#lluminary.exceptions.LLMAuthenticationError" title="lluminary.exceptions.LLMAuthenticationError"><strong>LLMAuthenticationError</strong></a> – If no valid API key is found</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.supports_image_input">
-<span class="sig-name descname"><span class="pre">supports_image_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM.supports_image_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.supports_image_input" title="Link to this definition"></a></dt>
-<dd><p>Check if the current model supports image inputs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.get_context_window">
-<span class="sig-name descname"><span class="pre">get_context_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4096</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM.get_context_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.get_context_window" title="Link to this definition"></a></dt>
-<dd><p>Get the context window size for the current model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>default</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Default context window size if the model is not found</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Context window size in tokens</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.count_tokens_from_messages">
-<span class="sig-name descname"><span class="pre">count_tokens_from_messages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM.count_tokens_from_messages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.count_tokens_from_messages" title="Link to this definition"></a></dt>
-<dd><p>Count tokens in a list of messages.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>messages</strong> – List of message dictionaries</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Total token count</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.estimate_tokens">
-<span class="sig-name descname"><span class="pre">estimate_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM.estimate_tokens"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.estimate_tokens" title="Link to this definition"></a></dt>
-<dd><p>Estimate token count before API call.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>messages</strong> – List of message dictionaries</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Estimated token count</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.get_actual_tokens">
-<span class="sig-name descname"><span class="pre">get_actual_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM.get_actual_tokens"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.get_actual_tokens" title="Link to this definition"></a></dt>
-<dd><p>Get actual token count from API response.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>messages</strong> – Original messages</p></li>
-<li><p><strong>api_response</strong> – Response from the API</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Token usage dictionary</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.embed">
-<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM.embed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.embed" title="Link to this definition"></a></dt>
-<dd><p>Generate embeddings for the provided texts.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>texts</strong> – List of texts to embed</p></li>
-<li><p><strong>**kwargs</strong> – Additional parameters</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple of (embeddings, usage statistics)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.rerank">
-<span class="sig-name descname"><span class="pre">rerank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documents</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM.rerank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.rerank" title="Link to this definition"></a></dt>
-<dd><p>Rerank documents based on relevance to the query.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>query</strong> – The query string</p></li>
-<li><p><strong>documents</strong> – List of documents to rerank</p></li>
-<li><p><strong>**kwargs</strong> – Additional parameters (e.g., top_n)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple of (ranked results, usage statistics)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.providers.provider_template.ProviderNameLLM.calculate_image_tokens">
-<span class="sig-name descname"><span class="pre">calculate_image_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/providers/provider_template.html#ProviderNameLLM.calculate_image_tokens"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.providers.provider_template.ProviderNameLLM.calculate_image_tokens" title="Link to this definition"></a></dt>
-<dd><p>Calculate tokens required for an image based on dimensions.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>width</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Image width in pixels</p></li>
-<li><p><strong>height</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Image height in pixels</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Token count</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 </section>
 <section id="router">
@@ -1953,7 +1270,7 @@ STREAMING, FUNCTIONS, RERANKING, etc.</p></li>
 <dd class="field-odd"><p>Dictionary mapping provider names to lists of their friendly model names</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>]]</p>
+<dd class="field-even"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>]]</p>
 </dd>
 </dl>
 </dd></dl>

@@ -261,13 +261,15 @@
         <span class="n">llm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Cast tools to the expected type for the LLM function interface</span>
+            <span class="n">functions_param</span> <span class="o">=</span> <span class="n">tools</span>  <span class="c1"># type: ignore</span>
             <span class="n">response</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">updated_messages</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
                 <span class="n">event_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;generate_</span><span class="si">{</span><span class="nb">id</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">system_prompt</span><span class="o">=</span><span class="n">system_prompt</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
                 <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
                 <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
                 <span class="n">temp</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
-                <span class="n">functions</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+                <span class="n">functions</span><span class="o">=</span><span class="n">functions_param</span><span class="p">,</span>
                 <span class="n">retry_limit</span><span class="o">=</span><span class="n">retry_limit</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">response</span><span class="p">,</span> <span class="n">usage</span>
@@ -480,9 +482,9 @@
         <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">functions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">functions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stream a response from the LLM, yielding chunks as they become available.</span>
 

@@ -76,15 +76,15 @@
 <span class="sd">Router for LLM model selection with extensible provider registration.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Type</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLM</span>
 
 <span class="c1"># Default provider classes</span>
-<span class="n">_DEFAULT_PROVIDERS</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_DEFAULT_PROVIDERS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">LLM</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
 <span class="c1"># Registry to hold provider classes dynamically</span>
-<span class="n">PROVIDER_REGISTRY</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">PROVIDER_REGISTRY</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">LLM</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
 <span class="c1"># Mapping of friendly names to model providers and their specific model names</span>
 <span class="n">MODEL_MAPPINGS</span> <span class="o">=</span> <span class="p">{</span>
@@ -164,7 +164,7 @@
 
 <div class="viewcode-block" id="get_llm_from_model">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.router.get_llm_from_model">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_llm_from_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLM</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_llm_from_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLM</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the appropriate LLM instance based on the friendly model name.</span>
 
@@ -213,18 +213,18 @@
 
 <div class="viewcode-block" id="list_available_models">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.router.list_available_models">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">list_available_models</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_available_models</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get a dictionary of all available models grouped by provider.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Dict[str, list[str]]: Dictionary mapping provider names to lists of their friendly model names</span>
+<span class="sd">        Dict[str, List[str]]: Dictionary mapping provider names to lists of their friendly model names</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Ensure providers are loaded</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">PROVIDER_REGISTRY</span><span class="p">:</span>
         <span class="n">_load_default_providers</span><span class="p">()</span>
 
-    <span class="n">models_by_provider</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">models_by_provider</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">friendly_name</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">MODEL_MAPPINGS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">provider_name</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;provider&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">provider_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">models_by_provider</span><span class="p">:</span>
