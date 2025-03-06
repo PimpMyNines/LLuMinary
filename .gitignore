@@ -99,6 +99,9 @@ fix_imports.py
 fix_missing_return.py
 fix_sys_path.py
 
+# Old package directory (deprecated)
+src/llmhandler/
+
 # Build artifacts
 *.so
 *.dylib
