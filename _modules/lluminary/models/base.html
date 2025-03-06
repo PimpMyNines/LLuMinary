@@ -377,9 +377,9 @@
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
             <span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-            <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">top_n</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">return_scores</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rerank a list of documents based on their relevance to a query.</span>
@@ -965,8 +965,10 @@
         <span class="p">)</span>  <span class="c1"># Default to same length as prompt</span>
 
         <span class="c1"># Calculate costs</span>
-        <span class="n">prompt_cost</span> <span class="o">=</span> <span class="n">prompt_tokens</span> <span class="o">*</span> <span class="n">costs</span><span class="p">[</span><span class="s2">&quot;read_token&quot;</span><span class="p">]</span>
-        <span class="n">response_cost</span> <span class="o">=</span> <span class="n">response_tokens</span> <span class="o">*</span> <span class="n">costs</span><span class="p">[</span><span class="s2">&quot;write_token&quot;</span><span class="p">]</span>
+        <span class="n">read_token_cost</span> <span class="o">=</span> <span class="n">costs</span><span class="p">[</span><span class="s2">&quot;read_token&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="mf">0.0</span>
+        <span class="n">write_token_cost</span> <span class="o">=</span> <span class="n">costs</span><span class="p">[</span><span class="s2">&quot;write_token&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="mf">0.0</span>
+        <span class="n">prompt_cost</span> <span class="o">=</span> <span class="n">prompt_tokens</span> <span class="o">*</span> <span class="n">read_token_cost</span>
+        <span class="n">response_cost</span> <span class="o">=</span> <span class="n">response_tokens</span> <span class="o">*</span> <span class="n">write_token_cost</span>
 
         <span class="c1"># Calculate image cost based on available information</span>
         <span class="n">image_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="k">if</span> <span class="n">images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">num_images</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
@@ -1150,7 +1152,8 @@
                 <span class="p">)</span>
 
         <span class="c1"># Generate classification using the retry mechanism</span>
-        <span class="n">selected_categories</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
+        <span class="c1"># The result_processing_function returns List[str]</span>
+        <span class="n">result</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
             <span class="n">event_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;classify_</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">system_prompt</span><span class="o">=</span><span class="n">effective_system_prompt</span><span class="p">,</span>
             <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
@@ -1160,7 +1163,8 @@
             <span class="n">retry_limit</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>  <span class="c1"># Use default retry limit</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">selected_categories</span><span class="p">,</span> <span class="n">usage</span></div>
+        <span class="c1"># result is already List[str] due to the result_processing_function</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">usage</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_classification_prompt</span><span class="p">(</span>
@@ -1222,10 +1226,12 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not find valid choice tags in response&quot;</span><span class="p">)</span>
 
         <span class="c1"># Convert numbers to category names</span>
-        <span class="k">if</span> <span class="n">single_match</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">single_match</span> <span class="ow">and</span> <span class="n">single_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
             <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">single_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))]</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">multi_match</span> <span class="ow">and</span> <span class="n">multi_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
             <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">multi_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid choice format in response&quot;</span><span class="p">)</span>
 
         <span class="c1"># Validate number of selections</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_options</span><span class="p">:</span>
