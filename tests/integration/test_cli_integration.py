@@ -2,16 +2,15 @@
 Integration tests for the CLI functionality.
 Tests real CLI commands with temp files and graceful skipping when auth fails.
 """
+
 import json
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
 
-from src.llmhandler.cli.classify import cli, list_configs, test, validate
-from src.llmhandler.models.classification import ClassificationConfig
+from src.lluminary.cli.classify import cli
 
 # Mark all tests in this file as CLI integration tests
 pytestmark = [pytest.mark.integration, pytest.mark.cli]
@@ -70,7 +69,7 @@ class TestCLIIntegration:
                 "max_options": 1,
                 "metadata": {"version": "1.0"},
             }
-            
+
             # Create second config
             config2 = {
                 "name": "config2",
@@ -83,14 +82,14 @@ class TestCLIIntegration:
                 "max_options": 2,
                 "metadata": {"version": "1.0"},
             }
-            
+
             # Write configs to files
             with open(os.path.join(temp_dir, "config1.json"), "w") as f:
                 json.dump(config1, f)
-                
+
             with open(os.path.join(temp_dir, "config2.json"), "w") as f:
                 json.dump(config2, f)
-                
+
             yield temp_dir
 
     def test_validate_command(self, runner, temp_config_file):
@@ -114,19 +113,27 @@ class TestCLIIntegration:
         """Test the classification command with a real API call."""
         # Try with multiple models in case one fails
         test_models = ["claude-haiku-3.5", "gpt-4o-mini", "gemini-2.0-flash-lite"]
-        
+
         for model in test_models:
             result = runner.invoke(
-                cli, 
-                ["test", temp_config_file, "How do I reset my password?", "--model", model]
+                cli,
+                [
+                    "test",
+                    temp_config_file,
+                    "How do I reset my password?",
+                    "--model",
+                    model,
+                ],
             )
-            
+
             if result.exit_code == 0 and "Classification Results" in result.output:
                 # Test passed with this model
                 assert "Categories:" in result.output
                 assert "Total tokens:" in result.output
                 assert "Cost:" in result.output
                 return
-        
+
         # If we get here, no models worked - skip the test
-        pytest.skip("Skipping test as no models were able to complete the classification test")
+        pytest.skip(
+            "Skipping test as no models were able to complete the classification test"
+        )

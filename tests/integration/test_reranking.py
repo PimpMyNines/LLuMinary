@@ -1,17 +1,16 @@
 """
 Integration tests for the document reranking functionality.
 """
-import os
+
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
 
 import pytest
 
 # Add the package to path for testing
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.llmhandler import get_llm_from_model
+from src.lluminary import get_llm_from_model
 
 
 @pytest.mark.integration
@@ -60,7 +59,7 @@ class TestReranking:
             assert "Python" in result["ranked_documents"][0]
 
         except Exception as e:
-            pytest.skip(f"Skipping OpenAI reranking test: {str(e)}")
+            pytest.skip(f"Skipping OpenAI reranking test: {e!s}")
 
     def test_cohere_reranking(self):
         """Test Cohere reranking functionality with actual API calls."""
@@ -90,7 +89,7 @@ class TestReranking:
             assert "Python" in result["ranked_documents"][0]
 
         except Exception as e:
-            pytest.skip(f"Skipping Cohere reranking test: {str(e)}")
+            pytest.skip(f"Skipping Cohere reranking test: {e!s}")
 
     def test_cross_provider_reranking_comparison(self):
         """Test and compare reranking results across providers."""
@@ -120,7 +119,7 @@ class TestReranking:
                 results[provider] = result
 
             except Exception as e:
-                print(f"Skipping {provider} reranking test: {str(e)}")
+                print(f"Skipping {provider} reranking test: {e!s}")
 
         # Skip test if fewer than 2 providers have results
         if len(results) < 2:
@@ -164,7 +163,7 @@ class TestReranking:
             assert result["usage"]["total_tokens"] in (0, None)
 
         except Exception as e:
-            pytest.skip(f"Skipping empty documents test: {str(e)}")
+            pytest.skip(f"Skipping empty documents test: {e!s}")
 
     def test_reranking_with_long_documents(self):
         """Test reranking with long documents that exceed token limits."""
@@ -198,7 +197,7 @@ class TestReranking:
             assert "Python" in result["ranked_documents"][0]
 
         except Exception as e:
-            pytest.skip(f"Skipping long documents test: {str(e)}")
+            pytest.skip(f"Skipping long documents test: {e!s}")
 
 
 if __name__ == "__main__":

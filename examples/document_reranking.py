@@ -3,11 +3,12 @@ Document reranking example for LLMHandler package.
 This example demonstrates how to use the document reranking functionality
 with different providers.
 """
+
 import os
 import time
 
 import numpy as np
-from llmhandler import get_llm_from_model
+from lluminary import get_llm_from_model
 
 
 def cosine_similarity(vec1, vec2):
@@ -282,7 +283,7 @@ def real_world_example():
         truncated_doc = doc[:100] + "..." if len(doc) > 100 else doc
         print(f"{i+1}. [{score:.4f}] {truncated_doc}")
 
-    print(f"\nMost relevant document (full text):")
+    print("\nMost relevant document (full text):")
     print(results["ranked_documents"][0])
 
     print(f"\nToken usage: {results['usage']['total_tokens']}")
@@ -294,22 +295,22 @@ if __name__ == "__main__":
     try:
         openai_results = openai_reranking_example()
     except Exception as e:
-        print(f"OpenAI reranking example failed: {str(e)}")
+        print(f"OpenAI reranking example failed: {e!s}")
         openai_results = None
 
     try:
         cohere_results = cohere_reranking_example()
     except Exception as e:
-        print(f"Cohere reranking example failed: {str(e)}")
+        print(f"Cohere reranking example failed: {e!s}")
         cohere_results = None
 
     try:
         if openai_results and cohere_results:
             compare_providers(openai_results, cohere_results)
     except Exception as e:
-        print(f"Provider comparison failed: {str(e)}")
+        print(f"Provider comparison failed: {e!s}")
 
     try:
         real_world_example()
     except Exception as e:
-        print(f"Real-world example failed: {str(e)}")
+        print(f"Real-world example failed: {e!s}")

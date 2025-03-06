@@ -1,6 +1,23 @@
-# Anthropic Provider Error Handling Implementation
+# ANTHROPIC ERROR HANDLING IMPLEMENTATION
 
-This document summarizes the implementation of standardized error handling in the Anthropic provider for the LLMHandler library.
+## Overview
+
+This document summarizes the implementation of standardized error handling in the Anthropic provider for the LLuMinary library, providing details on key components, benefits, and next steps.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Components Implemented](#key-components-implemented)
+  - [Error Mapping Method](#1-error-mapping-method)
+  - [Retry Mechanism](#2-retry-mechanism)
+  - [Enhanced Authentication](#3-enhanced-authentication)
+  - [Improved Image Processing](#4-improved-image-processing)
+  - [Message Format Validation](#5-message-format-validation)
+  - [API Call Error Handling](#6-api-call-error-handling)
+  - [Streaming Error Handling](#7-streaming-error-handling)
+- [Benefits Achieved](#benefits-achieved)
+- [Next Implementation Steps](#next-implementation-steps)
+- [Related Documentation](#related-documentation)
 
 ## Key Components Implemented
 
@@ -88,7 +105,7 @@ Enhanced `stream_generate()` method with:
    - Validation of all inputs before processing
    - Clear error messages for malformed inputs
    - Type checking on complex nested structures
-   
+
 4. **Claude 3.7 Specific Handling**
    - Special error types for thinking-related errors
    - Validation of thinking budget parameter
@@ -99,7 +116,7 @@ Enhanced `stream_generate()` method with:
 1. Apply the same error handling patterns to:
    - Google Provider
    - Bedrock Provider
-   
+
 2. Create test cases for all error scenarios:
    - Authentication failures
    - Rate limiting and retries
@@ -111,3 +128,13 @@ Enhanced `stream_generate()` method with:
    - Implement provider fallback on specific error types
    - Add cross-provider error handling patterns
    - Ensure appropriate error propagation
+
+## Related Documentation
+
+- [ERROR_HANDLING](./ERROR_HANDLING.md) - General error handling guidelines
+- [MODELS](./MODELS.md) - Model implementation details
+- [PROVIDER_TESTING](./PROVIDER_TESTING.md) - Provider testing guidelines
+- [API_REFERENCE](../API_REFERENCE.md) - Complete API reference
+- [BEDROCK_ERROR_HANDLING_IMPLEMENTATION](./BEDROCK_ERROR_HANDLING_IMPLEMENTATION.md) - Bedrock error handling
+- [GOOGLE_ERROR_HANDLING_IMPLEMENTATION](./GOOGLE_ERROR_HANDLING_IMPLEMENTATION.md) - Google error handling
+- [OPENAI_ERROR_HANDLING_IMPLEMENTATION](./OPENAI_ERROR_HANDLING_IMPLEMENTATION.md) - OpenAI error handling

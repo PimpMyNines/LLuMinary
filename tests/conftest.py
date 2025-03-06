@@ -1,15 +1,14 @@
 """
 Base test configuration and fixtures for testing LLMHandler.
 """
+
 import os
-from typing import Any, Dict, List, Optional, Union
-from unittest.mock import MagicMock, patch
+from typing import Any, Dict, List
+from unittest.mock import patch
 
 import pytest
 
-from src.llmhandler.exceptions import LLMMistake
-from src.llmhandler.models.router import (get_llm_from_model,
-                                          list_available_models)
+from src.lluminary.exceptions import LLMMistake
 
 
 # Sample test function for function calling tests
@@ -145,5 +144,5 @@ def mock_env_vars():
 def mock_model_clients():
     """Patch model clients and auth to avoid actual API calls during unit tests."""
     # This is a more focused mock implementation
-    with patch("src.llmhandler.models.base.LLM.auth", return_value=None):
+    with patch("src.lluminary.models.base.LLM.auth", return_value=None):
         yield {"mock_fixture": True}

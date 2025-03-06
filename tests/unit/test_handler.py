@@ -1,14 +1,14 @@
 """
 Unit tests for the LLMHandler class.
 """
-from typing import Any, Dict
-from unittest.mock import MagicMock, patch
+
+from unittest.mock import patch
 
 import pytest
 
-from src.llmhandler.exceptions import LLMMistake, ProviderError
-from src.llmhandler.handler import LLMHandler
-from src.llmhandler.models.base import LLM
+from src.lluminary.exceptions import LLMMistake, ProviderError
+from src.lluminary.handler import LLMHandler
+from src.lluminary.models.base import LLM
 
 
 def test_handler_initialization():
@@ -99,7 +99,7 @@ class MockLLM(LLM):
 def test_provider_initialization():
     """Test provider initialization and caching."""
     # Override the get_llm_from_model function to return our mock LLM
-    with patch("src.llmhandler.handler.get_llm_from_model", return_value=MockLLM()):
+    with patch("src.lluminary.handler.get_llm_from_model", return_value=MockLLM()):
         handler = LLMHandler()
 
         # Test getting a provider
@@ -487,7 +487,7 @@ def test_provider_specific_features():
 
     # Use different provider-specific implementations
     with patch(
-        "src.llmhandler.handler.get_llm_from_model",
+        "src.lluminary.handler.get_llm_from_model",
         side_effect=[openai_llm, anthropic_llm, google_llm],
     ):
         handler = LLMHandler()

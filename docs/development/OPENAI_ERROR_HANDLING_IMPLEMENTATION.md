@@ -1,6 +1,23 @@
-# OpenAI Provider Error Handling Implementation
+# OPENAI ERROR HANDLING IMPLEMENTATION
 
-This document summarizes the implementation of standardized error handling for the OpenAI provider in the LLMHandler library.
+## Overview
+
+This document summarizes the implementation of standardized error handling for the OpenAI provider in the LLuMinary library, detailing the key components, benefits, and next steps.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Components Implemented](#key-components-implemented)
+  - [Enhanced Exception Types](#1-enhanced-exception-types)
+  - [Error Mapping Logic](#2-error-mapping-logic)
+  - [Retry Mechanism](#3-retry-mechanism)
+  - [Enhanced Authentication](#4-enhanced-authentication)
+  - [Improved Image Processing](#5-improved-image-processing)
+  - [Standardized API Call Handling](#6-standardized-api-call-handling)
+  - [Comprehensive Tests](#7-comprehensive-tests)
+- [Benefits Achieved](#benefits-achieved)
+- [Next Steps](#next-steps)
+- [Related Documentation](#related-documentation)
 
 ## Key Components Implemented
 
@@ -101,3 +118,13 @@ Added `test_openai_error_handling.py` with tests for:
    - Implement provider fallback on specific error types
    - Better error reporting to end users
    - Consistent error handling across all API operations
+
+## Related Documentation
+
+- [ERROR_HANDLING](./ERROR_HANDLING.md) - General error handling guidelines
+- [MODELS](./MODELS.md) - Model implementation details
+- [PROVIDER_TESTING](./PROVIDER_TESTING.md) - Provider testing guidelines
+- [API_REFERENCE](../API_REFERENCE.md) - Complete API reference
+- [ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION](./ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION.md) - Anthropic error handling
+- [BEDROCK_ERROR_HANDLING_IMPLEMENTATION](./BEDROCK_ERROR_HANDLING_IMPLEMENTATION.md) - Bedrock error handling
+- [GOOGLE_ERROR_HANDLING_IMPLEMENTATION](./GOOGLE_ERROR_HANDLING_IMPLEMENTATION.md) - Google error handling

@@ -10,7 +10,7 @@ from pprint import pprint
 # Add package to path for local development
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from llmhandler import get_llm_from_model
+from lluminary import get_llm_from_model
 
 
 # We need to manually set API keys since set_provider_config is not available
@@ -119,7 +119,7 @@ def test_reranking_with_llm(llm):
         pprint(tourism_results["usage"])
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error: {e!s}")
 
 
 if __name__ == "__main__":

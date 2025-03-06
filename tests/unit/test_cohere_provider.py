@@ -1,17 +1,15 @@
 """
 Unit tests for the Cohere provider.
 """
-import json
+
 import os
-from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
-from PIL import Image
 
-from src.llmhandler.exceptions import LLMMistake, ProviderError
-from src.llmhandler.models.providers.cohere import CohereLLM
+from src.lluminary.exceptions import LLMMistake
+from src.lluminary.models.providers.cohere import CohereLLM
 
 
 class MockCohereClient:
@@ -94,14 +92,16 @@ def cohere_llm(mock_cohere_env):
 class TestCohereInitialization:
     """Test initialization of the CohereLLM class."""
 
-    @patch("src.llmhandler.models.base.LLM.__init__")
+    @patch("src.lluminary.models.base.LLM.__init__")
     def test_init(self, mock_base_init):
         """Test initialization of CohereLLM."""
         # Skip calling the parent class init which would call auth()
         mock_base_init.return_value = None
 
         llm = CohereLLM("command")
-        llm.model_name = "command"  # Manually set attributes that would be set by parent init
+        llm.model_name = (
+            "command"  # Manually set attributes that would be set by parent init
+        )
         llm.provider = "cohere"
         assert llm.model_name == "command"
         assert llm.provider == "cohere"
@@ -112,7 +112,9 @@ class TestCohereInitialization:
         llm = CohereLLM(
             "command-light", api_base="https://custom-api.cohere.ai", timeout=30
         )
-        llm.model_name = "command-light"  # Manually set attributes that would be set by parent init
+        llm.model_name = (
+            "command-light"  # Manually set attributes that would be set by parent init
+        )
         llm.provider = "cohere"
         assert llm.model_name == "command-light"
         assert llm.api_base == "https://custom-api.cohere.ai"
@@ -155,7 +157,7 @@ class TestCohereInitialization:
 class TestCohereAuthentication:
     """Test authentication for the Cohere provider."""
 
-    @patch("src.llmhandler.models.base.LLM.__init__")
+    @patch("src.lluminary.models.base.LLM.__init__")
     @patch("requests.Session")
     def test_auth(self, mock_session, mock_base_init, mock_cohere_env):
         """Test authentication with API key."""
@@ -178,7 +180,7 @@ class TestCohereAuthentication:
             {"Authorization": "Bearer test-api-key", "Content-Type": "application/json"}
         )
 
-    @patch("src.llmhandler.models.base.LLM.__init__")
+    @patch("src.lluminary.models.base.LLM.__init__")
     @patch("requests.Session")
     def test_auth_no_api_key(self, mock_session, mock_base_init):
         """Test authentication fails when no API key is available."""
@@ -195,10 +197,10 @@ class TestCohereAuthentication:
             # Auth should raise ValueError for missing API key
             with pytest.raises(ValueError) as exc_info:
                 llm.auth()
-            
+
             assert "API key not found" in str(exc_info.value)
 
-    @patch("src.llmhandler.models.base.LLM.__init__")
+    @patch("src.lluminary.models.base.LLM.__init__")
     @patch("requests.Session")
     def test_auth_with_aws_secrets(self, mock_session, mock_base_init):
         """Test authentication using AWS Secrets Manager."""
@@ -230,7 +232,10 @@ class TestCohereAuthentication:
                 assert llm.api_key == "aws-secret-key"
                 mock_get_aws.assert_called_once_with("cohere_api_key")
                 mock_session_instance.headers.update.assert_called_once_with(
-                    {"Authorization": "Bearer aws-secret-key", "Content-Type": "application/json"}
+                    {
+                        "Authorization": "Bearer aws-secret-key",
+                        "Content-Type": "application/json",
+                    }
                 )
 
 
@@ -273,7 +278,7 @@ class TestCohereMessageFormatting:
         assert "Tool Result" in formatted[2]["message"]
         assert "42" in formatted[2]["message"]
 
-    @patch("src.llmhandler.models.providers.cohere.CohereLLM._process_image_file")
+    @patch("src.lluminary.models.providers.cohere.CohereLLM._process_image_file")
     def test_format_messages_with_images(self, mock_process_image, cohere_llm):
         """Test formatting messages with image attachments."""
         # Make this model support images
@@ -301,17 +306,20 @@ class TestCohereMessageFormatting:
         assert formatted[0]["message"] == "What's in this image?"
         assert "attachments" in formatted[0]
         assert len(formatted[0]["attachments"]) == 3
-        
+
         # Check file attachments
         assert formatted[0]["attachments"][0]["source"]["type"] == "base64"
         assert formatted[0]["attachments"][0]["source"]["media_type"] == "image/jpeg"
         assert formatted[0]["attachments"][0]["source"]["data"] == "base64-image-data"
-        
+
         # Check URL attachment
         assert formatted[0]["attachments"][2]["source"]["type"] == "url"
-        assert formatted[0]["attachments"][2]["source"]["url"] == "https://example.com/image.jpg"
+        assert (
+            formatted[0]["attachments"][2]["source"]["url"]
+            == "https://example.com/image.jpg"
+        )
 
-    @patch("src.llmhandler.models.providers.cohere.CohereLLM._process_image_file")
+    @patch("src.lluminary.models.providers.cohere.CohereLLM._process_image_file")
     def test_format_messages_image_error_handling(self, mock_process_image, cohere_llm):
         """Test error handling when processing images."""
         # Make this model support images
@@ -399,7 +407,10 @@ class TestCohereGeneration:
         assert not kwargs["json"]["stream"]
         assert len(kwargs["json"]["chat_history"]) == 1
         assert kwargs["json"]["chat_history"][0]["role"] == "SYSTEM"
-        assert kwargs["json"]["chat_history"][0]["message"] == "You are a helpful assistant."
+        assert (
+            kwargs["json"]["chat_history"][0]["message"]
+            == "You are a helpful assistant."
+        )
 
     def test_with_functions(self, cohere_llm):
         """Test generation with function calling."""
@@ -412,7 +423,10 @@ class TestCohereGeneration:
                     "type": "object",
                     "properties": {
                         "arg1": {"type": "string", "description": "A string argument"},
-                        "arg2": {"type": "integer", "description": "An integer argument"},
+                        "arg2": {
+                            "type": "integer",
+                            "description": "An integer argument",
+                        },
                     },
                     "required": ["arg1", "arg2"],
                 },
@@ -485,7 +499,7 @@ class TestCohereGeneration:
         http_error.response = mock_response
         mock_response.raise_for_status.side_effect = http_error
         mock_response.json.return_value = {"message": "Invalid API Key"}
-        
+
         # Replace the session's post method
         cohere_llm.session.post.return_value = mock_response
 
@@ -503,7 +517,7 @@ class TestCohereGeneration:
                     }
                 ],
             )
-        
+
         # Verify error details
         error = exc_info.value
         assert "Cohere API error" in str(error)
@@ -530,7 +544,7 @@ class TestCohereGeneration:
                     }
                 ],
             )
-        
+
         # Verify error details
         error = exc_info.value
         assert "Error generating text with Cohere" in str(error)
@@ -541,7 +555,7 @@ class TestCohereGeneration:
 class TestCohereFeatureSupport:
     """Test feature support detection for Cohere provider."""
 
-    @patch("src.llmhandler.models.base.LLM.__init__")
+    @patch("src.lluminary.models.base.LLM.__init__")
     def test_supports_image_input(self, mock_base_init):
         """Test detection of image input support."""
         # Skip calling the parent class init
@@ -570,7 +584,7 @@ class TestCohereFeatureSupport:
         """Test detection of reranking support."""
         assert cohere_llm.supports_reranking() is True
 
-    @patch("src.llmhandler.models.base.LLM.__init__")
+    @patch("src.lluminary.models.base.LLM.__init__")
     def test_get_context_window(self, mock_base_init):
         """Test getting context window size for different models."""
         # Skip calling the parent class init
@@ -598,19 +612,21 @@ class TestCohereImageProcessing:
         mock_img = MagicMock()
         mock_img.format = "JPEG"
         mock_image_open.return_value.__enter__.return_value = mock_img
-        
+
         # Mock open for reading the file
         mock_open_data = b"fake-jpeg-data"
         with patch("builtins.open", mock_open := MagicMock()):
-            mock_open.return_value.__enter__.return_value.read.return_value = mock_open_data
-            
+            mock_open.return_value.__enter__.return_value.read.return_value = (
+                mock_open_data
+            )
+
             # Mock base64 encoding
             with patch("base64.b64encode") as mock_b64encode:
                 mock_b64encode.return_value = b"base64-encoded-data"
-                
+
                 # Process image
                 result = cohere_llm._process_image_file("/path/to/image.jpg")
-                
+
                 # Verify result
                 assert result == "base64-encoded-data"
                 mock_image_open.assert_called_once_with("/path/to/image.jpg")
@@ -625,24 +641,26 @@ class TestCohereImageProcessing:
         mock_img.format = "PNG"
         mock_img.mode = "RGB"  # Not RGBA
         mock_image_open.return_value.__enter__.return_value = mock_img
-        
+
         # Mock BytesIO and image saving
-        with patch("src.llmhandler.models.providers.cohere.BytesIO") as mock_bytesio:
+        with patch("src.lluminary.models.providers.cohere.BytesIO") as mock_bytesio:
             mock_buffer = MagicMock()
             mock_bytesio.return_value = mock_buffer
             mock_buffer.read.return_value = b"converted-jpeg-data"
-            
+
             # Mock base64 encoding
             with patch("base64.b64encode") as mock_b64encode:
                 mock_b64encode.return_value = b"base64-encoded-data"
-                
+
                 # Process image
                 result = cohere_llm._process_image_file("/path/to/image.png")
-                
+
                 # Verify result
                 assert result == "base64-encoded-data"
                 mock_image_open.assert_called_once_with("/path/to/image.png")
-                mock_img.save.assert_called_once_with(mock_buffer, format="JPEG", quality=90)
+                mock_img.save.assert_called_once_with(
+                    mock_buffer, format="JPEG", quality=90
+                )
                 mock_b64encode.assert_called_once_with(b"converted-jpeg-data")
 
     @patch("PIL.Image.open")
@@ -653,20 +671,20 @@ class TestCohereImageProcessing:
         mock_img.format = "PNG"
         mock_img.mode = "RGBA"  # Has alpha channel
         mock_image_open.return_value.__enter__.return_value = mock_img
-        
+
         # Mock BytesIO and image saving
-        with patch("src.llmhandler.models.providers.cohere.BytesIO") as mock_bytesio:
+        with patch("src.lluminary.models.providers.cohere.BytesIO") as mock_bytesio:
             mock_buffer = MagicMock()
             mock_bytesio.return_value = mock_buffer
             mock_buffer.read.return_value = b"converted-jpeg-data"
-            
+
             # Mock base64 encoding
             with patch("base64.b64encode") as mock_b64encode:
                 mock_b64encode.return_value = b"base64-encoded-data"
-                
+
                 # Process image
                 result = cohere_llm._process_image_file("/path/to/image.png")
-                
+
                 # Verify result
                 assert result == "base64-encoded-data"
                 mock_image_open.assert_called_once_with("/path/to/image.png")
@@ -682,7 +700,7 @@ class TestCohereImageProcessing:
         """Test error handling during image processing."""
         # Mock image open to raise exception
         mock_image_open.side_effect = Exception("Image processing error")
-        
+
         # Process image should return None on error
         result = cohere_llm._process_image_file("/path/to/image.jpg")
         assert result is None
@@ -697,19 +715,19 @@ class TestCohereEmbeddings:
         # Set up mock client
         client_instance = MagicMock()
         mock_client.return_value = client_instance
-        
+
         # Configure mock response
         embed_response = MagicMock()
         embed_response.embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
         client_instance.embed.return_value = embed_response
-        
+
         # Set the config
         cohere_llm.config = {"api_key": "test-key"}
-        
+
         # Call embed method
         texts = ["This is the first text", "This is the second text"]
         embeddings, usage = cohere_llm.embed(texts)
-        
+
         # Verify the results
         assert len(embeddings) == 2
         assert len(embeddings[0]) == 3
@@ -717,7 +735,7 @@ class TestCohereEmbeddings:
         assert "total_tokens" in usage
         assert "total_cost" in usage
         assert "model" in usage
-        
+
         # Verify client was called with correct parameters
         client_instance.embed.assert_called_once()
         call_args = client_instance.embed.call_args[1]
@@ -730,20 +748,20 @@ class TestCohereEmbeddings:
         # Set up mock client
         client_instance = MagicMock()
         mock_client.return_value = client_instance
-        
+
         # Configure mock response
         embed_response = MagicMock()
         embed_response.embeddings = [[0.1, 0.2, 0.3]]
         client_instance.embed.return_value = embed_response
-        
+
         # Set the config
         cohere_llm.config = {"api_key": "test-key"}
-        
+
         # Call embed method with custom model
         texts = ["Test text"]
         custom_model = "embed-multilingual-v3.0"
         embeddings, usage = cohere_llm.embed(texts, model=custom_model)
-        
+
         # Verify client was called with correct parameters
         call_args = client_instance.embed.call_args[1]
         assert call_args["model"] == custom_model
@@ -754,18 +772,18 @@ class TestCohereEmbeddings:
         # Set up mock client
         client_instance = MagicMock()
         mock_client.return_value = client_instance
-        
+
         # Set the config
         cohere_llm.config = {"api_key": "test-key"}
-        
+
         # Call embed method with invalid model
         texts = ["Test text"]
         invalid_model = "invalid-model"
-        
+
         # Should raise ValueError
         with pytest.raises(ValueError) as exc_info:
             cohere_llm.embed(texts, model=invalid_model)
-        
+
         assert "Embedding model" in str(exc_info.value)
         assert "not supported" in str(exc_info.value)
 
@@ -775,7 +793,7 @@ class TestCohereEmbeddings:
         # Call embed method with empty texts
         texts = []
         embeddings, usage = cohere_llm.embed(texts)
-        
+
         # Should return empty results without calling client
         assert embeddings == []
         assert usage["total_tokens"] == 0
@@ -790,17 +808,17 @@ class TestCohereEmbeddings:
         client_instance = MagicMock()
         client_instance.embed.side_effect = Exception("Embedding error")
         mock_client.return_value = client_instance
-        
+
         # Set the config
         cohere_llm.config = {"api_key": "test-key"}
-        
+
         # Call embed method
         texts = ["Test text"]
-        
+
         # Should raise ValueError
         with pytest.raises(ValueError) as exc_info:
             cohere_llm.embed(texts)
-        
+
         assert "Error getting embeddings from Cohere" in str(exc_info.value)
 
 
@@ -813,7 +831,7 @@ class TestCohereReranking:
         # Set up mock client
         client_instance = MagicMock()
         mock_client.return_value = client_instance
-        
+
         # Configure mock response
         rerank_results = [
             MagicMock(index=1, relevance_score=0.9, document="second doc"),
@@ -823,15 +841,15 @@ class TestCohereReranking:
         rerank_response = MagicMock()
         rerank_response.results = rerank_results
         client_instance.rerank.return_value = rerank_response
-        
+
         # Set the config
         cohere_llm.config = {"api_key": "test-key"}
-        
+
         # Call rerank method
         query = "example query"
         documents = ["first doc", "second doc", "third doc"]
         result = cohere_llm.rerank(query, documents)
-        
+
         # Verify the results
         assert len(result["ranked_documents"]) == 3
         assert result["ranked_documents"][0] == "second doc"  # Highest score
@@ -840,7 +858,7 @@ class TestCohereReranking:
         assert result["scores"][0] == 0.9
         assert "total_tokens" in result["usage"]
         assert "total_cost" in result["usage"]
-        
+
         # Verify client was called with correct parameters
         client_instance.rerank.assert_called_once()
         call_args = client_instance.rerank.call_args[1]
@@ -854,7 +872,7 @@ class TestCohereReranking:
         # Set up mock client
         client_instance = MagicMock()
         mock_client.return_value = client_instance
-        
+
         # Configure mock response
         rerank_results = [
             MagicMock(index=1, relevance_score=0.9, document="second doc"),
@@ -863,19 +881,19 @@ class TestCohereReranking:
         rerank_response = MagicMock()
         rerank_response.results = rerank_results
         client_instance.rerank.return_value = rerank_response
-        
+
         # Set the config
         cohere_llm.config = {"api_key": "test-key"}
-        
+
         # Call rerank method with top_n
         query = "example query"
         documents = ["first doc", "second doc", "third doc"]
         result = cohere_llm.rerank(query, documents, top_n=2)
-        
+
         # Verify the results
         assert len(result["ranked_documents"]) == 2
         assert result["indices"] == [1, 0]
-        
+
         # Verify client was called with correct parameters
         call_args = client_instance.rerank.call_args[1]
         assert call_args["top_n"] == 2
@@ -887,7 +905,7 @@ class TestCohereReranking:
         # Set up mock client
         client_instance = MagicMock()
         mock_client.return_value = client_instance
-        
+
         # Configure mock response
         rerank_results = [
             MagicMock(index=1, relevance_score=0.9, document="second doc"),
@@ -896,15 +914,15 @@ class TestCohereReranking:
         rerank_response = MagicMock()
         rerank_response.results = rerank_results
         client_instance.rerank.return_value = rerank_response
-        
+
         # Set the config
         cohere_llm.config = {"api_key": "test-key"}
-        
+
         # Call rerank method with return_scores=False
         query = "example query"
         documents = ["first doc", "second doc"]
         result = cohere_llm.rerank(query, documents, return_scores=False)
-        
+
         # Verify the results
         assert result["scores"] is None
 
@@ -915,7 +933,7 @@ class TestCohereReranking:
         query = "example query"
         documents = []
         result = cohere_llm.rerank(query, documents)
-        
+
         # Should return empty results without calling client
         assert result["ranked_documents"] == []
         assert result["indices"] == []
@@ -931,18 +949,18 @@ class TestCohereReranking:
         client_instance = MagicMock()
         client_instance.rerank.side_effect = Exception("Reranking error")
         mock_client.return_value = client_instance
-        
+
         # Set the config
         cohere_llm.config = {"api_key": "test-key"}
-        
+
         # Call rerank method
         query = "example query"
         documents = ["first doc", "second doc"]
-        
+
         # Should raise ValueError
         with pytest.raises(ValueError) as exc_info:
             cohere_llm.rerank(query, documents)
-        
+
         assert "Error reranking documents with Cohere" in str(exc_info.value)
 
 
@@ -978,7 +996,9 @@ class TestCohereClassification:
             )
 
             # Call the classify method
-            result, usage = cohere_llm.classify(messages=messages, categories=categories)
+            result, usage = cohere_llm.classify(
+                messages=messages, categories=categories
+            )
 
             # Verify the result
             assert "technology" in result
@@ -1007,7 +1027,7 @@ class TestCohereIntegration:
 
         # Create real instance
         llm = CohereLLM("command")
-        
+
         # Generate a response
         response, usage, _ = llm.generate(
             event_id="test-integration",
@@ -1022,12 +1042,12 @@ class TestCohereIntegration:
             ],
             max_tokens=50,
         )
-        
+
         # Check response
         assert isinstance(response, str)
         assert len(response) > 0
         assert "language" in response.lower() or "llm" in response.lower()
-        
+
         # Check usage
         assert usage["read_tokens"] > 0
         assert usage["write_tokens"] > 0
@@ -1042,15 +1062,15 @@ class TestCohereIntegration:
 
         # Create real instance
         llm = CohereLLM("command")
-        
+
         # Generate embeddings
         texts = ["This is a test for embeddings", "And this is another test"]
         embeddings, usage = llm.embed(texts)
-        
+
         # Check embeddings
         assert len(embeddings) == 2
         assert len(embeddings[0]) > 0  # Should have embedding dimensions
-        
+
         # Check usage
         assert usage["total_tokens"] > 0
         assert usage["total_cost"] > 0

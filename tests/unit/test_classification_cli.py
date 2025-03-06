@@ -1,9 +1,9 @@
 """
 Unit tests for the classification CLI commands.
 """
+
 import json
 import os
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
@@ -13,9 +13,8 @@ from click.testing import CliRunner
 # Mark all tests in this file as classification tests
 pytestmark = pytest.mark.classification
 
-from src.llmhandler.cli.classify import (cli, create, list_configs, test,
-                                         validate)
-from src.llmhandler.models.classification import ClassificationConfig
+from src.lluminary.cli.classify import create, list_configs, test, validate
+from src.lluminary.models.classification import ClassificationConfig
 
 
 @pytest.fixture
@@ -104,7 +103,7 @@ def test_validate_command_invalid():
         assert "✗ Configuration is invalid" in result.output
 
 
-@patch("src.llmhandler.cli.classify.get_llm_from_model")
+@patch("src.lluminary.cli.classify.get_llm_from_model")
 def test_test_command(mock_get_llm, temp_config_dir):
     """Test the test command."""
     # Setup mock LLM
@@ -143,7 +142,7 @@ def test_test_command(mock_get_llm, temp_config_dir):
     assert args[1][0]["message"] == "Test message"
 
 
-@patch("src.llmhandler.cli.classify.get_llm_from_model")
+@patch("src.lluminary.cli.classify.get_llm_from_model")
 def test_test_command_error(mock_get_llm):
     """Test the test command error handling."""
     # Setup mock LLM with error
@@ -211,7 +210,7 @@ def test_create_command(mock_confirm, mock_prompt):
 
         # Verify created file
         assert os.path.exists(output_path)
-        with open(output_path, "r") as f:
+        with open(output_path) as f:
             config_data = json.load(f)
             assert config_data["name"] == "new_config"
             assert config_data["categories"] == {

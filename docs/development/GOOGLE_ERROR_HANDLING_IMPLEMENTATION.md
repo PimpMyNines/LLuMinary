@@ -1,8 +1,28 @@
-# Google Provider Error Handling Implementation
+# GOOGLE ERROR HANDLING IMPLEMENTATION
 
-This document outlines the comprehensive error handling implementation for the Google LLM provider in the LLMHandler library.
+## Overview
 
-## Implementation Overview
+This document outlines the comprehensive error handling implementation for the Google LLM provider in the LLuMinary library, detailing Google-specific error mapping strategies and implementation approaches.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Implementation Approach](#implementation-approach)
+- [Key Components](#key-components)
+  - [Error Mapping Method](#1-error-mapping-method)
+  - [Retry Mechanism](#2-retry-mechanism)
+  - [Enhanced Authentication](#3-enhanced-authentication)
+  - [Improved Image Processing](#4-improved-image-processing)
+  - [Structured Exception Handling in Core Methods](#5-structured-exception-handling-in-core-methods)
+- [Google-Specific Considerations](#google-specific-considerations)
+  - [API Structure](#api-structure)
+  - [Error Detection Patterns](#error-detection-patterns)
+- [Testing Approach](#testing-approach)
+- [Future Improvements](#future-improvements)
+- [Integration with Handler](#integration-with-handler)
+- [Related Documentation](#related-documentation)
+
+## Implementation Approach
 
 The Google provider error handling follows the same pattern established for OpenAI and Anthropic, with adaptations specific to Google's API behavior:
 
@@ -20,23 +40,23 @@ The `_map_google_error` method examines exception messages and types to determin
 
 ```python
 def _map_google_error(self, error: Exception) -> Exception:
-    """Map a Google API exception to an appropriate LLMHandler exception."""
+    """Map a Google API exception to an appropriate LLuMinary exception."""
     error_message = str(error).lower()
     error_type = type(error).__name__
 
     # Authentication errors
-    if ("api key" in error_message or "credential" in error_message 
+    if ("api key" in error_message or "credential" in error_message
         or "permission" in error_message):
         return AuthenticationError(...)
-    
+
     # Rate limit errors
     if "rate limit" in error_message or "quota" in error_message:
         return RateLimitError(...)
-    
+
     # Service availability errors
     if "unavailable" in error_message or "server error" in error_message:
         return ServiceUnavailableError(...)
-        
+
     # etc...
 ```
 
@@ -128,8 +148,18 @@ Future error handling enhancements could include:
 
 ## Integration with Handler
 
-This implementation works with the existing error handler in the main LLMHandler class, enabling:
+This implementation works with the existing error handler in the main LLuMinary handler class, enabling:
 1. Automatic provider fallback when appropriate
 2. Consistent error reporting across providers
 3. Standardized retry strategies
 4. Detailed error logging
+
+## Related Documentation
+
+- [ERROR_HANDLING](./ERROR_HANDLING.md) - General error handling guidelines
+- [MODELS](./MODELS.md) - Model implementation details
+- [PROVIDER_TESTING](./PROVIDER_TESTING.md) - Provider testing guidelines
+- [API_REFERENCE](../API_REFERENCE.md) - Complete API reference
+- [ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION](./ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION.md) - Anthropic error handling
+- [BEDROCK_ERROR_HANDLING_IMPLEMENTATION](./BEDROCK_ERROR_HANDLING_IMPLEMENTATION.md) - Bedrock error handling
+- [OPENAI_ERROR_HANDLING_IMPLEMENTATION](./OPENAI_ERROR_HANDLING_IMPLEMENTATION.md) - OpenAI error handling

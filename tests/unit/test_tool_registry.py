@@ -11,7 +11,7 @@ pytest.skip(
     allow_module_level=True,
 )
 
-from src.llmhandler.tools.registry import ToolRegistry, ToolValidationError
+from src.lluminary.tools.registry import ToolRegistry
 
 
 def test_tool_with_type_hints() -> Dict[str, Any]:

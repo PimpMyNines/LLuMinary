@@ -1,0 +1,59 @@
+name: Version Check
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/lluminary/version.py'
+  workflow_dispatch:
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get current branch
+      id: branch
+      run: echo "branch=$(git branch --show-current)" >> $GITHUB_OUTPUT
+
+    - name: Check version bump
+      run: |
+        # Get version from PR branch
+        PR_VERSION=$(grep -Po "(?<=__version__ = \")[^\"]*" src/lluminary/version.py)
+        echo "PR version: $PR_VERSION"
+
+        # Checkout main branch to compare version
+        git checkout main
+        MAIN_VERSION=$(grep -Po "(?<=__version__ = \")[^\"]*" src/lluminary/version.py)
+        echo "Main version: $MAIN_VERSION"
+
+        # Compare versions using Python semantic versioning
+        python -c "
+        from packaging import version
+        pr_ver = version.parse('$PR_VERSION')
+        main_ver = version.parse('$MAIN_VERSION')
+        is_higher = pr_ver > main_ver
+
+        if not is_higher:
+            print(f'❌ Error: Version in PR ({pr_ver}) must be higher than main branch version ({main_ver})')
+            exit(1)
+        else:
+            print(f'✅ Version bumped from {main_ver} to {pr_ver}')
+        "
+
+    - name: Check version format
+      run: |
+        VERSION=$(grep -Po "(?<=__version__ = \")[^\"]*" src/lluminary/version.py)
+
+        # Validate semantic versioning format (X.Y.Z)
+        if ! [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "❌ Error: Version must follow semantic versioning format (X.Y.Z)"
+          exit 1
+        else
+          echo "✅ Version format is correct: $VERSION"
+        fi

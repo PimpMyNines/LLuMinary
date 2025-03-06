@@ -1,0 +1,44 @@
+Dual Licensing
+
+This software is available under two licenses:
+
+1. GNU Affero General Public License v3.0 (AGPL-3.0)
+2. Commercial License
+
+1. GNU Affero General Public License v3.0 (AGPL-3.0)
+---------------------------------------------------------
+
+Copyright (c) 2025 PimpMyNines
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+2. Commercial License
+---------------------------------------------------------
+
+For incorporation into commercial products or services that are sold, licensed,
+or otherwise commercialized to customers or third parties, a separate commercial
+license is required. Please contact licensing@pimpmynines.com to obtain a
+commercial license.
+
+The following uses are permitted under the AGPL-3.0 license without requiring
+a commercial license:
+
+- Private, non-commercial use by individuals
+- Internal use within organizations for development, testing, and internal
+  business operations (even by commercial entities)
+- Educational and research purposes
+
+A commercial license is only required when this software is incorporated into
+products or services that are distributed, sold, or provided to customers or
+third parties outside your organization.

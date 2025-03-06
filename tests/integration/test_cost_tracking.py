@@ -1,17 +1,16 @@
 """
 Integration tests for cost tracking functionality.
 """
-import os
+
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
 
 import pytest
 
 # Add the package to path for testing
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.llmhandler import get_llm_from_model
+from src.lluminary import get_llm_from_model
 
 
 @pytest.mark.integration
@@ -66,7 +65,7 @@ class TestCostTracking:
                 print(f"  Total cost: ${response['usage']['total_cost']:.6f}")
 
             except Exception as e:
-                pytest.skip(f"Skipping cost tracking test for {model_name}: {str(e)}")
+                pytest.skip(f"Skipping cost tracking test for {model_name}: {e!s}")
 
     def test_variable_length_cost_scaling(self):
         """Test that costs scale appropriately with response length."""
@@ -128,7 +127,7 @@ class TestCostTracking:
                 )
 
         except Exception as e:
-            pytest.skip(f"Skipping cost scaling test: {str(e)}")
+            pytest.skip(f"Skipping cost scaling test: {e!s}")
 
     def test_cross_provider_cost_comparison(self):
         """Compare costs across different providers for the same task."""
@@ -162,14 +161,16 @@ class TestCostTracking:
                     "response": response["response"],
                     "total_tokens": response["usage"]["total_tokens"],
                     "total_cost": response["usage"]["total_cost"],
-                    "cost_per_token": response["usage"]["total_cost"]
-                    / response["usage"]["total_tokens"]
-                    if response["usage"]["total_tokens"] > 0
-                    else 0,
+                    "cost_per_token": (
+                        response["usage"]["total_cost"]
+                        / response["usage"]["total_tokens"]
+                        if response["usage"]["total_tokens"] > 0
+                        else 0
+                    ),
                 }
 
             except Exception as e:
-                print(f"Skipping {provider} cost comparison test: {str(e)}")
+                print(f"Skipping {provider} cost comparison test: {e!s}")
 
         # Skip test if fewer than 2 providers have results
         if len(results) < 2:
@@ -262,7 +263,7 @@ class TestCostTracking:
             )
 
         except Exception as e:
-            pytest.skip(f"Skipping function calling cost test: {str(e)}")
+            pytest.skip(f"Skipping function calling cost test: {e!s}")
 
 
 if __name__ == "__main__":

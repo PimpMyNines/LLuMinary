@@ -1,0 +1,125 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version type (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      custom_version:
+        description: 'Custom version (leave empty to auto-increment)'
+        required: false
+        type: string
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install semver gitpython
+
+    - name: Configure Git
+      run: |
+        git config --global user.name "GitHub Actions Bot"
+        git config --global user.email "actions@github.com"
+
+    - name: Calculate new version
+      id: version
+      run: |
+        CURRENT_VERSION=$(grep -Po "(?<=__version__ = \")[^\"]*" src/lluminary/version.py)
+        echo "Current version: $CURRENT_VERSION"
+
+        if [[ -n "${{ github.event.inputs.custom_version }}" ]]; then
+          NEW_VERSION="${{ github.event.inputs.custom_version }}"
+          echo "Using custom version: $NEW_VERSION"
+        else
+          # Use semver library to calculate new version
+          NEW_VERSION=$(python -c "
+          import semver
+          current = '$CURRENT_VERSION'
+          bump_type = '${{ github.event.inputs.version_type }}'
+
+          if bump_type == 'patch':
+              new_version = semver.bump_patch(current)
+          elif bump_type == 'minor':
+              new_version = semver.bump_minor(current)
+          elif bump_type == 'major':
+              new_version = semver.bump_major(current)
+          else:
+              new_version = current
+
+          print(new_version)
+          ")
+          echo "Calculated new version: $NEW_VERSION"
+        fi
+
+        # Validate semantic versioning format
+        if ! [[ $NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "Error: Version must follow semantic versioning format (X.Y.Z)"
+          exit 1
+        fi
+
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Update version in files
+      run: |
+        NEW_VERSION=${{ steps.version.outputs.new_version }}
+
+        # Update version in version.py
+        sed -i "s/__version__ = \".*\"/__version__ = \"$NEW_VERSION\"/" src/lluminary/version.py
+
+        # Update CHANGELOG.md with new version header
+        CURRENT_DATE=$(date +"%Y-%m-%d")
+        RELEASE_HEADER="## [$NEW_VERSION] - $CURRENT_DATE"
+
+        if grep -q "## \[Unreleased\]" CHANGELOG.md; then
+          # If Unreleased section exists, add new version below it
+          sed -i "/## \[Unreleased\]/a\\
+$RELEASE_HEADER" CHANGELOG.md
+        else
+          # Otherwise add new version at the top (below the title)
+          sed -i "1,/^# Changelog/a\\
+\\
+$RELEASE_HEADER" CHANGELOG.md
+        fi
+
+    - name: Create release commit
+      run: |
+        NEW_VERSION=${{ steps.version.outputs.new_version }}
+
+        git add src/lluminary/version.py CHANGELOG.md
+        git commit -m "Release v$NEW_VERSION"
+        git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+        git push origin HEAD:main
+        git push origin "v$NEW_VERSION"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.new_version }}
+        name: Release v${{ steps.version.outputs.new_version }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true

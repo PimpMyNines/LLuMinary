@@ -2,12 +2,13 @@
 Integration tests for the classification functionality.
 Tests real classification with graceful skipping when auth fails.
 """
+
 import pytest
 
 # Mark all tests in this file as classification tests
 pytestmark = [pytest.mark.integration, pytest.mark.classification]
 
-from src.llmhandler.models.router import get_llm_from_model
+from src.lluminary.models.router import get_llm_from_model
 
 
 class TestClassification:
@@ -72,7 +73,7 @@ class TestClassification:
 
                 # Verify response
                 assert isinstance(selection, str)
-                assert selection in categories.keys()
+                assert selection in categories
 
                 # Print results
                 print(f"Classification result: {selection}")
@@ -85,7 +86,7 @@ class TestClassification:
                 all_results[model_name] = selection
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 failed_models.append((model_name, str(e)))
 
         # Print summary
@@ -171,15 +172,15 @@ class TestClassification:
                 )
 
                 # Verify valid responses
-                assert without_examples in categories.keys()
-                assert with_examples in categories.keys()
+                assert without_examples in categories
+                assert with_examples in categories
                 print(f"\nTest passed with {model_name}")
 
                 # If we get here, test passed with this model
                 return
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 continue
 
         # If we get here, no models worked
@@ -239,14 +240,14 @@ class TestClassification:
                 )
 
                 # Verify response
-                assert selection in categories.keys()
+                assert selection in categories
                 print(f"\nTest passed with {model_name}")
 
                 # If we get here, test passed with this model
                 return
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 continue
 
         # If we get here, no models worked

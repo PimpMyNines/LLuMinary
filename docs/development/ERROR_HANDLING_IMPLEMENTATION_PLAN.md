@@ -1,11 +1,32 @@
 # Error Handling Implementation Plan
 
-This document outlines the plan for implementing standardized error handling across all providers in the LLMHandler library.
+## Overview
+
+This document outlines the comprehensive plan for implementing standardized error handling across all providers in the LLuMinary library. It defines the goals, implementation strategy, current status, and success criteria for the error handling standardization initiative.
+
+## Table of Contents
+
+1. [Goals](#goals)
+2. [Current Status](#current-status)
+3. [Implementation Strategy](#implementation-strategy)
+4. [Phase 1: Update Exceptions.py](#phase-1-update-exceptionspy-completed)
+5. [Phase 2: Update OpenAI Provider](#phase-2-update-openai-provider-completed)
+6. [Phase 3: Update Anthropic Provider](#phase-3-update-anthropic-provider-completed)
+7. [Phase 4: Update Google Provider](#phase-4-update-google-provider-completed)
+8. [Phase 5: Update Bedrock Provider](#phase-5-update-bedrock-provider-completed)
+9. [Phase 6: Update Base LLM Class](#phase-6-update-base-llm-class)
+10. [Phase 7: Update Handler Class](#phase-7-update-handler-class)
+11. [Phase 8: Add Comprehensive Tests](#phase-8-add-comprehensive-tests)
+12. [Testing Strategy](#testing-strategy)
+13. [Implementation Timeline](#implementation-timeline)
+14. [Success Criteria](#success-criteria)
+15. [Documentation](#documentation)
+16. [Related Documentation](#related-documentation)
 
 ## Goals
 
 1. Implement consistent error handling across all providers
-2. Map provider-specific errors to LLMHandler custom exceptions
+2. Map provider-specific errors to LLuMinary custom exceptions
 3. Improve error messages with more context for debugging
 4. Implement standardized retry logic for recoverable errors
 5. Enhance error testing coverage
@@ -152,7 +173,7 @@ Total: 14 days
 ## Success Criteria
 
 - All providers use custom exception types from exceptions.py
-- Provider-specific errors are properly mapped to LLMHandler exceptions
+- Provider-specific errors are properly mapped to LLuMinary exceptions
 - Error messages include provider name, operation, and relevant context
 - Retry mechanisms are implemented for rate limiting and transient errors
 - All error scenarios have corresponding tests
@@ -164,3 +185,13 @@ Once implemented, we'll update:
 - API_REFERENCE.md with error handling documentation
 - Add error handling section to ARCHITECTURE.md
 - Create provider-specific error handling guides
+
+## Related Documentation
+
+- [Error Handling Summary](./ERROR_HANDLING_SUMMARY.md)
+- [OpenAI Error Handling Implementation](./OPENAI_ERROR_HANDLING_IMPLEMENTATION.md)
+- [Anthropic Error Handling Implementation](./ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION.md)
+- [Google Error Handling Implementation](./GOOGLE_ERROR_HANDLING_IMPLEMENTATION.md)
+- [Bedrock Error Handling Implementation](./BEDROCK_ERROR_HANDLING_IMPLEMENTATION.md)
+- [Error Handling Test Example](./ERROR_HANDLING_TEST_EXAMPLE.py)
+- [OpenAI Error Handling Example](./OPENAI_ERROR_HANDLING_EXAMPLE.py)

@@ -1,6 +1,28 @@
-# LLM Handler Models
+# LLUMINARY MODELS
 
-This directory contains the implementation of various Large Language Model (LLM) providers. The system is designed with a flexible, provider-agnostic architecture that allows for consistent handling of text and image inputs across different LLM services.
+## Overview
+
+This document provides comprehensive information about the LLuMinary model implementations and architecture. The system is designed with a flexible, provider-agnostic architecture that allows for consistent handling of text and image inputs across different LLM services.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+  - [Base Class: LLM](#base-class-llm)
+  - [Design Principles](#design-principles)
+  - [Provider Implementations](#provider-implementations)
+  - [Router](#router)
+- [Message Format](#message-format)
+- [Error Correction System](#error-correction-system)
+- [Classification Feature](#classification-feature)
+- [Image Handling](#image-handling)
+- [Usage Example](#usage-example)
+- [Available Models](#available-models)
+- [Testing](#testing)
+- [Best Practices](#best-practices)
+- [Authentication](#authentication)
+- [Development Guidelines](#development-guidelines)
+- [Related Documentation](#related-documentation)
 
 ## Architecture
 
@@ -113,7 +135,7 @@ The system includes a powerful classification capability that works across all p
 
 ### Basic Usage
 ```python
-from llmhandler.models.router import get_llm_from_model
+from lluminary.models.router import get_llm_from_model
 
 # Initialize a model
 llm = get_llm_from_model("claude-sonnet-3.5")
@@ -235,7 +257,7 @@ The classification response is structured as:
 The system includes a `ClassificationLibrary` for managing multiple configurations:
 
 ```python
-from llmhandler.models.classification import ClassificationLibrary
+from lluminary.models.classification import ClassificationLibrary
 
 # Initialize library
 library = ClassificationLibrary("configs")
@@ -256,16 +278,16 @@ The package includes command-line tools for managing classifications:
 
 ```bash
 # List available configs
-python -m llmhandler.cli.classify list-configs configs/
+python -m lluminary.cli.classify list-configs configs/
 
 # Validate a config file
-python -m llmhandler.cli.classify validate configs/bug_classifier.json
+python -m lluminary.cli.classify validate configs/bug_classifier.json
 
 # Test a classification
-python -m llmhandler.cli.classify test configs/bug_classifier.json "System is down!"
+python -m lluminary.cli.classify test configs/bug_classifier.json "System is down!"
 
 # Create a new config interactively
-python -m llmhandler.cli.classify create configs/new_classifier.json
+python -m lluminary.cli.classify create configs/new_classifier.json
 ```
 
 ## Image Handling
@@ -293,7 +315,7 @@ Each provider has specific image handling requirements:
 ## Usage Example
 
 ```python
-from llmhandler.models.router import get_llm_from_model
+from lluminary.models.router import get_llm_from_model
 
 # Initialize a model
 llm = get_llm_from_model("claude-sonnet-3.5")
@@ -426,3 +448,12 @@ If environment variables are not set, the library falls back to AWS Secrets Mana
    - Document all public methods
    - Include usage examples
    - Note provider-specific requirements
+
+## Related Documentation
+
+- [API_REFERENCE](../API_REFERENCE.md) - Complete API reference for all model components
+- [ARCHITECTURE](../ARCHITECTURE.md) - System architecture and component relationships
+- [ERROR_HANDLING](./ERROR_HANDLING.md) - Error handling implementation details
+- [PROVIDER_TESTING](./PROVIDER_TESTING.md) - Testing guidelines for provider implementations
+- [ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION](./ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION.md) - Anthropic-specific implementation details
+- [OPENAI_ERROR_HANDLING_IMPLEMENTATION](./OPENAI_ERROR_HANDLING_IMPLEMENTATION.md) - OpenAI-specific implementation details

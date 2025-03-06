@@ -1,12 +1,12 @@
 """
 Unit tests for the AWS Bedrock provider implementation.
 """
-import json
-import pytest
+
 from unittest.mock import MagicMock, patch
 
-from src.llmhandler.exceptions import LLMMistake
-from src.llmhandler.models.providers.bedrock import BedrockLLM
+import pytest
+
+from src.lluminary.models.providers.bedrock import BedrockLLM
 
 
 @pytest.fixture
@@ -29,11 +29,11 @@ def bedrock_llm():
 
         # Create mock client directly
         llm.bedrock_client = MagicMock()
-        
+
         # Ensure config exists
-        if not hasattr(llm, 'config'):
+        if not hasattr(llm, "config"):
             llm.config = {}
-        
+
         # Add client to config as expected by implementation
         llm.config["client"] = llm.bedrock_client
 
@@ -49,23 +49,24 @@ def test_bedrock_initialization(bedrock_llm):
     # Check that model settings are properly configured
     assert bedrock_llm.model_name in bedrock_llm.CONTEXT_WINDOW
     assert bedrock_llm.model_name in bedrock_llm.COST_PER_MODEL
-    
+
+
 def test_auth_error_handling():
     """Test authentication error handling."""
-    from src.llmhandler.exceptions import AuthenticationError
-    
+    from src.lluminary.exceptions import AuthenticationError
+
     # Test auth error handling by forcing an exception
     with patch("boto3.session.Session") as mock_session:
         # Set up mock to raise exception
         mock_session.side_effect = Exception("AWS credentials not found")
-        
+
         # Create a new LLM instance that will use our mocked boto3
         llm = BedrockLLM(model_name="us.anthropic.claude-3-5-sonnet-20241022-v2:0")
-        
+
         # Call auth directly and verify it raises the right exception
         with pytest.raises(AuthenticationError) as exc:
             llm.auth()
-        
+
         # Verify exception details
         exception = exc.value
         assert isinstance(exception, AuthenticationError)
@@ -93,7 +94,7 @@ def test_message_formatting(bedrock_llm):
     assert len(formatted) == 1
     assert formatted[0]["role"] == "user"
     assert isinstance(formatted[0]["content"], list)
-    
+
     # Verify the text content is directly in the content list
     assert len(formatted[0]["content"]) == 1
     assert "text" in formatted[0]["content"][0]
@@ -111,8 +112,11 @@ def test_get_supported_models(bedrock_llm):
 def test_validate_model(bedrock_llm):
     """Test model validation works correctly."""
     # Test with valid model
-    assert bedrock_llm.validate_model("us.anthropic.claude-3-5-sonnet-20241022-v2:0") is True
-    
+    assert (
+        bedrock_llm.validate_model("us.anthropic.claude-3-5-sonnet-20241022-v2:0")
+        is True
+    )
+
     # Test with invalid model
     assert bedrock_llm.validate_model("invalid-model-name") is False
 
@@ -128,40 +132,36 @@ def test_supported_model_lists(bedrock_llm):
     # Make sure appropriate lists are populated
     assert len(bedrock_llm.SUPPORTED_MODELS) > 0
     assert len(bedrock_llm.THINKING_MODELS) > 0
-    
+
     # Check the model lists contain appropriate entries
     assert "us.anthropic.claude-3-7-sonnet-20250219-v1:0" in bedrock_llm.THINKING_MODELS
-    assert "us.anthropic.claude-3-5-sonnet-20241022-v2:0" in bedrock_llm.SUPPORTED_MODELS
-    
+    assert (
+        "us.anthropic.claude-3-5-sonnet-20241022-v2:0" in bedrock_llm.SUPPORTED_MODELS
+    )
+
     # Verify that cost and context window data is properly configured for each model
     for model_name in bedrock_llm.SUPPORTED_MODELS:
         assert model_name in bedrock_llm.CONTEXT_WINDOW
         assert model_name in bedrock_llm.COST_PER_MODEL
-        
+
         # Verify cost structure is correct
         model_costs = bedrock_llm.COST_PER_MODEL[model_name]
         assert "read_token" in model_costs
         assert "write_token" in model_costs
         assert "image_cost" in model_costs
-        
+
         # Verify values are of the expected type
         assert isinstance(model_costs["read_token"], (int, float))
         assert isinstance(model_costs["write_token"], (int, float))
         assert isinstance(model_costs["image_cost"], (int, float))
-        
+
         # Verify context window is a number
         assert isinstance(bedrock_llm.CONTEXT_WINDOW[model_name], int)
 
 
 def test_error_handling(bedrock_llm):
     """Test basic error handling."""
-    from src.llmhandler.exceptions import (
-        LLMMistake, 
-        AuthenticationError, 
-        RateLimitError,
-        ServiceUnavailableError
-    )
-    
+
     # Test validation error when trying to use an unsupported model
     unsupported_model = "invalid-model-name"
     with pytest.raises(ValueError) as excinfo:
@@ -172,45 +172,41 @@ def test_error_handling(bedrock_llm):
             aws_secret_access_key="test-secret",
             region_name="us-east-1",
         )
-    
+
     # Verify error message contains useful information
     assert unsupported_model in str(excinfo.value)
     assert "not supported" in str(excinfo.value).lower()
-    
+
     # Test configuration error
     with pytest.raises(LLMMistake):
         # Remove the client from config to cause an error
         bedrock_llm.config.pop("client", None)
-        
+
         # This should fail since client is not configured
         bedrock_llm.generate(
             event_id="test",
             system_prompt="You are a helpful assistant",
             messages=[{"message_type": "human", "message": "Hello"}],
         )
-        
+
+
 def test_boto_client_errors(bedrock_llm):
     """Test AWS boto client error handling."""
     from botocore.exceptions import ClientError
-    from src.llmhandler.exceptions import (
-        LLMMistake,
+
+    from src.lluminary.exceptions import (
+        AuthenticationError,
         RateLimitError,
         ServiceUnavailableError,
-        AuthenticationError
     )
-    
+
     # Create a mock response for boto3 client error
     def create_client_error(code, message):
         return ClientError(
-            error_response={
-                "Error": {
-                    "Code": code,
-                    "Message": message
-                }
-            },
-            operation_name="converse"
+            error_response={"Error": {"Code": code, "Message": message}},
+            operation_name="converse",
         )
-    
+
     # Define error test cases
     error_test_cases = [
         # Rate limit errors
@@ -220,7 +216,9 @@ def test_boto_client_errors(bedrock_llm):
             "expected_message": "rate limit exceeded",
         },
         {
-            "error": create_client_error("TooManyRequestsException", "Too many requests"),
+            "error": create_client_error(
+                "TooManyRequestsException", "Too many requests"
+            ),
             "expected_exception": RateLimitError,
             "expected_message": "rate limit exceeded",
         },
@@ -232,7 +230,9 @@ def test_boto_client_errors(bedrock_llm):
         },
         # Service errors
         {
-            "error": create_client_error("ServiceUnavailableException", "Service unavailable"),
+            "error": create_client_error(
+                "ServiceUnavailableException", "Service unavailable"
+            ),
             "expected_exception": ServiceUnavailableError,
             "expected_message": "service unavailable",
         },
@@ -243,13 +243,13 @@ def test_boto_client_errors(bedrock_llm):
             "expected_message": "Bedrock API error",
         },
     ]
-    
+
     # Replace the mock client with one that raises errors
     for test_case in error_test_cases:
         # Configure the mock to raise our error
         bedrock_llm.config["client"] = MagicMock()
         bedrock_llm.config["client"].converse.side_effect = test_case["error"]
-        
+
         # Make the API call and check for the expected exception
         with pytest.raises(test_case["expected_exception"]) as exc:
             bedrock_llm._raw_generate(
@@ -258,63 +258,65 @@ def test_boto_client_errors(bedrock_llm):
                 messages=[{"message_type": "human", "message": "Test error handling"}],
                 max_tokens=100,
                 temp=0.7,
-                top_k=40
+                top_k=40,
             )
-        
+
         # Check exception properties
         exception = exc.value
         assert test_case["expected_message"] in str(exception).lower()
         assert exception.provider == "BedrockLLM"
-        
+
         # Check specific exception properties
         if isinstance(exception, RateLimitError):
             assert exception.retry_after is not None
             assert exception.retry_after > 0
-        
+
         if isinstance(exception, LLMMistake):
             assert exception.error_type == "api_error"
-            
+
         assert "details" in dir(exception)
         assert "original_error" in exception.details
-        
+
+
 def test_image_processing_errors():
     """Test image processing error handling."""
-    from src.llmhandler.exceptions import LLMMistake
-    
+
     # Create a fresh instance with mocked dependencies
     with patch.object(BedrockLLM, "auth"):
         llm = BedrockLLM(model_name="us.anthropic.claude-3-5-sonnet-20241022-v2:0")
-    
+
     # Test file not found error
     with patch("open", side_effect=FileNotFoundError("File not found")):
         with pytest.raises(LLMMistake) as exc:
             llm._get_image_bytes("/path/to/nonexistent.jpg")
-        
+
         exception = exc.value
         assert isinstance(exception, LLMMistake)
         assert "Failed to read image" in str(exception)
         assert exception.error_type == "image_processing_error"
         assert exception.provider == "BedrockLLM"
         assert "path" in exception.details
-        
+
     # Test general image processing error
-    with patch("open") as mock_open, patch("PIL.Image.open", side_effect=Exception("Invalid image format")):
+    with patch("open") as mock_open, patch(
+        "PIL.Image.open", side_effect=Exception("Invalid image format")
+    ):
         # Mock the file open but fail on image processing
         mock_open.return_value.__enter__.return_value = MagicMock()
-        
+
         with pytest.raises(LLMMistake) as exc:
             llm._get_image_bytes("/path/to/corrupted.jpg")
-            
+
         exception = exc.value
         assert isinstance(exception, LLMMistake)
         assert "Failed to process image" in str(exception)
         assert exception.error_type == "image_processing_error"
-        
+
     # Test URL download error
     with patch("requests.get", side_effect=Exception("Failed to download")):
         with pytest.raises(LLMMistake) as exc:
             llm._download_image_from_url("https://example.com/image.jpg")
-            
+
         exception = exc.value
         assert isinstance(exception, LLMMistake)
         assert "Failed to download image" in str(exception)
@@ -350,22 +352,25 @@ def test_tool_formatting(bedrock_llm):
                 },
                 "required": ["name"],
             },
-        }
+        },
     ]
-    
+
     formatted = bedrock_llm._format_tools_for_model(tools)
 
     # Check basic tool structure - should use Bedrock's toolSpec format
     assert "tools" in formatted
     assert len(formatted["tools"]) == 2
-    
+
     # Check first tool
     assert "toolSpec" in formatted["tools"][0]
     assert formatted["tools"][0]["toolSpec"]["name"] == "test_tool1"
-    assert formatted["tools"][0]["toolSpec"]["description"] == "Multiply x by the length of y"
+    assert (
+        formatted["tools"][0]["toolSpec"]["description"]
+        == "Multiply x by the length of y"
+    )
     assert "inputSchema" in formatted["tools"][0]["toolSpec"]
     assert "json" in formatted["tools"][0]["toolSpec"]["inputSchema"]
-    
+
     # Check first tool schema
     schema_json = formatted["tools"][0]["toolSpec"]["inputSchema"]["json"]
     assert schema_json["type"] == "object"
@@ -378,7 +383,7 @@ def test_tool_formatting(bedrock_llm):
 
     # Check second tool with optional parameters
     assert formatted["tools"][1]["toolSpec"]["name"] == "test_tool2"
-    
+
     # Check second tool schema
     schema_json = formatted["tools"][1]["toolSpec"]["inputSchema"]["json"]
     assert "name" in schema_json["properties"]

@@ -1,15 +1,20 @@
 """
 Unit tests for the router module.
 """
-from unittest.mock import MagicMock, patch
+
+from unittest.mock import patch
 
 import pytest
 
-from src.llmhandler.models.base import LLM
-from src.llmhandler.models.router import (MODEL_MAPPINGS, PROVIDER_REGISTRY,
-                                          get_llm_from_model,
-                                          list_available_models,
-                                          register_model, register_provider)
+from src.lluminary.models.base import LLM
+from src.lluminary.models.router import (
+    MODEL_MAPPINGS,
+    PROVIDER_REGISTRY,
+    get_llm_from_model,
+    list_available_models,
+    register_model,
+    register_provider,
+)
 
 
 class MockLLM(LLM):
@@ -133,7 +138,7 @@ def test_get_llm_from_registered_model():
         register_model("custom-model", "mock_provider", "test-model")
 
         # Get LLM from the registered model
-        with patch("src.llmhandler.models.router._load_default_providers"):
+        with patch("src.lluminary.models.router._load_default_providers"):
             llm = get_llm_from_model("custom-model")
 
             # Check if correct LLM was returned

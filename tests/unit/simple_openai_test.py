@@ -1,11 +1,12 @@
 """Simple tests for OpenAI provider."""
 
-import pytest
-import requests
 from unittest.mock import MagicMock, patch
 
-from src.llmhandler.models.providers.openai import OpenAILLM
-from src.llmhandler.exceptions import ServiceUnavailableError
+import pytest
+import requests
+
+from src.lluminary.exceptions import ServiceUnavailableError
+from src.lluminary.models.providers.openai import OpenAILLM
 
 
 def test_openai_init():
@@ -20,21 +21,22 @@ def test_openai_timeout_handling():
     with patch.object(OpenAILLM, "auth"):
         # Create LLM instance with mock
         llm = OpenAILLM("gpt-4o", api_key="test-key")
-        
+
         # Mock the client
         llm.client = MagicMock()
-        
+
         # Mock a timeout error
-        llm.client.chat.completions.create.side_effect = requests.exceptions.Timeout("Request timed out")
-        
+        llm.client.chat.completions.create.side_effect = requests.exceptions.Timeout(
+            "Request timed out"
+        )
+
         # Try to generate - this should handle the timeout
         with pytest.raises(ServiceUnavailableError) as excinfo:
             llm._raw_generate(
                 event_id="test",
                 system_prompt="Test",
-                messages=[{"message_type": "human", "message": "Hello"}]
+                messages=[{"message_type": "human", "message": "Hello"}],
             )
-            
+
         # Check that error was properly wrapped
         assert "timed out" in str(excinfo.value).lower()
-

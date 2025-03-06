@@ -1,18 +1,17 @@
 """
 Extended integration tests for advanced features like JSON mode, tool use, and long context handling.
 """
+
 import json
-import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
 
 import pytest
 
 # Add the package to path for testing
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.llmhandler import get_llm_from_model
+from src.lluminary import get_llm_from_model
 
 
 @pytest.mark.integration
@@ -97,7 +96,7 @@ class TestAdvancedFeaturesExtended:
                     continue
 
             except Exception as e:
-                print(f"Skipping JSON mode test for {provider}: {str(e)}")
+                print(f"Skipping JSON mode test for {provider}: {e!s}")
 
         # If we didn't break out of the loop, no provider worked
         else:
@@ -147,7 +146,7 @@ class TestAdvancedFeaturesExtended:
                 break
 
             except Exception as e:
-                print(f"Skipping long context test for {provider}: {str(e)}")
+                print(f"Skipping long context test for {provider}: {e!s}")
 
         if not successful:
             pytest.skip("No providers available for long context test")
@@ -226,7 +225,7 @@ class TestAdvancedFeaturesExtended:
                 break
 
             except Exception as e:
-                print(f"Skipping tool use test for {provider}: {str(e)}")
+                print(f"Skipping tool use test for {provider}: {e!s}")
 
         # If we didn't break out of the loop, no provider worked
         else:

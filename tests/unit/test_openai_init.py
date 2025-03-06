@@ -1,11 +1,12 @@
 """
 Basic tests for OpenAI provider initialization and authentication.
 """
+
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.llmhandler.models.providers.openai import OpenAILLM
+from src.lluminary.models.providers.openai import OpenAILLM
 
 
 @pytest.fixture
@@ -20,7 +21,7 @@ def openai_llm():
 
         # Initialize client attribute directly for tests
         llm.client = MagicMock()
-        
+
         yield llm
 
 
@@ -29,7 +30,7 @@ def test_openai_initialization(openai_llm):
     # Verify model-related settings in initialization
     assert openai_llm.model_name == "gpt-4o"
     assert openai_llm.config["api_key"] == "test-key"
-    
+
     # Test validation of model name during initialization
     assert openai_llm.validate_model("gpt-4o") is True
     assert openai_llm.validate_model("invalid-model") is False

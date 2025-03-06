@@ -1,7 +1,20 @@
-# Agent Session Notes
+# IMPLEMENTATION NOTES
 
-## Project Overview
-This project is a provider-agnostic LLM handler that supports multiple providers (OpenAI, Anthropic, and Bedrock) with a focus on reliability, error handling, and consistent behavior.
+## Overview
+
+This document provides essential implementation guidance for the LLuMinary library. The library is a provider-agnostic LLM handler that supports multiple providers (OpenAI, Anthropic, Google, Cohere, and Bedrock) with a focus on reliability, error handling, and consistent behavior.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Architectural Decisions](#key-architectural-decisions)
+- [Implementation Details](#implementation-details)
+- [Common Pitfalls](#common-pitfalls)
+- [Future Considerations](#future-considerations)
+- [Critical Notes](#critical-notes)
+- [Development Environment](#development-environment)
+- [Common Issues and Solutions](#common-issues-and-solutions)
+- [Related Documentation](#related-documentation)
 
 ## Key Architectural Decisions
 
@@ -149,3 +162,12 @@ python -m pytest tests/ -v
 - Track provider costs
 
 Remember: This project prioritizes reliability and consistency over performance. Keep operations synchronous and maintain thorough testing.
+
+## Related Documentation
+
+- [API_REFERENCE](../API_REFERENCE.md) - Complete API reference for all components
+- [ARCHITECTURE](../ARCHITECTURE.md) - System architecture and component relationships
+- [MODELS](./MODELS.md) - Detailed information about model implementations
+- [ERROR_HANDLING](./ERROR_HANDLING.md) - Error handling guidelines and implementation
+- [PROVIDER_TESTING](./PROVIDER_TESTING.md) - Testing guidelines for provider implementations
+- [TEST_COVERAGE](../TEST_COVERAGE.md) - Current test coverage status and goals

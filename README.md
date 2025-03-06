@@ -1,13 +1,16 @@
-# LLM Handler
+# LLuMinary
 
-A versatile Python library for interacting with multiple LLM providers through a unified interface.
+A versatile Python library for illuminating the path to multiple LLM providers through a unified interface.
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/PimpMyNines/LLuMinary/actions/workflows/ci.yml/badge.svg)](https://github.com/PimpMyNines/LLuMinary/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/gh/PimpMyNines/LLuMinary/branch/main/graph/badge.svg)](https://codecov.io/gh/PimpMyNines/LLuMinary)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://pimpmy9s.github.io/LLuMinary/)
 
 ## Overview
 
-LLM Handler provides a clean, extensible interface for working with various LLM providers including OpenAI, Anthropic, Google, and Cohere. It handles all the complexity of provider-specific implementations, message formatting, and error handling, allowing you to focus on building applications.
+LLuMinary provides a clean, extensible interface for working with various LLM providers including OpenAI, Anthropic, Google, and Cohere. It handles all the complexity of provider-specific implementations, message formatting, and error handling, allowing you to focus on building applications.
 
 ## Features
 
@@ -36,7 +39,7 @@ LLM Handler provides a clean, extensible interface for working with various LLM 
 ## Installation
 
 ```bash
-pip install llm-handler
+pip install lluminary
 ```
 
 ## Quick Start
@@ -431,7 +434,7 @@ You can run the following examples in a Jupyter notebook to test the LLM Handler
 
 ```python
 # Install the library (if needed)
-!pip install llm-handler
+!pip install lluminary
 
 # Import necessary components
 from llmhandler import get_llm_from_model
@@ -628,9 +631,9 @@ print(f"Python version: {sys.version}")
 # Check package version
 try:
     import llmhandler
-    print(f"LLM Handler version: {llmhandler.__version__}")
+    print(f"LLuMinary version: {llmhandler.__version__}")
 except (ImportError, AttributeError):
-    print("LLM Handler package not found or version not available")
+    print("LLuMinary package not found or version not available")
 
 # Check API key configuration (safely)
 def mask_key(key):

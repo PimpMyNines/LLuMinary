@@ -2,10 +2,11 @@
 Integration tests for advanced LLM features: response processing, retries, function calling,
 and thinking budget. Tests use real API calls and skip gracefully when credentials aren't available.
 """
+
 import pytest
 
-from src.llmhandler.exceptions import LLMMistake
-from src.llmhandler.models.router import get_llm_from_model
+from src.lluminary.exceptions import LLMMistake
+from src.lluminary.models.router import get_llm_from_model
 
 
 # Define validator function used in multiple tests
@@ -99,7 +100,7 @@ class TestResponseProcessing:
                 break
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 failed_models.append((model_name, str(e)))
 
         # Print summary
@@ -171,7 +172,7 @@ class TestResponseProcessing:
                     )
                     # We should never get here
                     assert False, "Expected LLMMistake exception was not raised"
-                except LLMMistake as e:
+                except LLMMistake:
                     # Verify we retried the correct number of times
                     assert retry_count == retry_limit + 1  # Initial attempt + retries
                     print(
@@ -185,7 +186,7 @@ class TestResponseProcessing:
                 return
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 continue
 
         # If we get here, no models worked
@@ -232,7 +233,7 @@ class TestFunctionCalling:
                 llm = get_llm_from_model(model_name)
 
                 # First generate - should trigger function call
-                print(f"Sending query that should trigger function call...")
+                print("Sending query that should trigger function call...")
                 response, usage, messages = llm.generate(
                     event_id="test_function_calling",
                     system_prompt="You are a helpful assistant.",
@@ -251,12 +252,12 @@ class TestFunctionCalling:
                 # Print results of first call
                 print(f"Response: {response[:50]}...")
                 used_tool = "No tool used"
-                if "tool_use" in usage and usage["tool_use"]:
+                if usage.get("tool_use"):
                     used_tool = f"Tool used: {usage['tool_use'].get('name') or usage['tool_use'].get('id')}"
                 print(used_tool)
 
                 # Continue conversation with tool result if tool was used
-                if "tool_use" in usage and usage["tool_use"]:
+                if usage.get("tool_use"):
                     tool_id = usage["tool_use"].get("id") or usage["tool_use"].get(
                         "name"
                     )
@@ -274,7 +275,7 @@ class TestFunctionCalling:
                         }
                     )
 
-                    print(f"Sending follow-up with tool result...")
+                    print("Sending follow-up with tool result...")
                     final_response, final_usage, _ = llm.generate(
                         event_id="test_function_calling_followup",
                         system_prompt="You are a helpful assistant.",
@@ -301,7 +302,7 @@ class TestFunctionCalling:
                 successful_models.append(model_name)
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 failed_models.append((model_name, str(e)))
 
         # Print summary
@@ -362,7 +363,7 @@ class TestThinkingBudget:
                     continue
 
                 # Generate response with thinking budget
-                print(f"Generating response with thinking budget...")
+                print("Generating response with thinking budget...")
                 response, usage, _ = llm.generate(
                     event_id="test_thinking_budget",
                     system_prompt="You are a helpful AI assistant.",
@@ -393,7 +394,7 @@ class TestThinkingBudget:
                 return
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 continue
 
         # If we get here, no models worked

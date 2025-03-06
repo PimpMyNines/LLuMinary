@@ -1,22 +1,21 @@
 """
 Unit tests for the Anthropic provider implementation.
 """
-import base64
+
 import json
-from io import BytesIO
-from typing import Any, Dict, List
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.llmhandler.exceptions import LLMMistake, ProviderError
-from src.llmhandler.models.providers.anthropic import AnthropicLLM
+from src.lluminary.models.providers.anthropic import AnthropicLLM
 
 
 @pytest.fixture
 def anthropic_llm():
     """Fixture for Anthropic LLM instance."""
-    with patch("anthropic.Anthropic") as mock_anthropic, patch("requests.post") as mock_post:
+    with patch("anthropic.Anthropic") as mock_anthropic, patch(
+        "requests.post"
+    ) as mock_post:
         # Configure mock response for requests.post
         mock_response = MagicMock()
         mock_response.json.return_value = {
@@ -28,18 +27,18 @@ def anthropic_llm():
 
         # Create the LLM instance with mock API key
         llm = AnthropicLLM("claude-3-5-sonnet-20241022", api_key="test-key")
-        
+
         # Ensure client is initialized
         llm.client = MagicMock()
-        
+
         # Ensure config exists
-        if not hasattr(llm, 'config'):
+        if not hasattr(llm, "config"):
             llm.config = {}
-        
+
         # Add client to config as expected by implementation
         llm.config["client"] = llm.client
         llm.config["api_key"] = "test-key"
-        
+
         yield llm
 
 
@@ -48,33 +47,36 @@ def test_supported_model_lists(anthropic_llm):
     # Make sure appropriate lists are populated
     assert len(anthropic_llm.SUPPORTED_MODELS) > 0
     assert len(anthropic_llm.THINKING_MODELS) > 0
-    
+
     # Check that core models are included
     assert "claude-3-5-sonnet-20241022" in anthropic_llm.SUPPORTED_MODELS
     assert "claude-3-7-sonnet-20250219" in anthropic_llm.THINKING_MODELS
-    
+
     # Verify model list relationships
     # Thinking models should be a subset of supported models
-    assert all(model in anthropic_llm.SUPPORTED_MODELS for model in anthropic_llm.THINKING_MODELS)
-    
+    assert all(
+        model in anthropic_llm.SUPPORTED_MODELS
+        for model in anthropic_llm.THINKING_MODELS
+    )
+
     # Verify that cost and context window data is properly configured for each model
     for model_name in anthropic_llm.SUPPORTED_MODELS:
         assert model_name in anthropic_llm.CONTEXT_WINDOW
         assert model_name in anthropic_llm.COST_PER_MODEL
-        
+
         # Verify cost structure is correct
         model_costs = anthropic_llm.COST_PER_MODEL[model_name]
         assert "read_token" in model_costs
         assert "write_token" in model_costs
-        
+
         # Verify image cost for Claude 3 models
         if "claude-3" in model_name:
             assert "image_cost" in model_costs
-        
+
         # Verify values are of the expected type
         assert isinstance(model_costs["read_token"], (int, float))
         assert isinstance(model_costs["write_token"], (int, float))
-        
+
         # Verify context window is a number
         assert isinstance(anthropic_llm.CONTEXT_WINDOW[model_name], int)
 
@@ -84,7 +86,7 @@ def test_anthropic_initialization(anthropic_llm):
     # Verify basic initialization properties
     assert anthropic_llm.model_name == "claude-3-5-sonnet-20241022"
     assert anthropic_llm.config["api_key"] == "test-key"
-    
+
     # Test validate_model
     assert anthropic_llm.validate_model("claude-3-5-sonnet-20241022") is True
     assert anthropic_llm.validate_model("invalid-model") is False

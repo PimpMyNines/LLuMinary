@@ -15,20 +15,17 @@ To run this example, make sure you have your API keys set in the environment:
 
 import json
 import os
-# Add parent directory to path to import llmhandler
+
+# Add parent directory to path to import lluminary
 import sys
 import time
 from datetime import datetime, timedelta
 
-import matplotlib.pyplot as plt
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from llmhandler import get_llm_from_model
-
+from lluminary import get_llm_from_model
 from monitoring.alerting import check_alerts, set_alert_threshold
-from monitoring.analytics import (analyze_metrics, collect_metrics,
-                                  get_metrics_over_time)
+from monitoring.analytics import analyze_metrics, collect_metrics, get_metrics_over_time
 
 # Set API keys from environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

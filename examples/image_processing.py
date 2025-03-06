@@ -1,7 +1,8 @@
 """
 Image processing examples for LLMHandler package.
 """
-from llmhandler import get_llm_from_model
+
+from lluminary import get_llm_from_model
 
 
 def image_description(image_url):

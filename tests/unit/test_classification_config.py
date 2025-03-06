@@ -1,9 +1,9 @@
 """
 Unit tests for the classification configuration classes.
 """
+
 import json
 import os
-from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -11,8 +11,10 @@ import pytest
 # Mark all tests in this file as classification tests
 pytestmark = pytest.mark.classification
 
-from src.llmhandler.models.classification.config import (ClassificationConfig,
-                                                         ClassificationLibrary)
+from src.lluminary.models.classification.config import (
+    ClassificationConfig,
+    ClassificationLibrary,
+)
 
 
 def test_classification_config_initialization():
@@ -131,7 +133,7 @@ def test_classification_config_file_operations():
         assert os.path.exists(file_path)
 
         # Verify file contents
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             data = json.load(f)
             assert data["name"] == "test_config"
             assert "cat1" in data["categories"]

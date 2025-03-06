@@ -1,14 +1,15 @@
 """
 Unit tests for the Classifier class.
 """
+
 import pytest
 
 # Mark all tests in this file as classification tests
 pytestmark = pytest.mark.classification
 from unittest.mock import MagicMock, patch
 
-from src.llmhandler.models.classification.classifier import Classifier
-from src.llmhandler.models.classification.validators import ValidationError
+from src.lluminary.models.classification.classifier import Classifier
+from src.lluminary.models.classification.validators import ValidationError
 
 
 class TestClassifier:
@@ -139,7 +140,7 @@ class TestClassifier:
         assert result == ["cat3"]
 
     @patch(
-        "src.llmhandler.models.classification.classifier.validate_classification_response"
+        "src.lluminary.models.classification.classifier.validate_classification_response"
     )
     def test_result_processing(self, mock_validate):
         """Test the result processing function passed to generate."""

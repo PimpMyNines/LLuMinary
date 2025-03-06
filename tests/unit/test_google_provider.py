@@ -1,15 +1,12 @@
 """
 Unit tests for the Google Gemini provider implementation.
 """
-from io import BytesIO
-from typing import Any, Dict, List
-from unittest.mock import ANY, MagicMock, patch
+
+from unittest.mock import MagicMock, patch
 
 import pytest
-from PIL import Image
 
-from src.llmhandler.exceptions import LLMMistake
-from src.llmhandler.models.providers.google import GoogleLLM
+from src.lluminary.models.providers.google import GoogleLLM
 
 
 @pytest.fixture
@@ -35,22 +32,22 @@ def mock_google_client():
 def google_llm(mock_google_client):
     """Fixture to create an instance of GoogleLLM with mocked dependencies."""
     with patch(
-        "src.llmhandler.utils.get_secret",
+        "src.lluminary.utils.get_secret",
         return_value={"api_key": "test_api_key"},
     ):
         llm = GoogleLLM("gemini-2.0-flash")
-        
+
         # Force authentication
         llm.auth()
-        
+
         # Ensure config exists
-        if not hasattr(llm, 'config'):
+        if not hasattr(llm, "config"):
             llm.config = {}
-        
+
         # Add essential config properties
         llm.config["api_key"] = "test_api_key"
         llm.config["client"] = mock_google_client.return_value
-        
+
         yield llm
 
 
@@ -58,33 +55,33 @@ def test_supported_model_lists():
     """Test that the model lists are properly configured."""
     # Make sure appropriate lists are populated
     assert len(GoogleLLM.SUPPORTED_MODELS) > 0
-    
+
     # Check that core models are included
     assert "gemini-2.0-flash" in GoogleLLM.SUPPORTED_MODELS
-    
+
     # Add special model list handling (they might not exist in all versions)
-    thinking_models = getattr(GoogleLLM, 'THINKING_MODELS', [])
+    thinking_models = getattr(GoogleLLM, "THINKING_MODELS", [])
     # If it exists, test it has the right type
     if thinking_models:
         assert isinstance(thinking_models, list)
-    
+
     # Verify model list relationships
     # Google models should all have costs and context windows
     for model_name in GoogleLLM.SUPPORTED_MODELS:
         assert model_name in GoogleLLM.CONTEXT_WINDOW
         assert model_name in GoogleLLM.COST_PER_MODEL
-        
+
         # Verify cost structure is correct
         model_costs = GoogleLLM.COST_PER_MODEL[model_name]
         assert "read_token" in model_costs
         assert "write_token" in model_costs
         assert "image_cost" in model_costs
-        
+
         # Verify values are of the expected type
         assert isinstance(model_costs["read_token"], (int, float))
         assert isinstance(model_costs["write_token"], (int, float))
         assert isinstance(model_costs["image_cost"], (int, float))
-        
+
         # Verify context window is a number
         assert isinstance(GoogleLLM.CONTEXT_WINDOW[model_name], int)
 
@@ -98,11 +95,11 @@ def test_google_instance_creation():
         assert llm is not None
         assert llm.model_name == "gemini-2.0-flash"
         assert llm.api_key == "test-key"
-        
+
         # Test validate_model
         assert llm.validate_model("gemini-2.0-flash") is True
         assert llm.validate_model("invalid-model") is False
-        
+
         # Check image support
         assert llm.SUPPORTS_IMAGES is True
 
@@ -110,7 +107,7 @@ def test_google_instance_creation():
 def test_auth(mock_google_client):
     """Test authentication process."""
     with patch(
-        "src.llmhandler.utils.get_secret",
+        "src.lluminary.utils.get_secret",
         return_value={"api_key": "test_api_key"},
     ):
         llm = GoogleLLM("gemini-2.0-flash")
@@ -121,7 +118,7 @@ def test_auth(mock_google_client):
 
     # Test authentication with thinking model (different API version)
     with patch(
-        "src.llmhandler.utils.get_secret",
+        "src.lluminary.utils.get_secret",
         return_value={"api_key": "test_api_key"},
     ):
         llm = GoogleLLM("gemini-2.0-flash-thinking-exp-01-21")
@@ -137,8 +134,7 @@ def test_auth(mock_google_client):
 @patch("PIL.Image.open")
 def test_process_image(mock_image_open, mock_requests_get, google_llm):
     """Test image processing for both file paths and URLs."""
-    from src.llmhandler.exceptions import LLMMistake
-    
+
     # Setup mock response for URL
     mock_response = MagicMock()
     mock_response.content = b"fake_image_data"
@@ -163,7 +159,7 @@ def test_process_image(mock_image_open, mock_requests_get, google_llm):
     mock_requests_get.side_effect = Exception("Failed to fetch image")
     with pytest.raises(LLMMistake) as exc:
         google_llm._process_image("https://example.com/bad_image.jpg", is_url=True)
-    
+
     # Verify LLMMistake exception details
     exception = exc.value
     assert isinstance(exception, LLMMistake)
@@ -172,13 +168,13 @@ def test_process_image(mock_image_open, mock_requests_get, google_llm):
     assert exception.provider == "GoogleLLM"
     assert "source" in exception.details
     assert "original_error" in exception.details
-    
+
     # Test error handling for invalid file path
     mock_requests_get.side_effect = None
     mock_image_open.side_effect = FileNotFoundError("No such file")
     with pytest.raises(LLMMistake) as exc:
         google_llm._process_image("/path/to/nonexistent/image.jpg")
-    
+
     # Verify LLMMistake exception details for file error
     exception = exc.value
     assert isinstance(exception, LLMMistake)
@@ -336,13 +332,11 @@ def test_image_handling(google_llm, mock_google_client):
 def test_error_handling(google_llm, mock_google_client):
     """Test error handling during generation."""
     # Import relevant exception classes
-    from src.llmhandler.exceptions import (
-        LLMMistake, 
-        AuthenticationError,
+    from src.lluminary.exceptions import (
         RateLimitError,
-        ServiceUnavailableError
+        ServiceUnavailableError,
     )
-    
+
     # Define error cases to test
     error_cases = [
         # Rate limit error
@@ -370,50 +364,50 @@ def test_error_handling(google_llm, mock_google_client):
             "expected_contains": "Google API generation failed",
         },
     ]
-    
+
     # Test each error case
     client_instance = mock_google_client.return_value
     for error_case in error_cases:
         # Set up the error
         client_instance.models.generate_content.side_effect = error_case["exception"]
-        
+
         # Create test message
         messages = [{"message_type": "human", "message": "Generate an error"}]
-        
+
         # Call generate and expect an exception
         with pytest.raises(error_case["expected_exception"]) as exc_info:
             google_llm._raw_generate(
                 event_id="test_event", system_prompt="", messages=messages
             )
-        
+
         # Verify exception type and message
         exception = exc_info.value
         assert isinstance(exception, error_case["expected_exception"])
         assert error_case["expected_contains"] in str(exception).lower()
         assert "Google" in str(exception)
-        
+
         # For LLMMistake, check error_type and provider fields
         if isinstance(exception, LLMMistake):
             assert exception.provider == "GoogleLLM"
             assert exception.error_type == "api_error"
             assert "original_error" in exception.details
-        
+
         # For RateLimitError, check retry_after
         if isinstance(exception, RateLimitError):
             assert exception.provider == "GoogleLLM"
             assert exception.retry_after is not None
             assert exception.retry_after > 0
-            
+
         # Reset for next test
         client_instance.models.generate_content.side_effect = None
         client_instance.models.generate_content.reset_mock()
-    
+
     # Test invalid model error
     with pytest.raises(ValueError) as exc_info:
         # Create a new instance with an invalid model
         with patch.object(GoogleLLM, "auth"):
             GoogleLLM("non-existent-model", api_key="test-key")
-    
+
     assert "not supported" in str(exc_info.value).lower()
     assert "non-existent-model" in str(exc_info.value)
 
@@ -608,7 +602,7 @@ def test_classification(google_llm):
         call_args = mock_generate.call_args[1]
         assert "system_prompt" in call_args
         assert "categories" in call_args["system_prompt"]
-        
+
         # Test with examples
         examples = [
             {
@@ -622,19 +616,19 @@ def test_classification(google_llm):
                 "selection": "command",
             },
         ]
-        
+
         # Reset mock
         mock_generate.reset_mock()
-        
+
         # Call classify with examples
         google_llm.classify(messages=messages, categories=categories, examples=examples)
-        
+
         # Verify examples were incorporated into prompt
         call_args = mock_generate.call_args[1]
         system_prompt = call_args.get("system_prompt", "")
         assert "capital of France" in system_prompt
         assert "close the door" in system_prompt
-        
+
         # Test with multiple categories selection
         mock_generate.reset_mock()
         mock_generate.return_value = (
@@ -647,14 +641,12 @@ def test_classification(google_llm):
             },
             None,
         )
-        
+
         # Call with allow_multiple=True
         result, usage = google_llm.classify(
-            messages=messages, 
-            categories=categories, 
-            allow_multiple=True
+            messages=messages, categories=categories, allow_multiple=True
         )
-        
+
         # Verify multiple categories are returned
         assert "question" in result
         assert "statement" in result

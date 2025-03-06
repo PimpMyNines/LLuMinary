@@ -1,7 +1,7 @@
 """
 Tests for the document reranking functionality.
 """
-import os
+
 import sys
 import unittest
 from pathlib import Path
@@ -10,10 +10,8 @@ from unittest.mock import MagicMock, patch
 # Add the package to path for testing
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from llmhandler import get_llm_from_model
-from llmhandler.models import set_provider_config
-from llmhandler.models.providers.cohere import CohereLLM
-from llmhandler.models.providers.openai import OpenAILLM
+from lluminary import get_llm_from_model
+from lluminary.models import set_provider_config
 
 
 class TestReranking(unittest.TestCase):

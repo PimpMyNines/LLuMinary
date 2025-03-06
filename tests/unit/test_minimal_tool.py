@@ -3,7 +3,7 @@
 
 def test_tool_imports():
     """Test that we can import from the tools module."""
-    from src.llmhandler.tools import ToolRegistry
+    from src.lluminary.tools import ToolRegistry
 
     registry = ToolRegistry()
     assert isinstance(registry, ToolRegistry)

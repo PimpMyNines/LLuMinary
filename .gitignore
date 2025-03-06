@@ -46,4 +46,55 @@ Thumbs.db
 .docker/
 
 # Data
-data/ 
+data/
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+
+# Development tools
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Project specific
+.env.*
+!.env.example
+
+# Documentation builds
+docs/build/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Build artifacts
+*.so
+*.dylib
+*.dll
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+.terragrunt-cache/
+
+# AWS
+.aws-sam/
+
+# Project-specific files
+AGENT_NOTES.md
+CLAUDE.md
+migrate_package.py

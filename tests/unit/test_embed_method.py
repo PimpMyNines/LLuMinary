@@ -1,13 +1,11 @@
 """
 Simple unit tests for embedding functionality.
 """
+
 import sys
 import unittest
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 # Add the package to path for testing
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
@@ -26,7 +24,7 @@ class TestEmbedFunctionality(unittest.TestCase):
         self.patcher.start()
 
         # Now we can import the class
-        from src.llmhandler.models.providers.openai import OpenAILLM
+        from src.lluminary.models.providers.openai import OpenAILLM
 
         self.OpenAILLM = OpenAILLM
 

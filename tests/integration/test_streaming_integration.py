@@ -1,18 +1,17 @@
 """
 Integration tests for the streaming functionality.
 """
+
 import asyncio
-import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
 
 import pytest
 
 # Add the package to path for testing
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.llmhandler import get_llm_from_model
+from src.lluminary import get_llm_from_model
 
 
 @pytest.mark.integration
@@ -74,7 +73,7 @@ class TestStreamingIntegration:
             assert "".join(received_chunks) == result
 
         except Exception as e:
-            pytest.skip(f"Skipping OpenAI streaming test: {str(e)}")
+            pytest.skip(f"Skipping OpenAI streaming test: {e!s}")
 
     def test_anthropic_streaming(self):
         """Test Anthropic streaming functionality with actual API calls."""
@@ -118,7 +117,7 @@ class TestStreamingIntegration:
             assert "".join(received_chunks) == result
 
         except Exception as e:
-            pytest.skip(f"Skipping Anthropic streaming test: {str(e)}")
+            pytest.skip(f"Skipping Anthropic streaming test: {e!s}")
 
     def test_google_streaming(self):
         """Test Google streaming functionality with actual API calls."""
@@ -162,7 +161,7 @@ class TestStreamingIntegration:
             assert "".join(received_chunks) == result
 
         except Exception as e:
-            pytest.skip(f"Skipping Google streaming test: {str(e)}")
+            pytest.skip(f"Skipping Google streaming test: {e!s}")
 
     def test_bedrock_streaming(self):
         """Test AWS Bedrock streaming functionality with actual API calls."""
@@ -206,7 +205,7 @@ class TestStreamingIntegration:
             assert "".join(received_chunks) == result
 
         except Exception as e:
-            pytest.skip(f"Skipping Bedrock streaming test: {str(e)}")
+            pytest.skip(f"Skipping Bedrock streaming test: {e!s}")
 
     def test_cross_provider_streaming(self):
         """Test streaming across all providers and compare performance."""
@@ -249,7 +248,7 @@ class TestStreamingIntegration:
                 }
 
             except Exception as e:
-                print(f"Skipping {provider} streaming test: {str(e)}")
+                print(f"Skipping {provider} streaming test: {e!s}")
 
         # Skip test if no providers worked
         if not results:
@@ -326,7 +325,7 @@ class TestStreamingIntegration:
             assert usage_data["is_complete"] is True
 
         except Exception as e:
-            pytest.skip(f"Skipping cancellation test: {str(e)}")
+            pytest.skip(f"Skipping cancellation test: {e!s}")
 
 
 if __name__ == "__main__":

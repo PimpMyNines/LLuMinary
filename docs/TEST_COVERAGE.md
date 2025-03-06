@@ -1,6 +1,8 @@
-# Test Coverage Reference
+# TEST COVERAGE REFERENCE
 
-This document provides an overview of the current test coverage for the LLM Handler library and identifies areas where additional testing is needed.
+## Overview
+
+This document provides a comprehensive overview of the current test coverage for the LLuMinary library and identifies areas where additional testing is needed. It serves as a reference for developers to understand the testing status and prioritize new test implementations.
 
 ## Table of Contents
 
@@ -261,3 +263,11 @@ def test_classify_from_config():
     assert usage["total_tokens"] == ...
     assert usage["total_cost"] == ...
 ```
+
+## Related Documentation
+
+- [API_REFERENCE](./API_REFERENCE.md) - Complete API reference for all components
+- [ARCHITECTURE](./ARCHITECTURE.md) - Overall system architecture
+- [PROVIDER_TESTING](./development/PROVIDER_TESTING.md) - Provider-specific testing guidance
+- [ERROR_HANDLING](./development/ERROR_HANDLING.md) - Error handling implementation details
+- [IMPLEMENTATION_NOTES](./development/IMPLEMENTATION_NOTES.md) - General implementation guidelines

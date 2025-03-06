@@ -2,9 +2,10 @@
 Integration tests for image processing functionality.
 Tests real image processing with graceful skipping when auth fails.
 """
+
 import pytest
 
-from src.llmhandler.models.router import get_llm_from_model
+from src.lluminary.models.router import get_llm_from_model
 
 
 @pytest.mark.integration
@@ -85,7 +86,7 @@ class TestImageProcessing:
                 successful_models.append(model_name)
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 failed_models.append((model_name, str(e)))
 
         # Print summary
@@ -167,7 +168,7 @@ class TestImageProcessing:
                 return
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 continue
 
         # If we get here, no models worked

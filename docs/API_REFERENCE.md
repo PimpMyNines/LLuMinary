@@ -1,4 +1,8 @@
-# LLM Handler API Reference
+# LLUMINARY API REFERENCE
+
+## Overview
+
+This document provides detailed API references for the LLuMinary library, including core interfaces, provider implementations, and advanced features.
 
 ## Table of Contents
 
@@ -629,3 +633,10 @@ response, usage, updated_messages = llm.generate(
     retry_limit=3  # Will retry up to 3 times if the generation fails
 )
 ```
+
+## Related Documentation
+
+- [ARCHITECTURE](./ARCHITECTURE.md) - Detailed architecture of the LLuMinary library
+- [TUTORIALS](./TUTORIALS.md) - Step-by-step tutorials for common use cases
+- [TEST_COVERAGE](./TEST_COVERAGE.md) - Current test coverage status
+- [ERROR_HANDLING](./development/ERROR_HANDLING.md) - Comprehensive error handling guidelines

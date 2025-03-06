@@ -2,14 +2,14 @@
 Comprehensive cross-provider integration tests.
 Tests key features across all providers with graceful skipping when auth fails.
 """
+
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, List, Any
 
 import pytest
 
-from src.llmhandler.handler import LLMHandler
-from src.llmhandler.models.router import get_llm_from_model
+from src.lluminary.handler import LLMHandler
+from src.lluminary.models.router import get_llm_from_model
 
 # Mark all tests in this file as cross-provider integration tests
 pytestmark = [pytest.mark.integration, pytest.mark.cross_provider]
@@ -64,14 +64,16 @@ class TestCrossProviderIntegration:
 
                 # Print results
                 print(f"Response: {response[:100]}...")
-                print(f"Tokens: {usage['read_tokens']} read, {usage['write_tokens']} write")
+                print(
+                    f"Tokens: {usage['read_tokens']} read, {usage['write_tokens']} write"
+                )
                 print(f"Cost: ${usage['total_cost']:.6f}")
 
                 successful_models.append(f"handler:{model_name}")
                 all_results[f"handler:{model_name}"] = response
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 failed_models.append((f"handler:{model_name}", str(e)))
 
         # Test with direct provider interfaces
@@ -101,14 +103,16 @@ class TestCrossProviderIntegration:
 
                 # Print results
                 print(f"Response: {response[:100]}...")
-                print(f"Tokens: {usage['read_tokens']} read, {usage['write_tokens']} write")
+                print(
+                    f"Tokens: {usage['read_tokens']} read, {usage['write_tokens']} write"
+                )
                 print(f"Cost: ${usage['total_cost']:.6f}")
 
                 successful_models.append(f"direct:{model_name}")
                 all_results[f"direct:{model_name}"] = response
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 failed_models.append((f"direct:{model_name}", str(e)))
 
         # Print summary
@@ -170,12 +174,14 @@ class TestCrossProviderIntegration:
                 llm.generate(
                     event_id="test_error_handling",
                     system_prompt="You are a helpful assistant.",
-                    messages=[{
-                        "message_type": "human",
-                        "message": "Hello",
-                        "image_paths": [],
-                        "image_urls": [],
-                    }],
+                    messages=[
+                        {
+                            "message_type": "human",
+                            "message": "Hello",
+                            "image_paths": [],
+                            "image_urls": [],
+                        }
+                    ],
                     max_tokens=-10,  # Invalid negative tokens
                 )
                 print("❌ Test failed: Negative max_tokens did not raise an error")
@@ -206,33 +212,39 @@ class TestCrossProviderIntegration:
                 response1, usage1 = handler.generate(
                     prompt="Explain quantum computing briefly.", max_tokens=100
                 )
-                
+
                 print(f"Model {model1} response: {response1[:50]}...")
-                print(f"Tokens: {usage1['total_tokens']}, Cost: ${usage1['total_cost']:.6f}")
+                print(
+                    f"Tokens: {usage1['total_tokens']}, Cost: ${usage1['total_cost']:.6f}"
+                )
 
                 # Switch to second model
                 handler.set_model(model2)
                 response2, usage2 = handler.generate(
                     prompt="Explain blockchain briefly.", max_tokens=100
                 )
-                
+
                 print(f"Model {model2} response: {response2[:50]}...")
-                print(f"Tokens: {usage2['total_tokens']}, Cost: ${usage2['total_cost']:.6f}")
+                print(
+                    f"Tokens: {usage2['total_tokens']}, Cost: ${usage2['total_cost']:.6f}"
+                )
 
                 # Switch back to first model
                 handler.set_model(model1)
                 response3, usage3 = handler.generate(
                     prompt="Explain artificial intelligence briefly.", max_tokens=100
                 )
-                
+
                 print(f"Model {model1} (again) response: {response3[:50]}...")
-                print(f"Tokens: {usage3['total_tokens']}, Cost: ${usage3['total_cost']:.6f}")
+                print(
+                    f"Tokens: {usage3['total_tokens']}, Cost: ${usage3['total_cost']:.6f}"
+                )
 
                 successful_pairs.append((model1, model2))
                 print(f"✓ Successfully switched between {model1} and {model2}")
 
             except Exception as e:
-                print(f"❌ Error switching between {model1} and {model2}: {str(e)}")
+                print(f"❌ Error switching between {model1} and {model2}: {e!s}")
 
         if not successful_pairs:
             pytest.skip("No model pairs could be successfully switched between")
@@ -271,39 +283,43 @@ class TestCrossProviderIntegration:
                 response, usage, _ = llm.generate(
                     event_id=f"parallel_test_{model}",
                     system_prompt="You are a helpful assistant.",
-                    messages=[{
-                        "message_type": "human",
-                        "message": prompt,
-                        "image_paths": [],
-                        "image_urls": [],
-                    }],
+                    messages=[
+                        {
+                            "message_type": "human",
+                            "message": prompt,
+                            "image_paths": [],
+                            "image_urls": [],
+                        }
+                    ],
                     max_tokens=100,
                 )
                 print(f"Completed request to {model}")
                 return model, True, response, usage
             except Exception as e:
-                print(f"Error with {model}: {str(e)}")
+                print(f"Error with {model}: {e!s}")
                 return model, False, str(e), None
 
         # Execute requests in parallel
         print("Executing parallel requests to different providers...")
         start_time = time.time()
-        
+
         with ThreadPoolExecutor(max_workers=len(models)) as executor:
             results = list(executor.map(process_model, models, prompts))
-            
+
         end_time = time.time()
-        
+
         # Process results
         for model, success, response, usage in results:
             if success:
                 successful_models.append(model)
                 responses[model] = response
                 print(f"\n{model} response: {response[:50]}...")
-                print(f"Tokens: {usage['total_tokens']}, Cost: ${usage['total_cost']:.6f}")
-        
+                print(
+                    f"Tokens: {usage['total_tokens']}, Cost: ${usage['total_cost']:.6f}"
+                )
+
         print(f"\nParallel execution completed in {end_time - start_time:.2f} seconds")
         print(f"Successful models: {len(successful_models)}/{len(models)}")
-        
+
         if not successful_models:
             pytest.skip("No models were able to complete parallel requests")

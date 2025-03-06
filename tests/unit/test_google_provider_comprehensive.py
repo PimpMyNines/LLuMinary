@@ -1,18 +1,12 @@
 """
 Comprehensive unit tests for the Google Gemini provider implementation.
 """
-import json
-import os
-from io import BytesIO
-from typing import Any, Dict, List
+
 from unittest.mock import MagicMock, patch
 
 import pytest
-import requests
-from PIL import Image
 
-from src.llmhandler.exceptions import LLMMistake
-from src.llmhandler.models.providers.google import GoogleLLM
+from src.lluminary.models.providers.google import GoogleLLM
 
 
 @pytest.fixture
@@ -22,17 +16,17 @@ def mock_genai_types():
         # Mock Content class
         mock_content = MagicMock()
         mock_types.Content.return_value = mock_content
-        
+
         # Mock Part class
         mock_part = MagicMock()
         mock_types.Part.from_text.return_value = mock_part
         mock_types.Part.from_function_call.return_value = mock_part
         mock_types.Part.from_function_response.return_value = mock_part
-        
+
         # Mock GenerateContentConfig
         mock_config = MagicMock()
         mock_types.GenerateContentConfig.return_value = mock_config
-        
+
         yield mock_types
 
 
@@ -43,13 +37,13 @@ def mock_genai_types():
 def google_llm():
     """Create a Google LLM instance with mocks."""
     # Create patches for auth
-    with patch("src.llmhandler.models.providers.google.get_secret") as mock_get_secret:
+    with patch("src.lluminary.models.providers.google.get_secret") as mock_get_secret:
         with patch("google.genai.Client") as mock_client:
             # Configure mocks
             mock_get_secret.return_value = {"api_key": "test-api-key"}
             mock_client_instance = MagicMock()
             mock_client.return_value = mock_client_instance
-            
+
             # Set up mock generation response
             mock_response = MagicMock()
             mock_response.text = "Generated text from Google Gemini"
@@ -57,14 +51,16 @@ def google_llm():
             mock_response.usage_metadata.prompt_token_count = 10
             mock_response.usage_metadata.candidates_token_count = 5
             mock_response.usage_metadata.total_token_count = 15
-            
+
             mock_client_instance.models = MagicMock()
-            mock_client_instance.models.generate_content = MagicMock(return_value=mock_response)
-            
+            mock_client_instance.models.generate_content = MagicMock(
+                return_value=mock_response
+            )
+
             # Create and initialize LLM
             llm = GoogleLLM("gemini-2.0-flash")
             llm.auth()  # Initialize with mock client
-            
+
             yield llm
 
 
@@ -81,7 +77,9 @@ class TestGoogleLLMInitialization:
     def test_init_with_kwargs(self):
         """Test initialization with additional kwargs."""
         with patch.object(GoogleLLM, "auth"):
-            llm = GoogleLLM("gemini-2.0-flash", api_key="test-key", custom_param="value")
+            llm = GoogleLLM(
+                "gemini-2.0-flash", api_key="test-key", custom_param="value"
+            )
             assert llm.model_name == "gemini-2.0-flash"
             assert llm.config["api_key"] == "test-key"
             assert llm.config["custom_param"] == "value"
@@ -101,7 +99,7 @@ class TestGoogleLLMInitialization:
         for model in GoogleLLM.SUPPORTED_MODELS:
             assert model in GoogleLLM.CONTEXT_WINDOW
             assert GoogleLLM.CONTEXT_WINDOW[model] > 0
-            
+
     def test_cost_per_model(self):
         """Test that cost information is properly defined for all models."""
         for model in GoogleLLM.SUPPORTED_MODELS:
@@ -121,20 +119,24 @@ class TestGoogleLLMAuthentication:
     def test_auth_standard_model(self):
         """Test authentication with a standard model."""
         # Create patches
-        with patch("src.llmhandler.models.providers.google.get_secret") as mock_get_secret:
+        with patch(
+            "src.lluminary.models.providers.google.get_secret"
+        ) as mock_get_secret:
             with patch("google.genai.Client") as mock_client:
                 # Configure mocks
                 mock_get_secret.return_value = {"api_key": "test-api-key"}
                 mock_client_instance = MagicMock()
                 mock_client.return_value = mock_client_instance
-                
+
                 # Create and authenticate LLM
                 llm = GoogleLLM("gemini-2.0-flash")
                 llm.auth()
-                
+
                 # Verify get_secret was called correctly
-                mock_get_secret.assert_called_once_with("google_api_key", required_keys=["api_key"])
-                
+                mock_get_secret.assert_called_once_with(
+                    "google_api_key", required_keys=["api_key"]
+                )
+
                 # Verify client was initialized correctly for standard model
                 mock_client.assert_called_once_with(api_key="test-api-key")
                 assert llm.client is not None
@@ -142,40 +144,45 @@ class TestGoogleLLMAuthentication:
     def test_auth_thinking_model(self):
         """Test authentication with a thinking model (requires alpha API)."""
         # Create patches
-        with patch("src.llmhandler.models.providers.google.get_secret") as mock_get_secret:
+        with patch(
+            "src.lluminary.models.providers.google.get_secret"
+        ) as mock_get_secret:
             with patch("google.genai.Client") as mock_client:
                 # Configure mocks
                 mock_get_secret.return_value = {"api_key": "test-api-key"}
                 mock_client_instance = MagicMock()
                 mock_client.return_value = mock_client_instance
-                
+
                 # Create and authenticate LLM
                 llm = GoogleLLM("gemini-2.0-flash-thinking-exp-01-21")
                 llm.auth()
-                
+
                 # Verify get_secret was called correctly
-                mock_get_secret.assert_called_once_with("google_api_key", required_keys=["api_key"])
-                
+                mock_get_secret.assert_called_once_with(
+                    "google_api_key", required_keys=["api_key"]
+                )
+
                 # Verify client was initialized with alpha API version
                 mock_client.assert_called_once_with(
-                    api_key="test-api-key", 
-                    http_options={"api_version": "v1alpha"}
+                    api_key="test-api-key", http_options={"api_version": "v1alpha"}
                 )
                 assert llm.client is not None
 
     def test_auth_error(self):
         """Test authentication error handling."""
         # Create patch for get_secret
-        with patch("src.llmhandler.models.providers.google.get_secret") as mock_get_secret:
+        with patch(
+            "src.lluminary.models.providers.google.get_secret"
+        ) as mock_get_secret:
             # Make get_secret raise an exception
             mock_get_secret.side_effect = Exception("Failed to get secret")
-            
+
             llm = GoogleLLM("gemini-2.0-flash")
-            
+
             # Authentication should raise an exception
             with pytest.raises(Exception) as exc_info:
                 llm.auth()
-            
+
             assert "Google authentication failed" in str(exc_info.value)
 
 
@@ -188,7 +195,7 @@ class TestGoogleLLMImageProcessing:
         mock_image = MagicMock()
         with patch("PIL.Image.open", return_value=mock_image) as mock_open:
             result = google_llm._process_image("/path/to/image.jpg")
-            
+
             # Verify Image.open was called with the correct path
             mock_open.assert_called_once_with("/path/to/image.jpg")
             assert result == mock_image
@@ -198,17 +205,21 @@ class TestGoogleLLMImageProcessing:
         # Mock requests.get response
         mock_response = MagicMock()
         mock_response.content = b"mock_image_bytes"
-        
+
         # Mock PIL Image
         mock_image = MagicMock()
-        
+
         with patch("requests.get", return_value=mock_response) as mock_get:
             with patch("PIL.Image.open", return_value=mock_image) as mock_open:
-                result = google_llm._process_image("https://example.com/image.jpg", is_url=True)
-                
+                result = google_llm._process_image(
+                    "https://example.com/image.jpg", is_url=True
+                )
+
                 # Verify requests.get was called with the correct URL
-                mock_get.assert_called_once_with("https://example.com/image.jpg", timeout=10)
-                
+                mock_get.assert_called_once_with(
+                    "https://example.com/image.jpg", timeout=10
+                )
+
                 # Verify PIL.Image.open was called with BytesIO containing the response content
                 assert mock_open.call_count == 1
                 # Cannot directly check BytesIO equality, so check that it was called
@@ -220,7 +231,7 @@ class TestGoogleLLMImageProcessing:
         with patch("PIL.Image.open", side_effect=Exception("Failed to open image")):
             with pytest.raises(Exception) as exc_info:
                 google_llm._process_image("/path/to/bad_image.jpg")
-            
+
             assert "Failed to process image file" in str(exc_info.value)
             assert "/path/to/bad_image.jpg" in str(exc_info.value)
 
@@ -229,15 +240,17 @@ class TestGoogleLLMImageProcessing:
         # Make requests.get raise an exception
         with patch("requests.get", side_effect=Exception("Failed to fetch image")):
             with pytest.raises(Exception) as exc_info:
-                google_llm._process_image("https://example.com/bad_image.jpg", is_url=True)
-            
+                google_llm._process_image(
+                    "https://example.com/bad_image.jpg", is_url=True
+                )
+
             assert "Failed to process image URL" in str(exc_info.value)
             assert "https://example.com/bad_image.jpg" in str(exc_info.value)
 
 
 class TestGoogleLLMMessageFormatting:
     """Test the message formatting methods of the GoogleLLM class."""
-    
+
     def test_format_human_message(self, google_llm, mock_genai_types):
         """Test formatting a human message."""
         # Create a simple human message
@@ -247,20 +260,22 @@ class TestGoogleLLMMessageFormatting:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Format the message
         formatted = google_llm._format_messages_for_model([message])
-        
+
         # Verify the formatting
         assert len(formatted) == 1
         mock_content = formatted[0]
-        
+
         # Check role
         assert mock_content.role == "user"
-        
+
         # Verify Part.from_text was called with the correct text
-        mock_genai_types.Part.from_text.assert_called_once_with(text="Hello, how are you?")
-        
+        mock_genai_types.Part.from_text.assert_called_once_with(
+            text="Hello, how are you?"
+        )
+
         # Verify parts were set on the Content
         assert mock_content.parts == [mock_genai_types.Part.from_text.return_value]
 
@@ -273,19 +288,21 @@ class TestGoogleLLMMessageFormatting:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Format the message
         formatted = google_llm._format_messages_for_model([message])
-        
+
         # Verify the formatting
         assert len(formatted) == 1
         mock_content = formatted[0]
-        
+
         # Check role
         assert mock_content.role == "model"
-        
+
         # Verify Part.from_text was called with the correct text
-        mock_genai_types.Part.from_text.assert_called_once_with(text="I'm an AI assistant.")
+        mock_genai_types.Part.from_text.assert_called_once_with(
+            text="I'm an AI assistant."
+        )
 
     def test_format_tool_message(self, google_llm, mock_genai_types):
         """Test formatting a tool message."""
@@ -296,29 +313,32 @@ class TestGoogleLLMMessageFormatting:
             "tool_result": {
                 "tool_id": "weather",
                 "success": True,
-                "result": {"temperature": 72, "condition": "sunny"}
-            }
+                "result": {"temperature": 72, "condition": "sunny"},
+            },
         }
-        
+
         # Format the message
         formatted = google_llm._format_messages_for_model([message])
-        
+
         # Verify the formatting
         assert len(formatted) == 1
         mock_content = formatted[0]
-        
+
         # Check role
         assert mock_content.role == "tool"
-        
+
         # Verify Part.from_text was called with the correct text
         mock_genai_types.Part.from_text.assert_called_once_with(text="Tool response")
-        
+
         # Verify from_function_response was called correctly
         mock_genai_types.Part.from_function_response.assert_called_once()
         function_call_args = mock_genai_types.Part.from_function_response.call_args[1]
         assert function_call_args["name"] == "weather"
         assert "result" in function_call_args["response"]
-        assert function_call_args["response"]["result"] == {"temperature": 72, "condition": "sunny"}
+        assert function_call_args["response"]["result"] == {
+            "temperature": 72,
+            "condition": "sunny",
+        }
 
     def test_format_tool_error_message(self, google_llm, mock_genai_types):
         """Test formatting a tool error message."""
@@ -329,17 +349,17 @@ class TestGoogleLLMMessageFormatting:
             "tool_result": {
                 "tool_id": "weather",
                 "success": False,
-                "error": "Location not found"
-            }
+                "error": "Location not found",
+            },
         }
-        
+
         # Format the message
         formatted = google_llm._format_messages_for_model([message])
-        
+
         # Verify the formatting
         assert len(formatted) == 1
         mock_content = formatted[0]
-        
+
         # Verify from_function_response was called correctly with error
         mock_genai_types.Part.from_function_response.assert_called_once()
         function_call_args = mock_genai_types.Part.from_function_response.call_args[1]
@@ -353,15 +373,12 @@ class TestGoogleLLMMessageFormatting:
         message = {
             "message_type": "human",
             "message": "What's the weather like?",
-            "tool_use": {
-                "name": "get_weather",
-                "input": {"location": "New York"}
-            }
+            "tool_use": {"name": "get_weather", "input": {"location": "New York"}},
         }
-        
+
         # Format the message
         formatted = google_llm._format_messages_for_model([message])
-        
+
         # Verify from_function_call was called correctly
         mock_genai_types.Part.from_function_call.assert_called_once()
         function_call_args = mock_genai_types.Part.from_function_call.call_args[1]
@@ -377,25 +394,27 @@ class TestGoogleLLMMessageFormatting:
             "image_paths": ["/path/to/image1.jpg"],
             "image_urls": ["https://example.com/image2.jpg"],
         }
-        
+
         # Mock _process_image to return a mock image
         mock_image = MagicMock()
         with patch.object(google_llm, "_process_image", return_value=mock_image):
             # Format the message
             formatted = google_llm._format_messages_for_model([message])
-            
+
             # Verify the formatting
             assert len(formatted) == 1
             mock_content = formatted[0]
-            
+
             # Check that _process_image was called twice (once for each image)
             assert google_llm._process_image.call_count == 2
-            
+
             # Verify the parts contains the text and two images
             assert len(mock_content.parts) == 3
-            
+
             # Verify Part.from_text was called
-            mock_genai_types.Part.from_text.assert_called_once_with(text="What's in these images?")
+            mock_genai_types.Part.from_text.assert_called_once_with(
+                text="What's in these images?"
+            )
 
     def test_format_image_processing_error(self, google_llm, mock_genai_types):
         """Test error handling when image processing fails."""
@@ -406,13 +425,17 @@ class TestGoogleLLMMessageFormatting:
             "image_paths": ["/path/to/bad_image.jpg"],
             "image_urls": [],
         }
-        
+
         # Mock _process_image to raise an exception
-        with patch.object(google_llm, "_process_image", side_effect=Exception("Failed to process image")):
+        with patch.object(
+            google_llm,
+            "_process_image",
+            side_effect=Exception("Failed to process image"),
+        ):
             # Formatting should raise an exception
             with pytest.raises(Exception) as exc_info:
                 google_llm._format_messages_for_model([message])
-            
+
             assert "Failed to process image file" in str(exc_info.value)
 
 
@@ -428,10 +451,12 @@ class TestGoogleLLMGeneration:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Mock _format_messages_for_model to return a simple list
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Generate text
             response, usage = google_llm._raw_generate(
                 event_id="test123",
@@ -440,10 +465,10 @@ class TestGoogleLLMGeneration:
                 max_tokens=1000,
                 temp=0.7,
             )
-            
+
             # Verify the response
             assert response == "Generated text from Google Gemini"
-            
+
             # Verify usage statistics
             assert usage["event_id"] == "test123"
             assert usage["read_tokens"] == 10
@@ -454,16 +479,16 @@ class TestGoogleLLMGeneration:
             assert "write_cost" in usage
             assert "image_cost" in usage
             assert "total_cost" in usage
-            
+
             # Verify client was called correctly
             client = google_llm.client
             client.models.generate_content.assert_called_once()
-            
+
             # Check arguments passed to generate_content
             call_args = client.models.generate_content.call_args[1]
             assert call_args["model"] == "gemini-2.0-flash"
             assert call_args["contents"] == formatted_messages
-            
+
             # Check config
             config = mock_genai_types.GenerateContentConfig.return_value
             assert config.max_output_tokens == 1000
@@ -479,7 +504,7 @@ class TestGoogleLLMGeneration:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Create tools
         tools = [
             {
@@ -488,16 +513,21 @@ class TestGoogleLLMGeneration:
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "location": {"type": "string", "description": "The city and state"}
+                        "location": {
+                            "type": "string",
+                            "description": "The city and state",
+                        }
                     },
-                    "required": ["location"]
-                }
+                    "required": ["location"],
+                },
             }
         ]
-        
+
         # Mock _format_messages_for_model to return a simple list
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Generate text with tools
             response, usage = google_llm._raw_generate(
                 event_id="test123",
@@ -505,7 +535,7 @@ class TestGoogleLLMGeneration:
                 messages=[message],
                 tools=tools,
             )
-            
+
             # Verify config was created correctly with tools
             config = mock_genai_types.GenerateContentConfig.return_value
             assert config.tools == tools
@@ -520,35 +550,35 @@ class TestGoogleLLMGeneration:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Create mock response with function calls
         tool_call = MagicMock(
-            id="tool123",
-            name="get_weather",
-            args={"location": "New York"}
+            id="tool123", name="get_weather", args={"location": "New York"}
         )
-        
+
         mock_response = MagicMock()
         mock_response.text = "I'll check the weather for you"
         mock_response.usage_metadata.prompt_token_count = 10
         mock_response.usage_metadata.candidates_token_count = 5
         mock_response.usage_metadata.total_token_count = 15
         mock_response.function_calls = [tool_call]
-        
+
         # Update mock client
         mock_instance = mock_client.return_value
         mock_instance.models.generate_content.return_value = mock_response
-        
+
         # Mock _format_messages_for_model to return a simple list
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Generate text
             response, usage = google_llm._raw_generate(
                 event_id="test123",
                 system_prompt="You are a helpful assistant",
                 messages=[message],
             )
-            
+
             # Verify tool use in usage statistics
             assert "tool_use" in usage
             assert usage["tool_use"]["id"] == "tool123"
@@ -564,17 +594,19 @@ class TestGoogleLLMGeneration:
             "image_paths": ["/path/to/image1.jpg"],
             "image_urls": ["https://example.com/image2.jpg"],
         }
-        
+
         # Mock _format_messages_for_model to return a simple list
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Generate text
             response, usage = google_llm._raw_generate(
                 event_id="test123",
                 system_prompt="",
                 messages=[message],
             )
-            
+
             # Verify image count and cost
             assert usage["images"] == 2
             assert usage["image_cost"] > 0
@@ -583,7 +615,7 @@ class TestGoogleLLMGeneration:
         """Test generation when client is not initialized."""
         # Set client to None
         google_llm.client = None
-        
+
         # Create a simple message
         message = {
             "message_type": "human",
@@ -591,10 +623,12 @@ class TestGoogleLLMGeneration:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Mock _format_messages_for_model and auth
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             with patch.object(google_llm, "auth") as mock_auth:
                 # Generate text
                 google_llm._raw_generate(
@@ -602,7 +636,7 @@ class TestGoogleLLMGeneration:
                     system_prompt="",
                     messages=[message],
                 )
-                
+
                 # Verify auth was called
                 mock_auth.assert_called_once()
 
@@ -615,14 +649,16 @@ class TestGoogleLLMGeneration:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Make client raise an exception
         mock_instance = mock_client.return_value
         mock_instance.models.generate_content.side_effect = Exception("API Error")
-        
+
         # Mock _format_messages_for_model
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Generate text should raise an exception
             with pytest.raises(Exception) as exc_info:
                 google_llm._raw_generate(
@@ -630,7 +666,7 @@ class TestGoogleLLMGeneration:
                     system_prompt="",
                     messages=[message],
                 )
-            
+
             assert "Google API generation failed" in str(exc_info.value)
 
     def test_raw_generate_missing_fields(self, google_llm, mock_client):
@@ -642,27 +678,29 @@ class TestGoogleLLMGeneration:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Create a response missing some fields
         mock_response = MagicMock()
         # No text or usage_metadata fields
         delattr(mock_response, "text")
         delattr(mock_response, "usage_metadata")
-        
+
         # Update mock client
         mock_instance = mock_client.return_value
         mock_instance.models.generate_content.return_value = mock_response
-        
+
         # Mock _format_messages_for_model
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Generate text
             response, usage = google_llm._raw_generate(
                 event_id="test123",
                 system_prompt="",
                 messages=[message],
             )
-            
+
             # Should handle missing fields gracefully
             assert response == ""
             assert usage["read_tokens"] == 0
@@ -679,18 +717,21 @@ class TestGoogleLLMStreaming:
         # Create mock model
         mock_model = MagicMock()
         mock_generative_model.return_value = mock_model
-        
+
         # Create mock streaming response
         mock_chunk1 = MagicMock(text="Hello")
         mock_chunk2 = MagicMock(text=" world")
         mock_chunk3 = MagicMock(text="!")
         mock_chunk4 = MagicMock()  # Final chunk without text
         mock_chunk4.candidates = [MagicMock(content=MagicMock(parts=[]))]
-        
+
         mock_model.generate_content.return_value = [
-            mock_chunk1, mock_chunk2, mock_chunk3, mock_chunk4
+            mock_chunk1,
+            mock_chunk2,
+            mock_chunk3,
+            mock_chunk4,
         ]
-        
+
         # Create message
         message = {
             "message_type": "human",
@@ -698,10 +739,12 @@ class TestGoogleLLMStreaming:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Mock _format_messages_for_model
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Stream generate
             chunks = []
             for chunk, usage in google_llm.stream_generate(
@@ -712,14 +755,14 @@ class TestGoogleLLMStreaming:
                 temp=0.7,
             ):
                 chunks.append((chunk, usage))
-            
+
             # Verify chunks
             assert len(chunks) == 4
             assert chunks[0][0] == "Hello"
             assert chunks[1][0] == " world"
             assert chunks[2][0] == "!"
             assert chunks[3][0] == ""  # Final empty chunk
-            
+
             # Verify final usage contains complete flag
             assert chunks[-1][1]["is_complete"] is True
             assert "total_cost" in chunks[-1][1]
@@ -730,13 +773,13 @@ class TestGoogleLLMStreaming:
         # Create mock model
         mock_model = MagicMock()
         mock_generative_model.return_value = mock_model
-        
+
         # Create mock streaming response
         mock_chunk1 = MagicMock(text="Hello")
         mock_chunk2 = MagicMock(text=" world")
-        
+
         mock_model.generate_content.return_value = [mock_chunk1, mock_chunk2]
-        
+
         # Create message
         message = {
             "message_type": "human",
@@ -744,15 +787,18 @@ class TestGoogleLLMStreaming:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Create callback
         callback_called = []
+
         def callback(chunk, usage):
             callback_called.append((chunk, usage))
-        
+
         # Mock _format_messages_for_model
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Stream generate with callback
             chunks = []
             for chunk, usage in google_llm.stream_generate(
@@ -762,45 +808,49 @@ class TestGoogleLLMStreaming:
                 callback=callback,
             ):
                 chunks.append((chunk, usage))
-            
+
             # Verify callback was called for each chunk
             assert len(callback_called) == len(chunks)
             assert callback_called[0][0] == chunks[0][0]
             assert callback_called[1][0] == chunks[1][0]
 
     @patch("google.generativeai.GenerativeModel")
-    def test_stream_generate_with_function_calls(self, mock_generative_model, google_llm):
+    def test_stream_generate_with_function_calls(
+        self, mock_generative_model, google_llm
+    ):
         """Test streaming with function calls."""
         # Create mock model
         mock_model = MagicMock()
         mock_generative_model.return_value = mock_model
-        
+
         # Create mock function call response at the end
         mock_function_call = MagicMock()
         mock_function_call.name = "get_weather"
         mock_function_call.args = {"location": "New York"}
-        
+
         mock_part = MagicMock()
         mock_part.function_call = mock_function_call
-        
+
         mock_content = MagicMock()
         mock_content.parts = [mock_part]
-        
+
         mock_candidate = MagicMock()
         mock_candidate.content = mock_content
-        
+
         mock_final_chunk = MagicMock()
         mock_final_chunk.candidates = [mock_candidate]
         mock_final_chunk.text = ""
-        
+
         # Create streaming response
         mock_chunk1 = MagicMock(text="I'll check")
         mock_chunk2 = MagicMock(text=" the weather")
-        
+
         mock_model.generate_content.return_value = [
-            mock_chunk1, mock_chunk2, mock_final_chunk
+            mock_chunk1,
+            mock_chunk2,
+            mock_final_chunk,
         ]
-        
+
         # Create message
         message = {
             "message_type": "human",
@@ -808,15 +858,17 @@ class TestGoogleLLMStreaming:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Create functions
         def get_weather(location):
             """Get weather for a location."""
             return f"Weather in {location}: Sunny"
-        
+
         # Mock _format_messages_for_model
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Stream generate with functions
             chunks = []
             for chunk, usage in google_llm.stream_generate(
@@ -826,16 +878,16 @@ class TestGoogleLLMStreaming:
                 functions=[get_weather],
             ):
                 chunks.append((chunk, usage))
-            
+
             # Verify function call was detected
             final_usage = chunks[-1][1]
             assert "tool_use" in final_usage
             assert len(final_usage["tool_use"]) > 0
-            
+
             # Get first tool use
             tool_id = list(final_usage["tool_use"].keys())[0]
             tool_use = final_usage["tool_use"][tool_id]
-            
+
             assert tool_use["name"] == "get_weather"
             assert "location" in tool_use["arguments"]
 
@@ -846,7 +898,7 @@ class TestGoogleLLMStreaming:
         mock_model = MagicMock()
         mock_model.generate_content.side_effect = Exception("Streaming error")
         mock_generative_model.return_value = mock_model
-        
+
         # Create message
         message = {
             "message_type": "human",
@@ -854,10 +906,12 @@ class TestGoogleLLMStreaming:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Mock _format_messages_for_model
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Streaming should raise an exception
             with pytest.raises(Exception) as exc_info:
                 for _ in google_llm.stream_generate(
@@ -866,22 +920,24 @@ class TestGoogleLLMStreaming:
                     messages=[message],
                 ):
                     pass
-            
+
             assert "Error streaming from Google" in str(exc_info.value)
 
     @patch("google.generativeai.GenerativeModel")
-    def test_stream_generate_system_prompt_cleaning(self, mock_generative_model, google_llm):
+    def test_stream_generate_system_prompt_cleaning(
+        self, mock_generative_model, google_llm
+    ):
         """Test that system prompt echoing is cleaned up."""
         # Create mock model
         mock_model = MagicMock()
         mock_generative_model.return_value = mock_model
-        
+
         # Create response with system prompt echoed
         system_prompt = "You are a helpful assistant."
         mock_chunk = MagicMock(text=f"{system_prompt} Hello")
-        
+
         mock_model.generate_content.return_value = [mock_chunk]
-        
+
         # Create message
         message = {
             "message_type": "human",
@@ -889,10 +945,12 @@ class TestGoogleLLMStreaming:
             "image_paths": [],
             "image_urls": [],
         }
-        
+
         # Mock _format_messages_for_model
         formatted_messages = [MagicMock()]
-        with patch.object(google_llm, "_format_messages_for_model", return_value=formatted_messages):
+        with patch.object(
+            google_llm, "_format_messages_for_model", return_value=formatted_messages
+        ):
             # Stream generate
             chunks = []
             for chunk, usage in google_llm.stream_generate(
@@ -901,7 +959,7 @@ class TestGoogleLLMStreaming:
                 messages=[message],
             ):
                 chunks.append((chunk, usage))
-            
+
             # Verify system prompt was stripped
             assert chunks[0][0] == " Hello"
 
@@ -916,7 +974,7 @@ class TestGoogleLLMStreaming:
                 "image_paths": [],
                 "image_urls": [],
             }
-            
+
             # Streaming should raise an ImportError
             with pytest.raises(ImportError) as exc_info:
                 for _ in google_llm.stream_generate(
@@ -925,7 +983,7 @@ class TestGoogleLLMStreaming:
                     messages=[message],
                 ):
                     pass
-            
+
             assert "Google Generative AI package not installed" in str(exc_info.value)
 
 
@@ -952,17 +1010,17 @@ class TestGoogleLLMFeatureSupport:
         assert "read_token" in costs
         assert "write_token" in costs
         assert "image_cost" in costs
-        
+
         # Check that all models have cost info
         for model in GoogleLLM.SUPPORTED_MODELS:
             # Change the model name temporarily
             original_model = google_llm.model_name
             google_llm.model_name = model
-            
+
             costs = google_llm.get_model_costs()
             assert "read_token" in costs
             assert "write_token" in costs
             assert "image_cost" in costs
-            
+
             # Restore the original model name
             google_llm.model_name = original_model

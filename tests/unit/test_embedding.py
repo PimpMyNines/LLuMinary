@@ -1,7 +1,7 @@
 """
 Unit tests for embedding functionality.
 """
-import os
+
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -11,9 +11,9 @@ import pytest
 # Add the package to path for testing
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.llmhandler import get_llm_from_model
-from src.llmhandler.models.providers.cohere import CohereLLM
-from src.llmhandler.models.providers.openai import OpenAILLM
+from src.lluminary import get_llm_from_model
+from src.lluminary.models.providers.cohere import CohereLLM
+from src.lluminary.models.providers.openai import OpenAILLM
 
 
 @pytest.mark.unit
@@ -207,7 +207,7 @@ class TestEmbeddings:
 
     def test_supports_embeddings(self):
         """Test the base LLM.supports_embeddings method."""
-        from src.llmhandler.models.base import LLM
+        from src.lluminary.models.base import LLM
 
         # Create a mock LLM instance
         llm = MagicMock(spec=LLM)

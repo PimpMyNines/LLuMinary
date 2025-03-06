@@ -2,11 +2,12 @@
 Advanced features example for LLMHandler package.
 Demonstrates embeddings, streaming, and custom provider registration.
 """
+
 import os
 import time
 
-from llmhandler import get_llm_from_model
-from llmhandler.models.router import register_model
+from lluminary import get_llm_from_model
+from lluminary.models.router import register_model
 
 
 def embedding_example():
@@ -143,7 +144,7 @@ def custom_provider_registration_example():
             print("Skipping Cohere API call (no API key available).")
 
     except (ImportError, ValueError) as e:
-        print(f"Could not use Cohere provider: {str(e)}")
+        print(f"Could not use Cohere provider: {e!s}")
         print("Cohere provider might not be implemented or registered.")
 
 
@@ -152,14 +153,14 @@ if __name__ == "__main__":
     try:
         embedding_example()
     except Exception as e:
-        print(f"Embedding example failed: {str(e)}")
+        print(f"Embedding example failed: {e!s}")
 
     try:
         streaming_example()
     except Exception as e:
-        print(f"Streaming example failed: {str(e)}")
+        print(f"Streaming example failed: {e!s}")
 
     try:
         custom_provider_registration_example()
     except Exception as e:
-        print(f"Custom provider example failed: {str(e)}")
+        print(f"Custom provider example failed: {e!s}")

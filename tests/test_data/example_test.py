@@ -2,8 +2,9 @@
 Example test file demonstrating how to test with LLMHandler.
 This file is meant as a simple template for users to understand testing patterns.
 """
-from src.llmhandler.exceptions import LLMMistake
-from src.llmhandler.models.router import get_llm_from_model
+
+from src.lluminary.exceptions import LLMMistake
+from src.lluminary.models.router import get_llm_from_model
 
 
 def test_simple_completion():

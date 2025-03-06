@@ -1,8 +1,8 @@
 """
 Basic test suite for Google Gemini provider.
 """
-import sys
-from unittest.mock import ANY, MagicMock, patch
+
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -22,7 +22,7 @@ patch_requests = patch("requests", new=MagicMock())
 patch_requests.start()
 
 # Now import GoogleLLM
-from src.llmhandler.models.providers.google import GoogleLLM
+from src.lluminary.models.providers.google import GoogleLLM
 
 # Stop the patches after import
 patch_genai.stop()
@@ -78,7 +78,7 @@ def test_auth():
     """Test the auth method."""
     # Patch get_secret to return a mock API key
     with patch(
-        "src.llmhandler.models.utils.get_secret", return_value={"api_key": "test-key"}
+        "src.lluminary.models.utils.get_secret", return_value={"api_key": "test-key"}
     ):
         # Patch google.genai.Client
         with patch("google.genai.Client", return_value=MagicMock()) as mock_client:

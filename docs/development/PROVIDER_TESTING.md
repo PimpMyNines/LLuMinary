@@ -1,6 +1,23 @@
-# Provider Testing Guide
+# PROVIDER TESTING GUIDE
 
-This document provides guidance on testing provider implementations in the LLMHandler package, using the Provider Template tests as a model.
+## Overview
+
+This document provides comprehensive guidance on testing provider implementations in the LLuMinary library, using the Provider Template tests as a model for consistency and thorough test coverage.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Test Structure for Providers](#test-structure-for-providers)
+  - [Core Provider Tests](#1-core-provider-tests)
+  - [Utility Tests](#2-utility-tests)
+  - [Streaming Tests](#3-streaming-tests)
+  - [Provider-Specific Feature Tests](#4-provider-specific-feature-tests)
+- [Test Fixtures](#test-fixtures)
+- [Key Testing Patterns](#key-testing-patterns)
+- [Testing Challenges and Solutions](#testing-challenges-and-solutions)
+- [Testing Coverage Requirements](#testing-coverage-requirements)
+- [Running Provider Tests](#running-provider-tests)
+- [Related Documentation](#related-documentation)
 
 ## Test Structure for Providers
 
@@ -92,9 +109,9 @@ def mock_provider_env():
     """Set up mock environment variables for testing."""
     original_env = os.environ.copy()
     os.environ["PROVIDER_API_KEY"] = "test-api-key"
-    
+
     yield
-    
+
     # Restore original environment
     os.environ.clear()
     os.environ.update(original_env)
@@ -112,12 +129,12 @@ def test_auth_from_env_var(self, mock_provider_env):
     # Initialize with auth mocked to prevent actual auth during creation
     with patch.object(ProviderLLM, "auth", return_value=None):
         provider = ProviderLLM(model_name="provider-model-1")
-    
+
     # Then call auth directly to test it
     # Restore the original method first
     provider.auth = ProviderLLM.auth.__get__(provider)
     provider.auth()
-    
+
     assert provider.api_key == "test-api-key"
 ```
 
@@ -134,14 +151,14 @@ def test_raw_generate(self, mock_client, provider_instance):
         "usage": {"prompt_tokens": 10, "completion_tokens": 5}
     }
     mock_client.return_value.generate.return_value = mock_response
-    
+
     # Call the method under test
     result, usage = provider_instance._raw_generate(
         event_id="test-event",
         system_prompt="Test prompt",
         messages=[{"message_type": "human", "message": "Hello"}]
     )
-    
+
     # Verify result and usage stats
     assert result == "Test response"
     assert usage["read_tokens"] == 10
@@ -157,7 +174,7 @@ Test how the provider handles API errors:
 def test_raw_generate_error(self, mock_client, provider_instance):
     # Set up mock to raise an exception
     mock_client.return_value.generate.side_effect = Exception("API error")
-    
+
     # Call the method and expect a LLMMistake exception
     with pytest.raises(LLMMistake) as excinfo:
         provider_instance._raw_generate(
@@ -165,7 +182,7 @@ def test_raw_generate_error(self, mock_client, provider_instance):
             system_prompt="Test prompt",
             messages=[{"message_type": "human", "message": "Hello"}]
         )
-    
+
     # Verify exception details
     assert "Error generating" in str(excinfo.value)
     assert excinfo.value.error_type == "api_error"
@@ -180,19 +197,19 @@ Test the message format conversion:
 def test_message_formatting_with_images(self, provider_instance):
     messages = [
         {
-            "message_type": "human", 
-            "message": "What's in this image?", 
+            "message_type": "human",
+            "message": "What's in this image?",
             "image_paths": ["/path/to/image.jpg"]
         }
     ]
-    
+
     # Mock image processing
     with patch.object(provider_instance, "_process_image_file") as mock_process:
         mock_process.return_value = "encoded-image"
-        
+
         # Format messages
         formatted = provider_instance._format_messages_for_model(messages)
-        
+
         # Verify results
         assert formatted[0]["content"] == "What's in this image?"
         assert "images" in formatted[0]
@@ -211,11 +228,11 @@ def test_stream_generate(self, provider_instance):
         {"choices": [{"delta": {"content": " world"}}]},
         {"choices": [{"delta": {"content": "!"}}]}
     ]
-    
+
     with patch("provider_sdk.Client") as mock_client:
         # Configure the mock to return a generator
         mock_client.return_value.generate_stream.return_value = iter(mock_stream)
-        
+
         # Call stream_generate and collect results
         chunks = []
         for chunk, usage in provider_instance._stream_generate(
@@ -224,7 +241,7 @@ def test_stream_generate(self, provider_instance):
             messages=[{"message_type": "human", "message": "Hi"}]
         ):
             chunks.append(chunk)
-        
+
         # Verify results
         assert "".join(chunks) == "Hello world!"
 ```
@@ -235,7 +252,7 @@ def test_stream_generate(self, provider_instance):
 
 **Challenge**: Testing provider API calls without exposing real credentials.
 
-**Solution**: 
+**Solution**:
 - Mock the `auth` method during initialization
 - Use environment variable fixtures for auth testing
 - Mock the actual API client and its responses
@@ -286,5 +303,14 @@ python -m pytest tests/unit/test_[provider]_*.py -v
 python -m pytest tests/unit/test_[provider]_streaming.py -v
 
 # Run with coverage
-python -m pytest tests/unit/test_[provider]_*.py --cov=src/llmhandler/models/providers/[provider].py
+python -m pytest tests/unit/test_[provider]_*.py --cov=src/lluminary/models/providers/[provider].py
 ```
+
+## Related Documentation
+
+- [API_REFERENCE](../API_REFERENCE.md) - Complete API reference for all components
+- [MODELS](./MODELS.md) - Detailed information about model implementations
+- [ERROR_HANDLING](./ERROR_HANDLING.md) - Error handling guidelines and implementation
+- [ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION](./ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION.md) - Anthropic-specific error handling
+- [OPENAI_ERROR_HANDLING_IMPLEMENTATION](./OPENAI_ERROR_HANDLING_IMPLEMENTATION.md) - OpenAI-specific error handling
+- [TEST_COVERAGE](../TEST_COVERAGE.md) - Current test coverage status and goals

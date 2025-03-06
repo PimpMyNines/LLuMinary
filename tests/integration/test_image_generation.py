@@ -2,13 +2,13 @@
 Integration tests for image generation functionality.
 Tests image generation across providers with graceful skipping when auth fails.
 """
+
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
 
-from src.llmhandler.models.router import get_llm_from_model
+from src.lluminary.models.router import get_llm_from_model
 
 # Mark all tests in this file as image generation integration tests
 pytestmark = [pytest.mark.integration, pytest.mark.image_generation]
@@ -50,13 +50,15 @@ class TestImageGeneration:
 
                 # Check if model supports image generation
                 if not hasattr(llm, "generate_image"):
-                    print(f"Model {model_name} does not support image generation, skipping...")
+                    print(
+                        f"Model {model_name} does not support image generation, skipping..."
+                    )
                     continue
 
                 # Create a temporary directory to save the image
                 with tempfile.TemporaryDirectory() as temp_dir:
                     output_path = os.path.join(temp_dir, "generated_image.png")
-                    
+
                     # Generate image
                     print(f"Generating image with prompt: '{prompt}'...")
                     result = llm.generate_image(
@@ -64,23 +66,29 @@ class TestImageGeneration:
                         output_path=output_path,
                         size="1024x1024",  # Standard size
                     )
-                    
+
                     # Check if image was generated
                     if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-                        print(f"Image successfully generated and saved to {output_path}")
-                        print(f"Image size: {os.path.getsize(output_path) / 1024:.2f} KB")
-                        
+                        print(
+                            f"Image successfully generated and saved to {output_path}"
+                        )
+                        print(
+                            f"Image size: {os.path.getsize(output_path) / 1024:.2f} KB"
+                        )
+
                         # If result contains metrics, print them
                         if isinstance(result, dict) and "cost" in result:
                             print(f"Cost: ${result['cost']:.6f}")
-                            
+
                         successful_models.append(model_name)
                     else:
-                        print(f"Image generation failed or produced an empty file")
-                        failed_models.append((model_name, "Empty or missing output file"))
+                        print("Image generation failed or produced an empty file")
+                        failed_models.append(
+                            (model_name, "Empty or missing output file")
+                        )
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 failed_models.append((model_name, str(e)))
 
         # Print summary
@@ -107,53 +115,58 @@ class TestImageGeneration:
         """
         # Use a reliable image generation model
         test_model = "dall-e-3"  # OpenAI is typically reliable for image generation
-        
+
         # Standard prompt for comparison
         prompt = "A futuristic city with flying cars and tall skyscrapers"
-        
+
         print("\n" + "=" * 60)
         print("IMAGE VARIATION PARAMETERS TEST")
         print("=" * 60)
-        
+
         try:
             # Initialize model
             llm = get_llm_from_model(test_model)
-            
+
             # Check if model supports image generation
             if not hasattr(llm, "generate_image"):
                 pytest.skip(f"Model {test_model} does not support image generation")
-                
+
             # Test different image sizes
             sizes = ["1024x1024", "512x512", "256x256"]
-            
+
             for size in sizes:
                 with tempfile.TemporaryDirectory() as temp_dir:
                     output_path = os.path.join(temp_dir, f"image_{size}.png")
-                    
+
                     print(f"\nGenerating image with size {size}...")
                     result = llm.generate_image(
                         prompt=prompt,
                         output_path=output_path,
                         size=size,
                     )
-                    
+
                     if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
                         print(f"Image successfully generated with size {size}")
-                        print(f"Image file size: {os.path.getsize(output_path) / 1024:.2f} KB")
-                        
+                        print(
+                            f"Image file size: {os.path.getsize(output_path) / 1024:.2f} KB"
+                        )
+
                         # If result contains metrics, print them
                         if isinstance(result, dict) and "cost" in result:
                             print(f"Cost: ${result['cost']:.6f}")
                     else:
                         print(f"Failed to generate image with size {size}")
-            
+
             # Test with quality parameter if supported
-            if hasattr(llm, "supports_quality_parameter") and llm.supports_quality_parameter():
+            if (
+                hasattr(llm, "supports_quality_parameter")
+                and llm.supports_quality_parameter()
+            ):
                 qualities = ["standard", "hd"]
                 for quality in qualities:
                     with tempfile.TemporaryDirectory() as temp_dir:
                         output_path = os.path.join(temp_dir, f"image_{quality}.png")
-                        
+
                         print(f"\nGenerating image with quality {quality}...")
                         result = llm.generate_image(
                             prompt=prompt,
@@ -161,16 +174,23 @@ class TestImageGeneration:
                             size="1024x1024",
                             quality=quality,
                         )
-                        
-                        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-                            print(f"Image successfully generated with quality {quality}")
-                            print(f"Image file size: {os.path.getsize(output_path) / 1024:.2f} KB")
+
+                        if (
+                            os.path.exists(output_path)
+                            and os.path.getsize(output_path) > 0
+                        ):
+                            print(
+                                f"Image successfully generated with quality {quality}"
+                            )
+                            print(
+                                f"Image file size: {os.path.getsize(output_path) / 1024:.2f} KB"
+                            )
                         else:
                             print(f"Failed to generate image with quality {quality}")
-            
+
         except Exception as e:
-            print(f"Error with {test_model}: {str(e)}")
-            pytest.skip(f"Skipping test due to error: {str(e)}")
+            print(f"Error with {test_model}: {e!s}")
+            pytest.skip(f"Skipping test due to error: {e!s}")
 
     def test_image_generation_with_style(self):
         """
@@ -178,33 +198,36 @@ class TestImageGeneration:
         """
         # Use a reliable image generation model that supports styles
         test_model = "dall-e-3"  # OpenAI DALL-E 3 supports style parameter
-        
+
         # Standard prompt for comparison
         prompt = "A cat sitting on a windowsill"
-        
+
         print("\n" + "=" * 60)
         print("IMAGE STYLE TEST")
         print("=" * 60)
-        
+
         try:
             # Initialize model
             llm = get_llm_from_model(test_model)
-            
+
             # Check if model supports image generation
             if not hasattr(llm, "generate_image"):
                 pytest.skip(f"Model {test_model} does not support image generation")
-                
+
             # Check if model supports style parameter
-            if not hasattr(llm, "supports_style_parameter") or not llm.supports_style_parameter():
+            if (
+                not hasattr(llm, "supports_style_parameter")
+                or not llm.supports_style_parameter()
+            ):
                 pytest.skip(f"Model {test_model} does not support style parameter")
-            
+
             # Test different styles
             styles = ["vivid", "natural"]
-            
+
             for style in styles:
                 with tempfile.TemporaryDirectory() as temp_dir:
                     output_path = os.path.join(temp_dir, f"image_{style}.png")
-                    
+
                     print(f"\nGenerating image with style {style}...")
                     result = llm.generate_image(
                         prompt=prompt,
@@ -212,13 +235,15 @@ class TestImageGeneration:
                         size="1024x1024",
                         style=style,
                     )
-                    
+
                     if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
                         print(f"Image successfully generated with style {style}")
-                        print(f"Image file size: {os.path.getsize(output_path) / 1024:.2f} KB")
+                        print(
+                            f"Image file size: {os.path.getsize(output_path) / 1024:.2f} KB"
+                        )
                     else:
                         print(f"Failed to generate image with style {style}")
-            
+
         except Exception as e:
-            print(f"Error with {test_model}: {str(e)}")
-            pytest.skip(f"Skipping test due to error: {str(e)}")
+            print(f"Error with {test_model}: {e!s}")
+            pytest.skip(f"Skipping test due to error: {e!s}")

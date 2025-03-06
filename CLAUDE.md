@@ -1,77 +1,18 @@
 # LLMHandler Development Guide
 
-## Commands
-- Run all tests: `python -m pytest tests/ -v`
-- Run unit tests: `python -m pytest tests/unit/ -v`
-- Run integration tests: `python -m pytest tests/integration/ -v`
-- Run specific test: `python -m pytest tests/path/to/test_file.py::TestClass::test_function -v`
+## Project-Specific Commands
 - Run tests by pattern: `python -m pytest tests/ -k "openai" -v`
 - Run tests by marker: `python -m pytest tests/ -m "image" -v`
 - Run tests with coverage: `python -m pytest tests/ --cov=src/llmhandler --cov-report=term`
-- Install development dependencies: `pip install -e ".[dev]"`
 - Install AWS dependencies: `pip install -e ".[aws]"`
-- Build package: `python -m build`
-- Check package: `twine check dist/*`
 - Build docs: `sphinx-build -b html docs/source docs/build/html`
 
-## Code Style Guidelines
-- Python version: 3.10+
-- Type hints: Required for all function parameters and return values, use Optional/Union
-- Naming: CamelCase for classes, snake_case for functions/variables, UPPER_SNAKE_CASE for constants
-- Imports: Group in order: standard libs, third-party, local; alphabetical within groups
-- Documentation: Google-style docstrings for all public classes and methods
-- Error handling: Use custom exception classes from exceptions.py
-- Design: Follow single responsibility principle and provider registry pattern
-- Tests: Unit tests required for all new functionality (target 90%+ coverage)
-
-## Package Structure Guidelines
-- Use pyproject.toml for all package configuration (PEP 621)
-- Organize code into logical modules with clear separation of concerns
-- Package all non-Python files using package_data in pyproject.toml
-- Follow single-source versioning pattern via version.py
-- Include proper typing support with py.typed marker
-- Document all public APIs with appropriate docstrings
-
-## Provider Integration
+## Provider Integration Guidelines
 - Maintain consistent interfaces across providers (OpenAI, Anthropic, Google, Cohere, Bedrock)
 - Support: text generation, embeddings, streaming, reranking, image input, function calling
 - Always implement token counting and cost tracking for each provider
 - Follow provider_template.py pattern when adding new providers
 - Implement proper error handling with standardized exception types
-
-## Current Status
-- 203 unit tests now passing:
-  - 13 for LLMHandler
-  - 20 for Base LLM class
-  - 170 for other components including providers, tools, and CLI
-- 74 integration tests now implemented and enabled:
-  - 7 for embeddings functionality
-  - 9 for streaming across providers
-  - 8 for document reranking
-  - 5 for cost tracking and comparison
-  - 5 for advanced features (response processing, function calling)
-  - 3 for CLI functionality
-  - 3 for tool registry integration
-  - 8 for cross-provider testing
-  - 6 for classification integration
-  - 4 for image generation
-  - 3 for rate limiting behavior
-  - 4 for provider error types
-  - 4 for dynamic model selection
-  - 5 for optional parameters
-- Current test coverage improved from 35% to 70% (goal is 90%)
-- Recently implemented:
-  - Better error handling with LLMHandlerError hierarchy
-  - Comprehensive testing for Google Provider (80%+ coverage)
-  - Comprehensive testing for Bedrock Provider (75%+ coverage)
-  - Added rate limiting behavior tests (recovery, backoff)
-  - Implemented provider error type and mapping tests
-  - Added dynamic model selection tests (fallback, routing)
-  - Implemented optional parameter tests
-  - Fixed tests for router (93% coverage)
-  - Added comprehensive tool registry tests (66% coverage)
-  - Verified comprehensive Cohere provider tests (90%+ coverage)
-  - Enhanced documentation with test markers and organization
 
 ## Testing Organization
 - Integration tests are organized by feature and use appropriate markers:
@@ -89,52 +30,144 @@
   - `dynamic_model_selection`: Tests for model selection
   - `optional_parameters`: Tests for provider-specific parameters
 
-## Packaging & Distribution Best Practices
-- Use `python -m build` for building both wheel and sdist
-- Verify packages with `twine check` before publishing
-- Set up automated GitHub Actions for testing and publishing
-- Implement proper versioning with semantic versioning
-- Maintain backward compatibility when possible
-- Include comprehensive README and documentation
-- Configure CI checks for linting, type checking, and formatting
-- Set up proper PyPI publishing credentials in GitHub Secrets
+## Current Project Status
+- **Current coverage**: 70% (target: 90%+)
+- **Passing tests**: 221 unit tests + 74 integration tests = 295 total tests
+- **Progress**: Classification, Tools Validator, Cohere Provider (90%+), Google Provider (80%+), Bedrock Provider (75%+), all Integration tests completed
+- **Critical Provider Status**: OpenAI (65%), Anthropic (38%) - require attention
+- **Last updated**: March 13, 2025
 
-## GitHub Actions CI/CD Pipeline
-A robust CI/CD pipeline should include:
-- Testing on multiple Python versions (3.8, 3.9, 3.10)
-- Code quality checks (linting, formatting, type hints)
-- Test coverage reporting
-- Package building and validation
-- Automated PyPI publishing for tagged releases
-- Documentation building and publishing
+## Test Coverage by Module
+| Module | Coverage | Priority |
+|--------|----------|----------|
+| Router | 93% | ✅ Done |
+| Handler | 73% | ✅ Good |
+| Base LLM | 76% | ✅ Good |
+| AWS Utils | 88% | ✅ Good |
+| Exceptions | 67% | ✅ Good |
+| Tool Registry | 66% | ✅ Good |
+| Classification Components | 90%+ | ✅ Done |
+| Classification CLI | 90%+ | ✅ Done |
+| Anthropic Provider | 38% | 🔴 CRITICAL |
+| OpenAI Provider | 65% | 🟡 Medium |
+| Google Provider | 80%+ | ✅ Done |
+| Bedrock Provider | 75%+ | ✅ Done |
+| Tools Validators | 90% | ✅ Done |
+| CLI (other components) | N/A | ✅ Done |
+| Cohere Provider | 90%+ | ✅ Done |
+| Provider Template | 47% | 🟡 Medium |
 
-## Consolidated Task List
-1. Complete provider test coverage
-   - OpenAI Provider (40% → 75%+) - CRITICAL
-   - Anthropic Provider (38% → 75%+) - CRITICAL
-   - Provider Template (47% → 75%+)
-2. Improve packaging configuration
-   - Update pyproject.toml with complete metadata
-   - Configure package data inclusion
-   - Set up proper entry points
-   - Implement single-source versioning
-3. Implement CI/CD pipeline
-   - Complete GitHub Actions workflow with testing, linting, and type checking
-   - Set up version bumping and tagging
-   - Configure publishing to PyPI
-   - Implement semantic versioning automation
-4. Enhance documentation
-   - Add comprehensive docstrings
-   - Generate API documentation with Sphinx
-   - Create usage examples
-   - Add architecture diagrams
-5. Implement quality assurance tools
-   - Add linting with ruff
-   - Add formatting with black and isort
-   - Add type checking with mypy
-   - Set up pre-commit hooks
-6. Standardize provider implementations
-   - Document provider testing patterns
-   - Enhance error handling across providers
-   - Implement clearer parameter validation
-   - Create unified approach to provider-specific features
+## Priority Tasks
+
+### 1. Provider Test Coverage (High Priority)
+- 🔴 **CRITICAL**: Complete OpenAI Provider tests (65% → 75%+)
+  - Implement authentication tests with proper environment variable fallback
+  - Add embedding functionality tests
+  - ✅ Add streaming tests with complex scenarios
+  - ✅ Add reranking functionality tests
+  - ✅ Implement token counting and cost tracking tests
+  - ✅ Add image generation tests
+  - ✅ Implement error handling and recovery tests
+- 🔴 **CRITICAL**: Complete Anthropic Provider tests (38% → 75%+)
+  - Add embeddings tests
+  - Implement authentication flow tests
+  - Expand error handling tests
+  - Add tests for thinking budget behavior
+  - Add timeout handling tests
+- 🟡 Complete Provider Template tests (47% → 75%+)
+  - Implement token counting tests
+  - Fix embedding and reranking test implementation
+  - Add image processing test fixtures
+  - Implement tool validation and formatting tests
+  - Add provider registration and discovery tests
+
+### 2. Package Structure Refinement (High Priority)
+- Update pyproject.toml
+  - Add complete classifiers
+  - Configure package data inclusion
+  - Add development dependencies
+  - Set up proper entry points
+- Implement proper versioning
+  - Implement single-source versioning
+  - Set up version bumping automation
+- Add package metadata
+  - Complete documentation in README.md
+  - Add licenses and other required files
+
+### 3. CI/CD Pipeline Implementation (High Priority)
+- Complete GitHub Actions workflow
+  - Add testing step before publishing
+  - Implement linting and type checking
+  - Set up version bumping and tagging
+  - Configure publishing to PimpMyNines organization
+- Implement release automation
+  - Add changelog generation
+  - Implement semantic versioning automation
+  - Add release artifacts creation
+- Add quality checks
+  - Configure black, isort, and ruff for code formatting
+  - Add mypy for type checking
+  - Set up pre-commit hooks for local development
+
+### 4. Documentation Enhancement (Medium Priority)
+- Enhance API documentation
+  - Add comprehensive docstrings
+  - Generate API documentation
+  - Create usage examples
+- Set up documentation build
+  - Implement sphinx documentation
+  - Add automatic documentation deployment
+- Add architecture diagrams
+  - Create component diagrams
+  - Document provider interfaces
+  - Add sequence diagrams for key workflows
+
+### 5. Provider Interface Improvements (Medium Priority)
+- ✅ Standardize error handling across providers
+- Implement clearer parameter validation
+  - Add validation for common parameters
+  - Improve error messages for invalid inputs
+- Create unified approach to provider-specific features
+  - Document provider capabilities
+  - Implement feature detection
+- Improve configuration validation
+  - Add schema validation for config
+  - Enhance error reporting for config issues
+
+## Agent Assignments
+
+### Agent 1: Provider Testing
+- **Focus**: Complete OpenAI and Anthropic provider testing
+- **Current task**: Implementing tests for OpenAI Provider (65% → 75%+) and Anthropic Provider (38% → 75%+)
+- **Progress on OpenAI Provider**:
+  - 196 passing tests implemented (up from 142)
+  - Current coverage ~65% (up from 40%)
+  - Target: 75%+ coverage
+- **Next steps for OpenAI Provider**:
+  - Complete implementation of additional embedding functionality tests
+  - Improve authentication tests
+  - Continue improving error handling tests for edge cases
+
+### Agent 2: Package Structure and CI/CD
+- **Focus**: Implement proper packaging, CI/CD pipeline, and documentation
+- **Current task**: Update pyproject.toml, create GitHub Actions workflow
+- **Next steps**:
+  - Complete pyproject.toml with all necessary configuration
+  - Implement GitHub Actions workflow with testing, quality checks, and publishing
+  - Set up documentation generation with Sphinx
+  - Create proper versioning mechanism
+
+### Agent 3: Provider Template and Quality Tooling
+- **Focus**: Complete Provider Template tests, implement quality tools
+- **Current task**: Improving Provider Template coverage (47% → 75%+)
+- **Next steps**:
+  - Fix token counting tests in Provider Template
+  - Complete embedding and reranking tests
+  - Set up linting, formatting, and type checking
+  - Implement pre-commit hooks
+
+
+## Future Improvements
+- **LOGGING**: Add option for streaming logs to remote data store
+- **GUARDRAILS**: Add ability to add global and/or model specific guardrails
+- **VOICE**: Add voice support using whisper or openai voice.

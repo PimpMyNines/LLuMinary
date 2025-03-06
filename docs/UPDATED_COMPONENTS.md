@@ -1,6 +1,8 @@
-# Updated Components Documentation
+# UPDATED COMPONENTS DOCUMENTATION
 
-This document details recent updates to key components in the LLM Handler library. These enhancements improve the library's functionality, type safety, and test coverage.
+## Overview
+
+This document details recent updates to key components in the LLuMinary library. These enhancements improve the library's functionality, type safety, and test coverage, providing a comprehensive reference of newly implemented features and improvements.
 
 ## Table of Contents
 
@@ -345,3 +347,11 @@ The CLI components now have comprehensive unit tests ensuring:
 - Proper metadata management
 
 All CLI commands are tested with both valid and invalid inputs, ensuring robust behavior in all scenarios.
+
+## Related Documentation
+
+- [API_REFERENCE](./API_REFERENCE.md) - Complete API reference for all components
+- [ARCHITECTURE](./ARCHITECTURE.md) - System architecture and component relationships
+- [TEST_COVERAGE](./TEST_COVERAGE.md) - Current test coverage reports and implementation guides
+- [TUTORIALS](./TUTORIALS.md) - Step-by-step guides for using these components
+- [ERROR_HANDLING](./development/ERROR_HANDLING.md) - Error handling integration details

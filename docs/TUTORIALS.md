@@ -1,6 +1,8 @@
-# LLM Handler Tutorials
+# LLUMINARY TUTORIALS
 
-This document provides a series of tutorials to help you get started with the LLM Handler library and explore its features.
+## Overview
+
+This document provides a comprehensive series of tutorials to help you get started with the LLuMinary library and explore its features. Each tutorial includes sample code and explanations to demonstrate key capabilities of the library.
 
 ## Table of Contents
 
@@ -17,6 +19,8 @@ This document provides a series of tutorials to help you get started with the LL
   - [Document Reranking Tutorial](#document-reranking-tutorial)
   - [Streaming Responses Tutorial](#streaming-responses-tutorial)
   - [Function Calling Tutorial](#function-calling-tutorial)
+- [Building Applications](#building-applications)
+  - [Streamlit Chat Application](#streamlit-chat-application)
 - [Building Custom Integrations](#building-custom-integrations)
   - [Creating a Custom Provider](#creating-a-custom-provider)
   - [Registering Custom Models](#registering-custom-models)
@@ -429,6 +433,218 @@ for message in updated_messages:
         print(f"  Response: {message.get('tool_result', {}).get('result')}")
 ```
 
+## Building Applications
+
+### Streamlit Chat Application
+
+This tutorial demonstrates how to build a chat application using Streamlit and the llm-handler library. The application allows users to interact with various LLM providers through a unified interface.
+
+#### Prerequisites
+
+- Python 3.10+
+- Streamlit
+- llm-handler
+
+```bash
+pip install streamlit llm-handler
+```
+
+#### Complete Application Code
+
+```python
+import streamlit as st
+import os
+from typing import List, Dict, Any, Optional
+from llmhandler import get_llm_from_model
+
+# Set page configuration
+st.set_page_config(
+    page_title="LLM Chat with llm-handler",
+    page_icon="🤖",
+    layout="wide"
+)
+
+# Initialize session state for chat history if it doesn't exist
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+if "llm" not in st.session_state:
+    st.session_state.llm = None
+
+# App title and description
+st.title("🤖 LLM Chat Application")
+st.markdown("""
+This application demonstrates how to use the llm-handler library to create a chat interface
+with various LLM providers including OpenAI, Anthropic, Google, and more.
+""")
+
+# Sidebar for configuration
+with st.sidebar:
+    st.header("Configuration")
+
+    # Model selection
+    model_options = {
+        "OpenAI": ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
+        "Anthropic": ["claude-3-opus", "claude-3-sonnet", "claude-haiku-3.5"],
+        "Google": ["gemini-2.0-pro", "gemini-2.0-flash"],
+        "Cohere": ["command", "command-light"]
+    }
+
+    provider = st.selectbox("Provider", list(model_options.keys()))
+    model = st.selectbox("Model", model_options[provider])
+
+    # API key input
+    api_key = st.text_input("API Key", type="password")
+
+    # System prompt
+    system_prompt = st.text_area(
+        "System Prompt",
+        value="You are a helpful, friendly AI assistant. Provide clear and concise responses.",
+        height=150
+    )
+
+    # Temperature slider
+    temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
+
+    # Max tokens slider
+    max_tokens = st.slider("Max Tokens", min_value=100, max_value=4000, value=1000, step=100)
+
+    # Initialize or update LLM when settings change
+    if st.button("Apply Settings") or st.session_state.llm is None:
+        if api_key:
+            with st.spinner("Initializing LLM..."):
+                try:
+                    st.session_state.llm = get_llm_from_model(model, api_key=api_key)
+                    st.success(f"Successfully initialized {model}")
+                except Exception as e:
+                    st.error(f"Error initializing LLM: {str(e)}")
+        else:
+            st.warning("Please enter an API key")
+
+# Display chat history
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Chat input
+if prompt := st.chat_input("Type your message here..."):
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+
+    # Display user message
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # Check if LLM is initialized
+    if st.session_state.llm is None:
+        with st.chat_message("assistant"):
+            st.error("Please configure and initialize the LLM in the sidebar first.")
+    else:
+        # Display assistant response with a spinner
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
+
+            # Format messages for the LLM
+            formatted_messages = []
+            for msg in st.session_state.messages:
+                if msg["role"] == "user":
+                    formatted_messages.append({
+                        "message_type": "human",
+                        "message": msg["content"],
+                        "image_paths": [],
+                        "image_urls": []
+                    })
+                elif msg["role"] == "assistant":
+                    formatted_messages.append({
+                        "message_type": "ai",
+                        "message": msg["content"]
+                    })
+
+            # Stream the response
+            try:
+                # Define callback for streaming
+                def process_chunk(chunk, usage_data):
+                    nonlocal full_response
+                    if chunk:
+                        full_response += chunk
+                        message_placeholder.markdown(full_response + "▌")
+
+                # Stream generate
+                for _, _ in st.session_state.llm.stream_generate(
+                    event_id="streamlit_chat",
+                    system_prompt=system_prompt,
+                    messages=formatted_messages,
+                    max_tokens=max_tokens,
+                    temp=temperature,
+                    callback=process_chunk
+                ):
+                    pass
+
+                # Display final response
+                message_placeholder.markdown(full_response)
+
+                # Add assistant response to chat history
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+            except Exception as e:
+                st.error(f"Error generating response: {str(e)}")
+
+# Add a button to clear chat history
+if st.button("Clear Chat"):
+    st.session_state.messages = []
+    st.experimental_rerun()
+
+# Display usage information in the sidebar
+with st.sidebar:
+    st.header("About")
+    st.markdown("""
+    This application uses the [llm-handler](https://github.com/yourusername/llm-handler) library
+    to provide a unified interface for interacting with various LLM providers.
+
+    Features:
+    - Support for multiple providers (OpenAI, Anthropic, Google, Cohere)
+    - Streaming responses
+    - Configurable parameters (temperature, max tokens)
+    - Custom system prompts
+    """)
+```
+
+#### How to Run the Application
+
+Save the code to a file named `app.py` and run it with:
+
+```bash
+streamlit run app.py
+```
+
+#### Key Components Explained
+
+1. **Configuration in Sidebar**:
+   - Provider and model selection
+   - API key input
+   - System prompt customization
+   - Parameter adjustment (temperature, max tokens)
+
+2. **Message Formatting**:
+   - Converts Streamlit's message format to llm-handler's expected format
+   - Handles both user and assistant messages
+
+3. **Streaming Implementation**:
+   - Uses `stream_generate()` with a callback function
+   - Updates the UI in real-time as chunks are received
+   - Shows a typing indicator (▌) during generation
+
+4. **Session State Management**:
+   - Maintains chat history between interactions
+   - Stores the LLM instance for reuse
+
+5. **Error Handling**:
+   - Gracefully handles initialization errors
+   - Provides clear error messages during generation
+
+This application demonstrates how to leverage the llm-handler library's unified interface to create a flexible chat application that works with multiple LLM providers through a consistent API.
+
 ## Building Custom Integrations
 
 ### Creating a Custom Provider
@@ -548,3 +764,11 @@ register_model(
 # Now you can use these custom models
 llm = get_llm_from_model("my-gpt4-turbo", api_key="your-openai-api-key")
 ```
+
+## Related Documentation
+
+- [API_REFERENCE](./API_REFERENCE.md) - Complete API reference for all components
+- [ARCHITECTURE](./ARCHITECTURE.md) - System architecture and component relationships
+- [TEST_COVERAGE](./TEST_COVERAGE.md) - Current test coverage and implementation guides
+- [MODELS](./development/MODELS.md) - Comprehensive list of supported models
+- [ERROR_HANDLING](./development/ERROR_HANDLING.md) - Error handling implementation details

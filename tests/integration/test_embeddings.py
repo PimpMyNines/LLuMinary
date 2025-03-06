@@ -1,17 +1,16 @@
 """
 Integration tests for the embeddings functionality.
 """
-import os
+
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
 
 import pytest
 
 # Add the package to path for testing
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.llmhandler import get_llm_from_model
+from src.lluminary import get_llm_from_model
 
 
 @pytest.mark.integration
@@ -67,7 +66,7 @@ class TestEmbeddings:
                 print(f"Embeddings test passed for {model_name}")
 
             except Exception as e:
-                pytest.skip(f"Skipping embeddings test for {model_name}: {str(e)}")
+                pytest.skip(f"Skipping embeddings test for {model_name}: {e!s}")
 
         # Try specific embedding models for each provider
         for provider, model_name in embedding_models.items():
@@ -100,7 +99,7 @@ class TestEmbeddings:
                 print(f"Embeddings test passed for {provider}:{model_name}")
 
             except Exception as e:
-                print(f"Skipping {provider} embeddings test: {str(e)}")
+                print(f"Skipping {provider} embeddings test: {e!s}")
 
     def test_batch_embeddings(self, test_models):
         """Test getting batch embeddings from each provider."""
@@ -157,7 +156,7 @@ class TestEmbeddings:
 
             except Exception as e:
                 pytest.skip(
-                    f"Skipping batch embeddings test for {model_name}: {str(e)}"
+                    f"Skipping batch embeddings test for {model_name}: {e!s}"
                 )
 
         # Test with specific embedding models for each provider
@@ -189,7 +188,7 @@ class TestEmbeddings:
                 print(f"Batch embeddings test passed for {provider}:{model_name}")
 
             except Exception as e:
-                print(f"Skipping {provider} batch embeddings test: {str(e)}")
+                print(f"Skipping {provider} batch embeddings test: {e!s}")
 
     def test_similarity_calculation(self, test_models):
         """Test using embeddings for similarity calculation."""
@@ -247,7 +246,7 @@ class TestEmbeddings:
                 break
 
             except Exception as e:
-                print(f"Skipping {provider} similarity calculation test: {str(e)}")
+                print(f"Skipping {provider} similarity calculation test: {e!s}")
 
     def test_missing_embedding_providers(self):
         """Test that providers without embedding support behave correctly."""
@@ -278,7 +277,7 @@ class TestEmbeddings:
                 print(f"Missing embedding provider test passed for {provider}")
 
             except Exception as e:
-                print(f"Skipping {provider} missing embedding test: {str(e)}")
+                print(f"Skipping {provider} missing embedding test: {e!s}")
 
 
 if __name__ == "__main__":

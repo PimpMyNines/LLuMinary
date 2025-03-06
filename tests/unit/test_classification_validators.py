@@ -1,13 +1,17 @@
 """
 Unit tests for the classification validators.
 """
+
 import pytest
 
 # Mark all tests in this file as classification tests
 pytestmark = pytest.mark.classification
 
-from src.llmhandler.models.classification.validators import (
-    ValidationError, validate_classification_response, validate_xml_format)
+from src.lluminary.models.classification.validators import (
+    ValidationError,
+    validate_classification_response,
+    validate_xml_format,
+)
 
 
 def test_validate_xml_format():

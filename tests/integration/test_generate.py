@@ -2,12 +2,11 @@
 Integration tests for text generation functionality.
 These tests attempt real API calls and skip when credentials aren't available.
 """
-import traceback
+
 
 import pytest
 
-from src.llmhandler.models.router import (get_llm_from_model,
-                                          list_available_models)
+from src.lluminary.models.router import get_llm_from_model
 
 
 @pytest.mark.integration
@@ -70,7 +69,7 @@ class TestBasicGeneration:
                 successful_models.append(model_name)
 
             except Exception as e:
-                print(f"Error testing {model_name}: {str(e)}")
+                print(f"Error testing {model_name}: {e!s}")
                 failed_models.append((model_name, str(e)))
 
         # Print summary
@@ -158,7 +157,7 @@ class TestSystemPrompt:
                 return
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 continue
 
         # If we get here, no models worked
@@ -238,7 +237,7 @@ class TestTokenLimits:
                 return
 
             except Exception as e:
-                print(f"Error with {model_name}: {str(e)}")
+                print(f"Error with {model_name}: {e!s}")
                 continue
 
         # If we get here, no models worked

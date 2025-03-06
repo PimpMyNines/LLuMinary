@@ -1,12 +1,12 @@
 """
 Unit tests for the AWS Bedrock provider implementation.
 """
-import json
-import pytest
+
 from unittest.mock import MagicMock, patch
 
-from src.llmhandler.exceptions import LLMMistake
-from src.llmhandler.models.providers.bedrock import BedrockLLM
+import pytest
+
+from src.lluminary.models.providers.bedrock import BedrockLLM
 
 
 @pytest.fixture
@@ -29,11 +29,11 @@ def bedrock_llm():
 
         # Create mock client directly
         llm.bedrock_client = MagicMock()
-        
+
         # Ensure config exists
-        if not hasattr(llm, 'config'):
+        if not hasattr(llm, "config"):
             llm.config = {}
-        
+
         # Add client to config as expected by implementation
         llm.config["client"] = llm.bedrock_client
 
@@ -70,7 +70,7 @@ def test_message_formatting(bedrock_llm):
     assert len(formatted) == 1
     assert formatted[0]["role"] == "user"
     assert isinstance(formatted[0]["content"], list)
-    
+
     # Verify the text content is directly in the content list
     assert len(formatted[0]["content"]) == 1
     assert "text" in formatted[0]["content"][0]
@@ -88,8 +88,11 @@ def test_get_supported_models(bedrock_llm):
 def test_validate_model(bedrock_llm):
     """Test model validation works correctly."""
     # Test with valid model
-    assert bedrock_llm.validate_model("us.anthropic.claude-3-5-sonnet-20241022-v2:0") is True
-    
+    assert (
+        bedrock_llm.validate_model("us.anthropic.claude-3-5-sonnet-20241022-v2:0")
+        is True
+    )
+
     # Test with invalid model
     assert bedrock_llm.validate_model("invalid-model-name") is False
 

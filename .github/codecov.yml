@@ -1,0 +1,43 @@
+codecov:
+  require_ci_to_pass: yes
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...90"
+  status:
+    project:
+      default:
+        # basic settings
+        target: 75%
+        threshold: 2%
+        # fail if coverage drops by more than 2%
+        if_not_found: success
+        if_ci_failed: error
+        # only compare coverage with the base branch
+        only_pulls: true
+    patch:
+      default:
+        # basic settings
+        target: 75%
+        threshold: 5%
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
+        # only consider lines that were changed in the PR
+        only_pulls: true
+
+parsers:
+  gcov:
+    branch_detection:
+      conditional: yes
+      loop: yes
+      method: no
+      macro: no
+
+comment:
+  layout: "reach,diff,flags,files,footer"
+  behavior: default
+  require_changes: false
+  require_base: no
+  require_head: yes

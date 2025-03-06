@@ -1,10 +1,12 @@
 """
 Tests for the Google provider's class attributes and basic methods.
 """
-import pytest
-from unittest.mock import patch, MagicMock
 
-from src.llmhandler.models.providers.google import GoogleLLM
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from src.lluminary.models.providers.google import GoogleLLM
 
 
 def test_supported_models():
@@ -24,11 +26,11 @@ def test_context_window():
         assert model in GoogleLLM.CONTEXT_WINDOW
         assert isinstance(GoogleLLM.CONTEXT_WINDOW[model], int)
         assert GoogleLLM.CONTEXT_WINDOW[model] > 0
-        
+
         # Specific checks for known values
         if model == "gemini-2.0-flash":
             assert GoogleLLM.CONTEXT_WINDOW[model] == 128000
-        
+
         if model == "gemini-2.0-flash-lite-preview-02-05":
             assert GoogleLLM.CONTEXT_WINDOW[model] == 128000
 
@@ -37,12 +39,12 @@ def test_cost_per_model():
     """Test that cost info is defined for all models."""
     for model in GoogleLLM.SUPPORTED_MODELS:
         assert model in GoogleLLM.COST_PER_MODEL
-        
+
         model_costs = GoogleLLM.COST_PER_MODEL[model]
         assert "read_token" in model_costs
         assert "write_token" in model_costs
         assert "image_cost" in model_costs
-        
+
         assert model_costs["read_token"] > 0
         assert model_costs["write_token"] > 0
         assert model_costs["image_cost"] > 0
@@ -99,7 +101,7 @@ def test_get_model_costs():
         assert costs["read_token"] > 0
         assert costs["write_token"] > 0
         assert costs["image_cost"] > 0
-        
+
         # Test with different model
         llm.model_name = "gemini-2.0-pro-exp-02-05"
         costs = llm.get_model_costs()
@@ -112,11 +114,11 @@ def test_process_image_local():
     """Test processing a local image."""
     with patch.object(GoogleLLM, "auth"):
         llm = GoogleLLM("gemini-2.0-flash")
-        
+
         mock_image = MagicMock()
         with patch("PIL.Image.open", return_value=mock_image) as mock_open:
             result = llm._process_image("/path/to/image.jpg")
-            
+
             # Verify Image.open was called with correct path
             mock_open.assert_called_once_with("/path/to/image.jpg")
             assert result == mock_image
@@ -126,21 +128,25 @@ def test_process_image_url():
     """Test processing an image from URL."""
     with patch.object(GoogleLLM, "auth"):
         llm = GoogleLLM("gemini-2.0-flash")
-        
+
         # Create mock response for URL fetch
         mock_response = MagicMock()
         mock_response.content = b"fake_image_data"
-        
+
         # Create mock image
         mock_image = MagicMock()
-        
+
         with patch("requests.get", return_value=mock_response) as mock_get:
             with patch("PIL.Image.open", return_value=mock_image) as mock_open:
-                result = llm._process_image("https://example.com/image.jpg", is_url=True)
-                
+                result = llm._process_image(
+                    "https://example.com/image.jpg", is_url=True
+                )
+
                 # Verify HTTP request was made
-                mock_get.assert_called_once_with("https://example.com/image.jpg", timeout=10)
-                
+                mock_get.assert_called_once_with(
+                    "https://example.com/image.jpg", timeout=10
+                )
+
                 # Verify image was processed
                 assert mock_open.call_count == 1
                 assert result == mock_image
@@ -150,12 +156,12 @@ def test_process_image_error_local():
     """Test error handling for local image processing."""
     with patch.object(GoogleLLM, "auth"):
         llm = GoogleLLM("gemini-2.0-flash")
-        
+
         # Make Image.open raise an exception
         with patch("PIL.Image.open", side_effect=Exception("Failed to open image")):
             with pytest.raises(Exception) as exc_info:
                 llm._process_image("/path/to/bad_image.jpg")
-            
+
             assert "Failed to process image file" in str(exc_info.value)
             assert "/path/to/bad_image.jpg" in str(exc_info.value)
 
@@ -164,11 +170,11 @@ def test_process_image_error_url():
     """Test error handling for URL image processing."""
     with patch.object(GoogleLLM, "auth"):
         llm = GoogleLLM("gemini-2.0-flash")
-        
+
         # Make requests.get raise an exception
         with patch("requests.get", side_effect=Exception("Failed to fetch image")):
             with pytest.raises(Exception) as exc_info:
                 llm._process_image("https://example.com/bad_image.jpg", is_url=True)
-            
+
             assert "Failed to process image URL" in str(exc_info.value)
             assert "https://example.com/bad_image.jpg" in str(exc_info.value)

@@ -1,12 +1,13 @@
 """
 Minimal tests for LLMHandler to improve coverage.
 """
+
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.llmhandler.exceptions import ProviderError
-from src.llmhandler.handler import LLMHandler
+from src.lluminary.exceptions import ProviderError
+from src.lluminary.handler import LLMHandler
 
 
 def test_handler_initialization():
@@ -26,7 +27,7 @@ def test_handler_get_provider():
 
     # Test get_provider with ProviderError
     with patch(
-        "src.llmhandler.handler.get_llm_from_model", side_effect=Exception("Test error")
+        "src.lluminary.handler.get_llm_from_model", side_effect=Exception("Test error")
     ):
         with pytest.raises(ProviderError):
             handler.get_provider("test-provider")

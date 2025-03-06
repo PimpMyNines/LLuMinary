@@ -1,6 +1,7 @@
 """
 Simplified tests for Google Gemini provider.
 """
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -15,7 +16,7 @@ def test_basic_functionality():
         with patch("requests.get"):
             with patch("PIL.Image.open"):
                 # Import GoogleLLM after patching dependencies
-                from src.llmhandler.models.providers.google import GoogleLLM
+                from src.lluminary.models.providers.google import GoogleLLM
 
                 # Further patch auth to avoid actual API calls
                 with patch.object(GoogleLLM, "auth"):
@@ -40,7 +41,7 @@ def test_with_mocked_generation():
         "requests.get"
     ):
         # Import GoogleLLM after patching
-        from src.llmhandler.models.providers.google import GoogleLLM
+        from src.lluminary.models.providers.google import GoogleLLM
 
         # First, patch LLM.auth to avoid authentication attempts
         with patch.object(GoogleLLM, "auth"):
@@ -96,7 +97,7 @@ def test_with_image_input():
         "requests.get"
     ):
         # Import GoogleLLM after patching
-        from src.llmhandler.models.providers.google import GoogleLLM
+        from src.lluminary.models.providers.google import GoogleLLM
 
         with patch.object(GoogleLLM, "auth"):
             # Create a test instance
@@ -155,7 +156,7 @@ def test_stream_generation(mock_generative_model):
         "requests.get"
     ):
         # Import GoogleLLM after patching
-        from src.llmhandler.models.providers.google import GoogleLLM
+        from src.lluminary.models.providers.google import GoogleLLM
 
         with patch.object(GoogleLLM, "auth"):
             # Create a test instance

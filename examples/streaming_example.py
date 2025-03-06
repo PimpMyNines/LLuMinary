@@ -10,7 +10,7 @@ from pathlib import Path
 # Add package to path for local development
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from llmhandler import get_llm_from_model
+from lluminary import get_llm_from_model
 
 
 def main():
@@ -95,7 +95,7 @@ def test_streaming_with_provider(model_name, api_key):
         print(f"Total time: {elapsed_time:.2f} seconds")
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error: {e!s}")
 
 
 if __name__ == "__main__":

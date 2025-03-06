@@ -4,12 +4,14 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import pytest
 
-from src.llmhandler.tools.registry import ToolValidationError
-from src.llmhandler.tools.validators import (_validate_type_structure,
-                                             json_serializable,
-                                             validate_nested_structure,
-                                             validate_params,
-                                             validate_return_type)
+from src.lluminary.tools.registry import ToolValidationError
+from src.lluminary.tools.validators import (
+    _validate_type_structure,
+    json_serializable,
+    validate_nested_structure,
+    validate_params,
+    validate_return_type,
+)
 
 
 class TestTypeValidation:

@@ -1,13 +1,27 @@
-# LLMHandler Error Handling Guidelines
+# ERROR HANDLING GUIDELINES
 
-This document outlines the standard approach for error handling across all LLMHandler components, with special focus on provider implementations.
+## Overview
+
+This document outlines the standard approach for error handling across all LLuMinary components, with special focus on provider implementations. It serves as a reference for developers implementing error handling in new or existing components.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Error Hierarchy](#error-hierarchy)
+- [Key Error Types](#key-error-types)
+- [Provider Error Handling Standard](#provider-error-handling-standard)
+- [Common Error Patterns by Provider](#common-error-patterns-by-provider)
+- [Implementation Checklist](#implementation-checklist)
+- [Example Implementation](#example-implementation)
+- [Testing Error Handling](#testing-error-handling)
+- [Related Documentation](#related-documentation)
 
 ## Error Hierarchy
 
-LLMHandler has a well-defined error hierarchy to categorize different types of errors:
+LLuMinary has a well-defined error hierarchy to categorize different types of errors:
 
 ```
-LLMHandlerError (base class)
+LLuMinaryError (base class)
 ├── ProviderError (provider-specific issues)
 └── LLMMistake (LLM response issues)
     ├── FormatError
@@ -18,7 +32,7 @@ LLMHandlerError (base class)
 
 ## Key Error Types
 
-1. **LLMHandlerError**: Base exception class for all errors within the library.
+1. **LLuMinaryError**: Base exception class for all errors within the library.
 
 2. **ProviderError**: For provider-specific issues like authentication, API errors, configuration problems.
    - Used for errors where retrying with the same parameters is unlikely to succeed
@@ -32,7 +46,7 @@ LLMHandlerError (base class)
 
 ## Provider Error Handling Standard
 
-All provider implementations must follow these standards:
+All provider implementations in LLuMinary must follow these standards:
 
 ### 1. Use Custom Exception Types
 
@@ -79,11 +93,11 @@ Include consistent information in error messages:
 
 ### 4. Map Provider-Specific Errors
 
-Each provider should implement a method to map provider-specific error codes to LLMHandler exceptions:
+Each provider should implement a method to map provider-specific error codes to LLuMinary exceptions:
 
 ```python
 def _map_api_error(self, error):
-    """Map provider API errors to appropriate LLMHandler exceptions."""
+    """Map provider API errors to appropriate LLuMinary exceptions."""
     if "invalid_api_key" in str(error):
         return ProviderError(
             message="Authentication failed: Invalid API key",
@@ -93,7 +107,7 @@ def _map_api_error(self, error):
     elif "rate_limit" in str(error):
         return ProviderError(
             message="Rate limit exceeded",
-            provider="openai", 
+            provider="openai",
             details={
                 "original_error": str(error),
                 "retry_after": error.headers.get("retry-after", "60")
@@ -111,7 +125,7 @@ def _call_with_retry(self, func, *args, max_retries=3, backoff_factor=1.5, **kwa
     """Call API function with exponential backoff retry logic."""
     retry_count = 0
     last_exception = None
-    
+
     while retry_count < max_retries:
         try:
             return func(*args, **kwargs)
@@ -125,7 +139,7 @@ def _call_with_retry(self, func, *args, max_retries=3, backoff_factor=1.5, **kwa
             else:
                 # Non-retryable error, raise immediately
                 raise self._map_api_error(e)
-    
+
     # If we've exhausted retries
     raise ProviderError(
         message=f"Failed after {max_retries} retries",
@@ -143,7 +157,7 @@ Implement proper recovery behavior for LLMMistake errors:
 except LLMMistake as e:
     attempts += 1
     cumulative_usage["retry_count"] = attempts
-    
+
     # Add failed response and error to messages for context
     working_messages.extend([
         {"message_type": "ai", "message": raw_response},
@@ -205,19 +219,19 @@ class OpenAILLM(LLM):
                 provider="openai",
                 details={"original_error": str(e)}
             )
-    
-    def _raw_generate(self, event_id, system_prompt, messages, max_tokens=1000, temp=0.0, 
+
+    def _raw_generate(self, event_id, system_prompt, messages, max_tokens=1000, temp=0.0,
                      tools=None, thinking_budget=None):
         """Generate text with proper error handling."""
         try:
             # Format messages
             formatted_messages = self._format_messages_for_model(messages)
-            
+
             # Make API call with retry logic
             response = self._call_api_with_retry(
                 formatted_messages, max_tokens, temp, tools
             )
-            
+
             # Extract content and validate
             content = self._extract_content(response)
             if not content.strip():
@@ -226,17 +240,17 @@ class OpenAILLM(LLM):
                     error_type="content",
                     provider="openai"
                 )
-                
+
             # Calculate usage statistics
             usage = self._calculate_usage(response, messages)
-            
+
             return content, usage, messages
-            
+
         except openai.APIError as e:
             # Map provider-specific error to our exception types
             mapped_error = self._map_openai_error(e)
             raise mapped_error
-            
+
     def _map_openai_error(self, error):
         """Map OpenAI API errors to appropriate LLMHandler exceptions."""
         if "invalid_api_key" in str(error):
@@ -248,7 +262,7 @@ class OpenAILLM(LLM):
         elif "rate_limit" in str(error):
             return ProviderError(
                 message="Rate limit exceeded",
-                provider="openai", 
+                provider="openai",
                 details={
                     "original_error": str(error),
                     "retry_after": getattr(error, "headers", {}).get("retry-after", "60")
@@ -271,3 +285,12 @@ All error handling should be thoroughly tested:
 3. Test proper mapping of provider-specific errors
 4. Test recovery from LLMMistake errors
 5. Test proper error propagation
+
+## Related Documentation
+
+- [API_REFERENCE](../API_REFERENCE.md) - Complete API reference including error handling
+- [ARCHITECTURE](../ARCHITECTURE.md) - System architecture including error handling architecture
+- [ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION](./ANTHROPIC_ERROR_HANDLING_IMPLEMENTATION.md) - Anthropic-specific error handling
+- [OPENAI_ERROR_HANDLING_IMPLEMENTATION](./OPENAI_ERROR_HANDLING_IMPLEMENTATION.md) - OpenAI-specific error handling
+- [GOOGLE_ERROR_HANDLING_IMPLEMENTATION](./GOOGLE_ERROR_HANDLING_IMPLEMENTATION.md) - Google-specific error handling
+- [BEDROCK_ERROR_HANDLING_IMPLEMENTATION](./BEDROCK_ERROR_HANDLING_IMPLEMENTATION.md) - Bedrock-specific error handling

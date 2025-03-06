@@ -1,16 +1,13 @@
 """
 Unit tests for the core model functionality.
 """
-import importlib
-import sys
-from unittest.mock import MagicMock, patch
+
 
 import pytest
 
 # First, let's try to import the router and see if there are any issues
 try:
-    from src.llmhandler.models.router import (get_llm_from_model,
-                                              list_available_models)
+    from src.lluminary.models.router import get_llm_from_model, list_available_models
 
     IMPORT_ERROR = None
 except Exception as e:
@@ -28,25 +25,22 @@ class TestModelRouter:
 
         try:
             # Just test if the router imports correctly
-            assert hasattr(
-                get_llm_from_model, "__call__"
-            ), "get_llm_from_model should be callable"
+            assert callable(get_llm_from_model), "get_llm_from_model should be callable"
 
             # Import all provider classes to make sure they exist
             try:
-                from src.llmhandler.models.providers.anthropic import \
-                    AnthropicLLM
-                from src.llmhandler.models.providers.bedrock import BedrockLLM
-                from src.llmhandler.models.providers.google import GoogleLLM
-                from src.llmhandler.models.providers.openai import OpenAILLM
+                from src.lluminary.models.providers.anthropic import AnthropicLLM
+                from src.lluminary.models.providers.bedrock import BedrockLLM
+                from src.lluminary.models.providers.google import GoogleLLM
+                from src.lluminary.models.providers.openai import OpenAILLM
 
                 # If we get here, all providers imported correctly
                 assert True
             except ImportError as e:
-                pytest.fail(f"Failed to import provider classes: {str(e)}")
+                pytest.fail(f"Failed to import provider classes: {e!s}")
 
         except Exception as e:
-            pytest.fail(f"Test failed with exception: {str(e)}")
+            pytest.fail(f"Test failed with exception: {e!s}")
 
     def test_list_available_models(self):
         """Test listing available models by provider."""
@@ -76,7 +70,7 @@ class TestModelRouter:
             assert True
 
         except Exception as e:
-            pytest.fail(f"Test failed with exception: {str(e)}")
+            pytest.fail(f"Test failed with exception: {e!s}")
 
     def test_invalid_model(self):
         """Test exception raised for invalid model name."""
@@ -101,10 +95,10 @@ class TestModelRouter:
         except Exception as e:
             if "nonexistent-model-that-definitely-doesnt-exist" in str(e):
                 # It might be a different error format than expected
-                print(f"Different error format than expected: {str(e)}")
+                print(f"Different error format than expected: {e!s}")
                 assert True
             else:
-                pytest.fail(f"Test failed with unexpected exception: {str(e)}")
+                pytest.fail(f"Test failed with unexpected exception: {e!s}")
 
 
 class TestModelBase:
@@ -118,7 +112,7 @@ class TestModelBase:
 
         try:
             # Check that the supports_image_input method exists on the base class
-            from src.llmhandler.models.base import LLM
+            from src.lluminary.models.base import LLM
 
             # Just verify the method exists
             assert hasattr(
@@ -126,4 +120,4 @@ class TestModelBase:
             ), "LLM class should have supports_image_input method"
 
         except Exception as e:
-            pytest.fail(f"Test failed with exception: {str(e)}")
+            pytest.fail(f"Test failed with exception: {e!s}")

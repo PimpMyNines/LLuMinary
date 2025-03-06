@@ -1,13 +1,14 @@
 """
 Unit tests for the authentication functionality.
 """
+
 import json
 import os
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.llmhandler.models.utils.aws import get_secret
+from src.lluminary.models.utils.aws import get_secret
 
 
 class TestAuthentication:

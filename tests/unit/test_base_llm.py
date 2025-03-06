@@ -1,15 +1,13 @@
 """
 Unit tests for the base LLM class.
 """
-import json
-import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-from unittest.mock import MagicMock, patch
+
+from typing import Any, Callable, Dict, List, Optional, Tuple
+from unittest.mock import patch
 
 import pytest
 
-from src.llmhandler.exceptions import LLMMistake
-from src.llmhandler.models.base import LLM
+from src.lluminary.models.base import LLM
 
 
 class MockLLM(LLM):
@@ -74,8 +72,8 @@ def mock_llm():
 def test_llm_initialization(mock_llm):
     """Test LLM initialization."""
     assert mock_llm.model_name == "test-model"
-    assert mock_llm.SUPPORTED_MODELS == ["test-model"]
-    assert mock_llm.THINKING_MODELS == ["test-model"]
+    assert ["test-model"] == mock_llm.SUPPORTED_MODELS
+    assert ["test-model"] == mock_llm.THINKING_MODELS
     assert "test-model" in mock_llm.CONTEXT_WINDOW
     assert "test-model" in mock_llm.COST_PER_MODEL
 

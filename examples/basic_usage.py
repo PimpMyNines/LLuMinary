@@ -1,7 +1,8 @@
 """
 Basic usage examples for LLMHandler package.
 """
-from llmhandler import get_llm_from_model
+
+from lluminary import get_llm_from_model
 
 
 def basic_text_generation():
@@ -104,7 +105,7 @@ def function_calling_example():
     print("Response:", response)
 
     # Check if a tool was used
-    if "tool_use" in usage and usage["tool_use"]:
+    if usage.get("tool_use"):
         tool_id = usage["tool_use"].get("id") or usage["tool_use"].get("name")
         print(f"Tool used: {tool_id}")
 

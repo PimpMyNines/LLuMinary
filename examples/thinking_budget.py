@@ -1,7 +1,8 @@
 """
 Example demonstrating the thinking budget feature with Claude 3.7.
 """
-from llmhandler import get_llm_from_model
+
+from lluminary import get_llm_from_model
 
 
 def thinking_budget_example():
@@ -98,7 +99,7 @@ def thinking_budget_example():
         )
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error: {e!s}")
         return None, None
 
 
