@@ -1,0 +1,18 @@
+# Ruff configuration file
+
+line-length = 88
+target-version = "py38"
+
+[lint]
+select = ["E", "F", "B", "I", "W", "C4", "UP", "N", "ANN", "SIM", "RUF"]
+ignore = ["ANN101", "ANN102", "ANN002", "ANN003", "ANN204", "N818"]
+
+[lint.per-file-ignores]
+"tests/**/*.py" = ["ANN"]
+"debug/**/*.py" = ["E501", "ANN", "I", "B"]
+"examples/**/*.py" = ["E501"]
+"docs/development/**/*.py" = ["E501", "ANN", "I", "B", "F", "RUF"]
+"tests/unit/test_openai_**/*.py" = ["F841"]  # Suppress unused variable warnings in test files
+
+[lint.pydocstyle]
+convention = "google"
