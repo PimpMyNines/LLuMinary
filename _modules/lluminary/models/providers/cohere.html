@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>lluminary.models.providers.cohere &mdash; LLuMinary 0.0.1</title>
+  <title>lluminary.models.providers.cohere &mdash; LLuMinary 1.0.0</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
       <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -85,9 +85,9 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">...exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLMMistake</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..base</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLM</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..router</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_provider</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLMMistake</span>
 
 
 <div class="viewcode-block" id="CohereLLM">
@@ -213,7 +213,7 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_messages_for_model</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert standard message format to Cohere chat format.</span>
@@ -261,14 +261,17 @@
                                 <span class="p">}</span>
                             <span class="p">)</span>
                     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Failed to process image </span><span class="si">{</span><span class="n">img_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Warning: Failed to process image </span><span class="si">{</span><span class="n">img_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span>
 
                 <span class="c1"># Process image URLs</span>
                 <span class="k">for</span> <span class="n">img_url</span> <span class="ow">in</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;image_urls&quot;</span><span class="p">,</span> <span class="p">[]):</span>
                     <span class="k">try</span><span class="p">:</span>
-                        <span class="n">attachments</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">img_url</span><span class="p">}})</span>
+                        <span class="n">attachments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="p">{</span><span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">img_url</span><span class="p">}})</span>
                     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Failed to add image URL </span><span class="si">{</span><span class="n">img_url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Warning: Failed to add image URL </span><span class="si">{</span><span class="n">img_url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span>
 
                 <span class="c1"># Add attachments if present</span>
                 <span class="k">if</span> <span class="n">attachments</span><span class="p">:</span>
@@ -279,15 +282,15 @@
         <span class="k">return</span> <span class="n">formatted_messages</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_raw_generate</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
-        <span class="n">tools</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">thinking_budget</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+            <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+            <span class="n">tools</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">thinking_budget</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a response using the Cohere chat API.</span>
@@ -297,7 +300,8 @@
 
         <span class="c1"># Add system prompt as a SYSTEM message if provided</span>
         <span class="k">if</span> <span class="n">system_prompt</span><span class="p">:</span>
-            <span class="n">formatted_messages</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;SYSTEM&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">system_prompt</span><span class="p">})</span>
+            <span class="n">formatted_messages</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;SYSTEM&quot;</span><span class="p">,</span>
+                                          <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">system_prompt</span><span class="p">})</span>
 
         <span class="c1"># Count images for cost calculation</span>
         <span class="n">image_count</span> <span class="o">=</span> <span class="mi">0</span>
@@ -309,7 +313,8 @@
         <span class="c1"># Prepare request data</span>
         <span class="n">request_data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
-            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">formatted_messages</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;message&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">formatted_messages</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">formatted_messages</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span>
+                <span class="s2">&quot;message&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">formatted_messages</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="s2">&quot;chat_history&quot;</span><span class="p">:</span> <span class="p">(</span>
                 <span class="n">formatted_messages</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">formatted_messages</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">[]</span>
             <span class="p">),</span>
@@ -333,7 +338,8 @@
                 <span class="k">if</span> <span class="s2">&quot;parameters&quot;</span> <span class="ow">in</span> <span class="n">tool</span><span class="p">:</span>
                     <span class="n">parameters</span> <span class="o">=</span> <span class="n">tool</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span>
                     <span class="k">if</span> <span class="s2">&quot;properties&quot;</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
-                        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_def</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_def</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span>
+                            <span class="s2">&quot;properties&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                             <span class="n">cohere_tool</span><span class="p">[</span><span class="s2">&quot;parameter_definitions&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                                 <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">param_def</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
                                 <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">param_def</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;string&quot;</span><span class="p">),</span>
@@ -343,7 +349,8 @@
 
             <span class="k">if</span> <span class="n">cohere_tools</span><span class="p">:</span>
                 <span class="n">request_data</span><span class="p">[</span><span class="s2">&quot;tools&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cohere_tools</span>
-                <span class="n">request_data</span><span class="p">[</span><span class="s2">&quot;tool_results&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Initialize empty tool results</span>
+                <span class="n">request_data</span><span class="p">[</span>
+                    <span class="s2">&quot;tool_results&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Initialize empty tool results</span>
 
         <span class="c1"># Make request to Cohere API</span>
         <span class="k">try</span><span class="p">:</span>
@@ -419,7 +426,8 @@
                 <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;cohere&quot;</span><span class="p">,</span>
                 <span class="n">details</span><span class="o">=</span><span class="p">{</span>
                     <span class="s2">&quot;status_code&quot;</span><span class="p">:</span> <span class="p">(</span>
-                        <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;response&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+                        <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">e</span><span class="p">,</span>
+                                                          <span class="s2">&quot;response&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
                     <span class="p">)</span>
                 <span class="p">},</span>
             <span class="p">)</span>
@@ -502,11 +510,11 @@
 <div class="viewcode-block" id="CohereLLM.embed">
 <a class="viewcode-back" href="../../../../api.html#lluminary.models.providers.cohere.CohereLLM.embed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">embed</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+            <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get embeddings for a list of texts using Cohere&#39;s embedding models.</span>
@@ -563,7 +571,7 @@
 
             <span class="c1"># Process in batches to avoid rate limits and large requests</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">texts</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
-                <span class="n">batch</span> <span class="o">=</span> <span class="n">texts</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
+                <span class="n">batch</span> <span class="o">=</span> <span class="n">texts</span><span class="p">[</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
 
                 <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span>
                     <span class="n">texts</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
@@ -614,12 +622,12 @@
 <div class="viewcode-block" id="CohereLLM.rerank">
 <a class="viewcode-back" href="../../../../api.html#lluminary.models.providers.cohere.CohereLLM.rerank">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rerank</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">return_scores</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+            <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">return_scores</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rerank documents using Cohere&#39;s dedicated reranking API.</span>
@@ -683,7 +691,8 @@
 
             <span class="c1"># Get ranked documents - either from response or reindex original documents</span>
             <span class="k">if</span> <span class="n">top_n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;document&quot;</span><span class="p">):</span>
-                <span class="n">ranked_documents</span> <span class="o">=</span> <span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">document</span> <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">results</span><span class="p">]</span>
+                <span class="n">ranked_documents</span> <span class="o">=</span> <span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">document</span> <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span>
+                                    <span class="n">response</span><span class="o">.</span><span class="n">results</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">ranked_documents</span> <span class="o">=</span> <span class="p">[</span><span class="n">documents</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">ranked_indices</span><span class="p">]</span>
 

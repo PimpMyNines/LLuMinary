@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API Reference &mdash; LLuMinary 0.0.1</title>
+  <title>API Reference &mdash; LLuMinary 1.0.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -48,21 +48,26 @@
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-lluminary.handler">Client</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#lluminary.handler.LLuMinary"><code class="docutils literal notranslate"><span class="pre">LLuMinary</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.__init__"><code class="docutils literal notranslate"><span class="pre">LLuMinary.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.get_provider"><code class="docutils literal notranslate"><span class="pre">LLuMinary.get_provider()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.generate"><code class="docutils literal notranslate"><span class="pre">LLuMinary.generate()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.generate_with_usage"><code class="docutils literal notranslate"><span class="pre">LLuMinary.generate_with_usage()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.classify"><code class="docutils literal notranslate"><span class="pre">LLuMinary.classify()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.classify_with_usage"><code class="docutils literal notranslate"><span class="pre">LLuMinary.classify_with_usage()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.estimate_cost"><code class="docutils literal notranslate"><span class="pre">LLuMinary.estimate_cost()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.supports_images"><code class="docutils literal notranslate"><span class="pre">LLuMinary.supports_images()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.supports_embeddings"><code class="docutils literal notranslate"><span class="pre">LLuMinary.supports_embeddings()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.get_embeddings"><code class="docutils literal notranslate"><span class="pre">LLuMinary.get_embeddings()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.stream_generate"><code class="docutils literal notranslate"><span class="pre">LLuMinary.stream_generate()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.get_context_window"><code class="docutils literal notranslate"><span class="pre">LLuMinary.get_context_window()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.register_tools"><code class="docutils literal notranslate"><span class="pre">LLuMinary.register_tools()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLuMinary.check_context_fit"><code class="docutils literal notranslate"><span class="pre">LLuMinary.check_context_fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lluminary.handler.LLMHandler"><code class="docutils literal notranslate"><span class="pre">LLMHandler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.config"><code class="docutils literal notranslate"><span class="pre">LLMHandler.config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.default_provider"><code class="docutils literal notranslate"><span class="pre">LLMHandler.default_provider</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.fallback_providers"><code class="docutils literal notranslate"><span class="pre">LLMHandler.fallback_providers</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.llm_instances"><code class="docutils literal notranslate"><span class="pre">LLMHandler.llm_instances</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.logger"><code class="docutils literal notranslate"><span class="pre">LLMHandler.logger</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.__init__"><code class="docutils literal notranslate"><span class="pre">LLMHandler.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.get_provider"><code class="docutils literal notranslate"><span class="pre">LLMHandler.get_provider()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.generate"><code class="docutils literal notranslate"><span class="pre">LLMHandler.generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.generate_with_usage"><code class="docutils literal notranslate"><span class="pre">LLMHandler.generate_with_usage()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.classify"><code class="docutils literal notranslate"><span class="pre">LLMHandler.classify()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.classify_with_usage"><code class="docutils literal notranslate"><span class="pre">LLMHandler.classify_with_usage()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.estimate_cost"><code class="docutils literal notranslate"><span class="pre">LLMHandler.estimate_cost()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.supports_images"><code class="docutils literal notranslate"><span class="pre">LLMHandler.supports_images()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.supports_embeddings"><code class="docutils literal notranslate"><span class="pre">LLMHandler.supports_embeddings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.get_embeddings"><code class="docutils literal notranslate"><span class="pre">LLMHandler.get_embeddings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.stream_generate"><code class="docutils literal notranslate"><span class="pre">LLMHandler.stream_generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.get_context_window"><code class="docutils literal notranslate"><span class="pre">LLMHandler.get_context_window()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.register_tools"><code class="docutils literal notranslate"><span class="pre">LLMHandler.register_tools()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.handler.LLMHandler.check_context_fit"><code class="docutils literal notranslate"><span class="pre">LLMHandler.check_context_fit()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -104,7 +109,36 @@
 <li class="toctree-l3"><a class="reference internal" href="#lluminary.models.router.register_model"><code class="docutils literal notranslate"><span class="pre">register_model()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#tools">Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tools">Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#lluminary.tools.registry.ToolValidationError"><code class="docutils literal notranslate"><span class="pre">ToolValidationError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lluminary.tools.registry.ToolMetadata"><code class="docutils literal notranslate"><span class="pre">ToolMetadata</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolMetadata.name"><code class="docutils literal notranslate"><span class="pre">ToolMetadata.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolMetadata.description"><code class="docutils literal notranslate"><span class="pre">ToolMetadata.description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolMetadata.function"><code class="docutils literal notranslate"><span class="pre">ToolMetadata.function</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolMetadata.parameters"><code class="docutils literal notranslate"><span class="pre">ToolMetadata.parameters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolMetadata.return_type"><code class="docutils literal notranslate"><span class="pre">ToolMetadata.return_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolMetadata.success_count"><code class="docutils literal notranslate"><span class="pre">ToolMetadata.success_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolMetadata.failure_count"><code class="docutils literal notranslate"><span class="pre">ToolMetadata.failure_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolMetadata.total_execution_time"><code class="docutils literal notranslate"><span class="pre">ToolMetadata.total_execution_time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolMetadata.average_execution_time"><code class="docutils literal notranslate"><span class="pre">ToolMetadata.average_execution_time</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#lluminary.tools.registry.ToolRegistry"><code class="docutils literal notranslate"><span class="pre">ToolRegistry</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolRegistry.__init__"><code class="docutils literal notranslate"><span class="pre">ToolRegistry.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolRegistry.register_tool"><code class="docutils literal notranslate"><span class="pre">ToolRegistry.register_tool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolRegistry.register_tools"><code class="docutils literal notranslate"><span class="pre">ToolRegistry.register_tools()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolRegistry.get_tool"><code class="docutils literal notranslate"><span class="pre">ToolRegistry.get_tool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolRegistry.list_tools"><code class="docutils literal notranslate"><span class="pre">ToolRegistry.list_tools()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lluminary.tools.registry.ToolRegistry.get_tool_stats"><code class="docutils literal notranslate"><span class="pre">ToolRegistry.get_tool_stats()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#lluminary.tools.validators.validate_tool"><code class="docutils literal notranslate"><span class="pre">validate_tool()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lluminary.tools.validators.validate_return_type"><code class="docutils literal notranslate"><span class="pre">validate_return_type()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lluminary.tools.validators.validate_params"><code class="docutils literal notranslate"><span class="pre">validate_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lluminary.tools.validators.validate_nested_structure"><code class="docutils literal notranslate"><span class="pre">validate_nested_structure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lluminary.tools.validators.json_serializable"><code class="docutils literal notranslate"><span class="pre">json_serializable()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#exceptions">Exceptions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#lluminary.exceptions.LLMError"><code class="docutils literal notranslate"><span class="pre">LLMError</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#lluminary.exceptions.LLMProviderError"><code class="docutils literal notranslate"><span class="pre">LLMProviderError</span></code></a><ul>
@@ -175,37 +209,86 @@
 <span id="client"></span><h2>Client<a class="headerlink" href="#module-lluminary.handler" title="Link to this heading"></a></h2>
 <p>Main handler module for LLM operations.
 Provides a unified interface for interacting with various LLM providers.</p>
+<p>This module implements the LLMHandler class which serves as the primary entry point
+for applications using the LLuMinary library. It abstracts provider-specific details,
+manages multiple provider instances, and provides cross-provider features like
+fallback mechanisms and cost estimation.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lluminary.handler.</span></span><span class="sig-name descname"><span class="pre">LLuMinary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lluminary.handler.</span></span><span class="sig-name descname"><span class="pre">LLMHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Main class for handling LLM operations.
-Provides a unified interface for working with different LLM providers
-and managing message generation, tool usage, and error handling.</p>
+<p>Main class for handling LLM operations.</p>
+<p>Provides a unified interface for working with different LLM providers
+and managing message generation, tool usage, and error handling. The handler
+abstracts away provider-specific details and provides features like:</p>
+<ol class="arabic simple">
+<li><p>Provider fallback mechanisms</p></li>
+<li><p>Consolidated error handling</p></li>
+<li><p>Cross-provider cost estimation</p></li>
+<li><p>Capability detection</p></li>
+<li><p>Common operations (generate, embed, classify)</p></li>
+</ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>config</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>)</p>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.config">
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#lluminary.handler.LLMHandler.config" title="Link to this definition"></a></dt>
+<dd><p>Configuration dictionary</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.default_provider">
+<span class="sig-name descname"><span class="pre">default_provider</span></span><a class="headerlink" href="#lluminary.handler.LLMHandler.default_provider" title="Link to this definition"></a></dt>
+<dd><p>Name of the default LLM provider</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.fallback_providers">
+<span class="sig-name descname"><span class="pre">fallback_providers</span></span><a class="headerlink" href="#lluminary.handler.LLMHandler.fallback_providers" title="Link to this definition"></a></dt>
+<dd><p>List of providers to try if the primary fails</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.llm_instances">
+<span class="sig-name descname"><span class="pre">llm_instances</span></span><a class="headerlink" href="#lluminary.handler.LLMHandler.llm_instances" title="Link to this definition"></a></dt>
+<dd><p>Dictionary of provider instances</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.logger">
+<span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#lluminary.handler.LLMHandler.logger" title="Link to this definition"></a></dt>
+<dd><p>Optional logger for recording errors and operations</p>
+</dd></dl>
+
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.__init__" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.__init__" title="Link to this definition"></a></dt>
 <dd><p>Initialize the LLM handler with configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>config</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Optional configuration dictionary containing:
 - default_provider: Name of the default LLM provider
+- fallback_providers: List of providers to try if primary fails
 - providers: Dictionary of provider-specific configurations
-- logging: Logging configuration</p>
+- logging: Logging configuration including level and format</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#lluminary.exceptions.LLMConfigurationError" title="lluminary.exceptions.LLMConfigurationError"><strong>LLMConfigurationError</strong></a> – If configuration is invalid</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.get_provider">
-<span class="sig-name descname"><span class="pre">get_provider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.get_provider"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.get_provider" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.get_provider">
+<span class="sig-name descname"><span class="pre">get_provider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.get_provider"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.get_provider" title="Link to this definition"></a></dt>
 <dd><p>Get an LLM provider instance. If the provider is not already initialized,
 it will attempt to initialize it on demand.</p>
+<p>This method handles provider initialization, caching, and error cases.
+It will attempt to use the specified provider if available, falling back
+to the default provider if needed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>provider_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Optional name of the provider to use.
@@ -218,15 +301,21 @@ If not specified, uses the default provider.</p>
 <dd class="field-odd"><p><a class="reference internal" href="#lluminary.models.base.LLM" title="lluminary.models.base.LLM">LLM</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#lluminary.exceptions.LLMProviderError" title="lluminary.exceptions.LLMProviderError"><strong>LLMProviderError</strong></a> – If the provider cannot be initialized</p>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMProviderError" title="lluminary.exceptions.LLMProviderError"><strong>LLMProviderError</strong></a> – If the provider cannot be initialized or is not recognized</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMConfigurationError" title="lluminary.exceptions.LLMConfigurationError"><strong>LLMConfigurationError</strong></a> – If provider configuration is invalid</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMAuthenticationError" title="lluminary.exceptions.LLMAuthenticationError"><strong>LLMAuthenticationError</strong></a> – If provider authentication fails</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.generate">
-<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thinking_budget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.generate" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thinking_budget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fallbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.generate" title="Link to this definition"></a></dt>
 <dd><p>Generate a response using the specified or default provider.</p>
+<p>This method provides a simple interface that returns just the generated text.
+For additional information like usage statistics, use generate_with_usage.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -237,7 +326,8 @@ If not specified, uses the default provider.</p>
 <li><p><strong>temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Temperature for generation</p></li>
 <li><p><strong>tools</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional list of tools/functions to use</p></li>
 <li><p><strong>retry_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Maximum number of retry attempts</p></li>
-<li><p><strong>thinking_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Optional number of tokens for thinking</p></li>
+<li><p><strong>thinking_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Optional number of tokens for thinking</p></li>
+<li><p><strong>use_fallbacks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to try fallback providers on failure</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -247,26 +337,37 @@ If not specified, uses the default provider.</p>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><strong>Exception</strong></a> – If generation fails after retries</p>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMValidationError" title="lluminary.exceptions.LLMValidationError"><strong>LLMValidationError</strong></a> – If parameters are invalid</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMProviderError" title="lluminary.exceptions.LLMProviderError"><strong>LLMProviderError</strong></a> – If all providers fail and no fallbacks are available</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMError" title="lluminary.exceptions.LLMError"><strong>LLMError</strong></a> – For other error types that can’t be handled</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.generate_with_usage">
-<span class="sig-name descname"><span class="pre">generate_with_usage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thinking_budget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.generate_with_usage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.generate_with_usage" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.generate_with_usage">
+<span class="sig-name descname"><span class="pre">generate_with_usage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thinking_budget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fallbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.generate_with_usage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.generate_with_usage" title="Link to this definition"></a></dt>
 <dd><p>Generate a response and return usage statistics.</p>
+<p>This method handles:
+1. Parameter validation
+2. Provider fallbacks if the primary provider fails
+3. Error mapping to standard exception types
+4. Logging of generation attempts and failures
+5. Usage statistics collection</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>messages</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>]</em>) – List of messages in the standard format</p></li>
 <li><p><strong>system_prompt</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – System-level instructions for the model (optional)</p></li>
-<li><p><strong>provider</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Optional provider name to use</p></li>
+<li><p><strong>provider</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Optional provider name to use (will try fallbacks if this fails)</p></li>
 <li><p><strong>max_tokens</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Maximum number of tokens to generate</p></li>
 <li><p><strong>temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Temperature for generation</p></li>
 <li><p><strong>tools</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional list of tools/functions to use</p></li>
 <li><p><strong>retry_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Maximum number of retry attempts</p></li>
-<li><p><strong>thinking_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Optional number of tokens for thinking</p></li>
+<li><p><strong>thinking_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Optional number of tokens for thinking</p></li>
+<li><p><strong>use_fallbacks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to try fallback providers on failure</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -280,14 +381,19 @@ If not specified, uses the default provider.</p>
 <dd class="field-odd"><p>Tuple containing</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><strong>Exception</strong></a> – If generation fails after retries</p>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMValidationError" title="lluminary.exceptions.LLMValidationError"><strong>LLMValidationError</strong></a> – If parameters are invalid</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMProviderError" title="lluminary.exceptions.LLMProviderError"><strong>LLMProviderError</strong></a> – If all providers fail</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMAuthenticationError" title="lluminary.exceptions.LLMAuthenticationError"><strong>LLMAuthenticationError</strong></a> – If authentication fails for all providers</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMError" title="lluminary.exceptions.LLMError"><strong>LLMError</strong></a> – For other error types that can’t be handled</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.classify">
-<span class="sig-name descname"><span class="pre">classify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.classify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.classify" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.classify">
+<span class="sig-name descname"><span class="pre">classify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.classify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.classify" title="Link to this definition"></a></dt>
 <dd><p>Classify messages into predefined categories.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -310,8 +416,8 @@ If not specified, uses the default provider.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.classify_with_usage">
-<span class="sig-name descname"><span class="pre">classify_with_usage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.classify_with_usage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.classify_with_usage" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.classify_with_usage">
+<span class="sig-name descname"><span class="pre">classify_with_usage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.classify_with_usage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.classify_with_usage" title="Link to this definition"></a></dt>
 <dd><p>Classify messages into predefined categories and return usage statistics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -338,8 +444,8 @@ If not specified, uses the default provider.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.estimate_cost">
-<span class="sig-name descname"><span class="pre">estimate_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_response_tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.estimate_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.estimate_cost" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.estimate_cost">
+<span class="sig-name descname"><span class="pre">estimate_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_response_tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.estimate_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.estimate_cost" title="Link to this definition"></a></dt>
 <dd><p>Estimate the cost of processing messages.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -364,8 +470,8 @@ If not specified, uses the default provider.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.supports_images">
-<span class="sig-name descname"><span class="pre">supports_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.supports_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.supports_images" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.supports_images">
+<span class="sig-name descname"><span class="pre">supports_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.supports_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.supports_images" title="Link to this definition"></a></dt>
 <dd><p>Check if the provider supports image inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -381,8 +487,8 @@ If not specified, uses the default provider.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.supports_embeddings">
-<span class="sig-name descname"><span class="pre">supports_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.supports_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.supports_embeddings" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.supports_embeddings">
+<span class="sig-name descname"><span class="pre">supports_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.supports_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.supports_embeddings" title="Link to this definition"></a></dt>
 <dd><p>Check if the provider supports embeddings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -394,13 +500,20 @@ If not specified, uses the default provider.</p>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
 </dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#lluminary.exceptions.LLMProviderError" title="lluminary.exceptions.LLMProviderError"><strong>LLMProviderError</strong></a> – If the provider cannot be initialized</p>
+</dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.get_embeddings">
-<span class="sig-name descname"><span class="pre">get_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.get_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.get_embeddings" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.get_embeddings">
+<span class="sig-name descname"><span class="pre">get_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fallbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.get_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.get_embeddings" title="Link to this definition"></a></dt>
 <dd><p>Get embeddings for a list of texts.</p>
+<p>This method provides:
+1. Parameter validation
+2. Provider fallbacks if the primary provider fails
+3. Error handling and logging</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -408,6 +521,7 @@ If not specified, uses the default provider.</p>
 <li><p><strong>model</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Optional specific embedding model to use</p></li>
 <li><p><strong>provider</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Optional provider name to use</p></li>
 <li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of texts to process in each batch</p></li>
+<li><p><strong>use_fallbacks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to try fallback providers on failure</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -421,15 +535,24 @@ If not specified, uses the default provider.</p>
 <dd class="field-odd"><p>Tuple containing</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If embeddings are not supported or fail</p>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMValidationError" title="lluminary.exceptions.LLMValidationError"><strong>LLMValidationError</strong></a> – If parameters are invalid</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMProviderError" title="lluminary.exceptions.LLMProviderError"><strong>LLMProviderError</strong></a> – If embeddings are not supported by any provider</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMError" title="lluminary.exceptions.LLMError"><strong>LLMError</strong></a> – For other provider-specific errors</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.stream_generate">
-<span class="sig-name descname"><span class="pre">stream_generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.stream_generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.stream_generate" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.stream_generate">
+<span class="sig-name descname"><span class="pre">stream_generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fallbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.stream_generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.stream_generate" title="Link to this definition"></a></dt>
 <dd><p>Stream a response from the LLM, yielding chunks as they become available.</p>
+<p>This method provides:
+1. Parameter validation
+2. Provider fallbacks if the primary provider fails
+3. Error handling and logging
+4. Streaming response in consistent chunks</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -440,6 +563,7 @@ If not specified, uses the default provider.</p>
 <li><p><strong>temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Temperature for generation</p></li>
 <li><p><strong>functions</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>[</em><em>[</em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – List of functions the LLM can use</p></li>
 <li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>]</em><em>, </em><em>None</em><em>] </em><em>| </em><em>None</em>) – Optional callback function to call with each chunk</p></li>
+<li><p><strong>use_fallbacks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to try fallback providers on failure</p></li>
 </ul>
 </dd>
 <dt class="field-even">Yields<span class="colon">:</span></dt>
@@ -447,8 +571,9 @@ If not specified, uses the default provider.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If streaming is not supported</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><strong>Exception</strong></a> – If streaming fails</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMValidationError" title="lluminary.exceptions.LLMValidationError"><strong>LLMValidationError</strong></a> – If parameters are invalid</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMProviderError" title="lluminary.exceptions.LLMProviderError"><strong>LLMProviderError</strong></a> – If no provider supports streaming</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMError" title="lluminary.exceptions.LLMError"><strong>LLMError</strong></a> – For other error types that can’t be handled</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -458,8 +583,8 @@ If not specified, uses the default provider.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.get_context_window">
-<span class="sig-name descname"><span class="pre">get_context_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.get_context_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.get_context_window" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.get_context_window">
+<span class="sig-name descname"><span class="pre">get_context_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.get_context_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.get_context_window" title="Link to this definition"></a></dt>
 <dd><p>Get the context window size for the provider.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -475,8 +600,8 @@ If not specified, uses the default provider.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.register_tools">
-<span class="sig-name descname"><span class="pre">register_tools</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tools</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.register_tools"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.register_tools" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.register_tools">
+<span class="sig-name descname"><span class="pre">register_tools</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tools</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.register_tools"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.register_tools" title="Link to this definition"></a></dt>
 <dd><p>Register tools that can be used by the LLM.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -489,8 +614,8 @@ If not specified, uses the default provider.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="lluminary.handler.LLuMinary.check_context_fit">
-<span class="sig-name descname"><span class="pre">check_context_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_response_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLuMinary.check_context_fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLuMinary.check_context_fit" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="lluminary.handler.LLMHandler.check_context_fit">
+<span class="sig-name descname"><span class="pre">check_context_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_response_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/handler.html#LLMHandler.check_context_fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.handler.LLMHandler.check_context_fit" title="Link to this definition"></a></dt>
 <dd><p>Check if messages will fit in the provider’s context window.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -522,10 +647,27 @@ If not specified, uses the default provider.</p>
 <h3>Base Classes<a class="headerlink" href="#base-classes" title="Link to this heading"></a></h3>
 <p id="module-lluminary.models.base">Base class for LLM providers.
 All provider-specific implementations should inherit from this class.</p>
+<p>This base class provides common functionality, type definitions, and standard
+error handling patterns that all provider implementations should follow.
+It defines the interface and core behaviors expected from any provider.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="lluminary.models.base.LLM">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lluminary.models.base.</span></span><span class="sig-name descname"><span class="pre">LLM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/base.html#LLM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.base.LLM" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<p>Abstract base class for LLM provider implementations.</p>
+<p>All provider implementations must inherit from this class and implement
+its abstract methods. This class defines the standard interface that all
+LLM providers must conform to, ensuring consistent behavior across different
+implementations.</p>
+<dl class="simple">
+<dt>Class Variables:</dt><dd><p>CONTEXT_WINDOW: Maximum token limits per model
+COST_PER_MODEL: Cost per token per model
+SUPPORTED_MODELS: List of supported model identifiers
+THINKING_MODELS: Models supporting thinking/reasoning
+EMBEDDING_MODELS: Models supporting embedding generation
+RERANKING_MODELS: Models supporting document reranking</p>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -565,6 +707,51 @@ All provider-specific implementations should inherit from this class.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="lluminary.models.base.LLM.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_processing_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thinking_budget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/base.html#LLM.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.base.LLM.generate" title="Link to this definition"></a></dt>
+<dd><p>Generate a response with retry logic and error handling.</p>
+<p>This is the main entry point for generation that handles:
+1. Parameter validation
+2. Retry logic for recoverable errors
+3. Error handling and mapping to standard exceptions
+4. Usage statistics tracking
+5. Response processing and validation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Unique identifier for this generation</p></li>
+<li><p><strong>system_prompt</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Instructions for the model</p></li>
+<li><p><strong>messages</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>]</em>) – List of messages to process</p></li>
+<li><p><strong>max_tokens</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Maximum tokens to generate</p></li>
+<li><p><strong>temp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Temperature for generation</p></li>
+<li><p><strong>tools</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – List of tools/functions to use</p></li>
+<li><p><strong>retry_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Maximum number of retries</p></li>
+<li><p><strong>result_processing_function</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>] </em><em>| </em><em>None</em>) – Function to process the result</p></li>
+<li><p><strong>thinking_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Number of tokens for thinking (if supported)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>Generated response text</p></li>
+<li><p>Usage statistics</p></li>
+<li><p>Updated messages including the response</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMValidationError" title="lluminary.exceptions.LLMValidationError"><strong>LLMValidationError</strong></a> – If parameters are invalid</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMMistake" title="lluminary.exceptions.LLMMistake"><strong>LLMMistake</strong></a> – If generation fails after all retries</p></li>
+<li><p><a class="reference internal" href="#lluminary.exceptions.LLMProviderError" title="lluminary.exceptions.LLMProviderError"><strong>LLMProviderError</strong></a> – For provider-specific errors</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="lluminary.models.base.LLM.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/base.html#LLM.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.base.LLM.__init__" title="Link to this definition"></a></dt>
 <dd><p>Initialize the LLM provider with the specified model.</p>
@@ -595,76 +782,6 @@ Should be called during initialization.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.base.LLM.embed">
-<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/base.html#LLM.embed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.base.LLM.embed" title="Link to this definition"></a></dt>
-<dd><p>Get embeddings for a list of texts.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>texts</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – List of texts to embed</p></li>
-<li><p><strong>model</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – Specific embedding model to use, defaults to a provider-specific model</p></li>
-<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of texts to process in each batch, defaults to 100</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Tuple containing:</dt><dd><ul class="simple">
-<li><p>List of embedding vectors (one per input text)</p></li>
-<li><dl class="simple">
-<dt>Usage statistics including:</dt><dd><ul>
-<li><p>tokens: Number of tokens processed</p></li>
-<li><p>cost: Cost of the embedding operation</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple[List[List[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a>]], Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, Any]]</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#lluminary.exceptions.LLMValidationError" title="lluminary.exceptions.LLMValidationError"><strong>LLMValidationError</strong></a> – If input parameters are invalid</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#NotImplementedError" title="(in Python v3.13)"><strong>NotImplementedError</strong></a> – If the provider doesn’t implement embedding</p></li>
-<li><p><a class="reference internal" href="#lluminary.exceptions.LLMProviderError" title="lluminary.exceptions.LLMProviderError"><strong>LLMProviderError</strong></a> – For provider-specific errors</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.base.LLM.supports_embeddings">
-<span class="sig-name descname"><span class="pre">supports_embeddings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/base.html#LLM.supports_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.base.LLM.supports_embeddings" title="Link to this definition"></a></dt>
-<dd><p>Check if this provider supports embeddings.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>True if embeddings are supported, False otherwise</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.base.LLM.supports_reranking">
-<span class="sig-name descname"><span class="pre">supports_reranking</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/base.html#LLM.supports_reranking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.base.LLM.supports_reranking" title="Link to this definition"></a></dt>
-<dd><p>Check if this LLM instance supports document reranking.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>True if this model supports document reranking, False otherwise</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -732,45 +849,6 @@ Should be called during initialization.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.13)"><em>Iterator</em></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><em>Tuple</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>]]]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lluminary.models.base.LLM.generate">
-<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">messages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_processing_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thinking_budget</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/models/base.html#LLM.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.models.base.LLM.generate" title="Link to this definition"></a></dt>
-<dd><p>Generate a response with automatic error correction.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>event_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Unique identifier for this generation event</p></li>
-<li><p><strong>system_prompt</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – System-level instructions</p></li>
-<li><p><strong>messages</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>]</em>) – List of messages in standard format</p></li>
-<li><p><strong>max_tokens</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Maximum tokens to generate</p></li>
-<li><p><strong>temp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Temperature for generation</p></li>
-<li><p><strong>result_processing_function</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Function to validate and transform response</p></li>
-<li><p><strong>retry_limit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Maximum number of attempts (including first try)</p></li>
-<li><p><strong>functions</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>[</em><em>[</em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – List of functions to use as tools</p></li>
-<li><p><strong>thinking_budget</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Number of tokens allowed for thinking</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>Processed response (type depends on processing function)</p></li>
-<li><p>Usage statistics</p></li>
-<li><p>Updated messages including the response</p></li>
-</ul>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple[Any, Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, Any], List[Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, Any]]]</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="#lluminary.exceptions.LLMValidationError" title="lluminary.exceptions.LLMValidationError"><strong>LLMValidationError</strong></a> – If input parameters are invalid</p></li>
-<li><p><a class="reference internal" href="#lluminary.exceptions.LLMMistake" title="lluminary.exceptions.LLMMistake"><strong>LLMMistake</strong></a> – If valid response not obtained within retry_limit</p></li>
-<li><p><a class="reference internal" href="#lluminary.exceptions.LLMProviderError" title="lluminary.exceptions.LLMProviderError"><strong>LLMProviderError</strong></a> – For provider-specific errors</p></li>
-</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -1760,6 +1838,297 @@ AWS configuration files, or IAM roles.</p>
 </section>
 <section id="tools">
 <h2>Tools<a class="headerlink" href="#tools" title="Link to this heading"></a></h2>
+<p id="module-lluminary.tools.registry">Tool registry for managing and validating LLM tools.</p>
+<p>This module provides a centralized registry for managing tools that can be used
+by the LLM handler. It includes validation, monitoring, and metadata management.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolValidationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lluminary.tools.registry.</span></span><span class="sig-name descname"><span class="pre">ToolValidationError</span></span><a class="reference internal" href="_modules/lluminary/tools/registry.html#ToolValidationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.registry.ToolValidationError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lluminary.exceptions.LLMError" title="lluminary.exceptions.LLMError"><code class="xref py py-class docutils literal notranslate"><span class="pre">LLMError</span></code></a></p>
+<p>Raised when tool validation fails.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolMetadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lluminary.tools.registry.</span></span><span class="sig-name descname"><span class="pre">ToolMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">success_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failure_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_execution_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">average_execution_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/registry.html#ToolMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.registry.ToolMetadata" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Metadata for a registered tool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>function</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a>)</p></li>
+<li><p><strong>parameters</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>]</em>)</p></li>
+<li><p><strong>return_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>)</p></li>
+<li><p><strong>success_count</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+<li><p><strong>failure_count</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
+<li><p><strong>total_execution_time</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
+<li><p><strong>average_execution_time</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolMetadata.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#lluminary.tools.registry.ToolMetadata.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolMetadata.description">
+<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#lluminary.tools.registry.ToolMetadata.description" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolMetadata.function">
+<span class="sig-name descname"><span class="pre">function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a></em><a class="headerlink" href="#lluminary.tools.registry.ToolMetadata.function" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolMetadata.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#lluminary.tools.registry.ToolMetadata.parameters" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolMetadata.return_type">
+<span class="sig-name descname"><span class="pre">return_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a></em><a class="headerlink" href="#lluminary.tools.registry.ToolMetadata.return_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolMetadata.success_count">
+<span class="sig-name descname"><span class="pre">success_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#lluminary.tools.registry.ToolMetadata.success_count" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolMetadata.failure_count">
+<span class="sig-name descname"><span class="pre">failure_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#lluminary.tools.registry.ToolMetadata.failure_count" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolMetadata.total_execution_time">
+<span class="sig-name descname"><span class="pre">total_execution_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></em><a class="headerlink" href="#lluminary.tools.registry.ToolMetadata.total_execution_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolMetadata.average_execution_time">
+<span class="sig-name descname"><span class="pre">average_execution_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></em><a class="headerlink" href="#lluminary.tools.registry.ToolMetadata.average_execution_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolRegistry">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lluminary.tools.registry.</span></span><span class="sig-name descname"><span class="pre">ToolRegistry</span></span><a class="reference internal" href="_modules/lluminary/tools/registry.html#ToolRegistry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.registry.ToolRegistry" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Registry for managing and validating LLM tools.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolRegistry.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/registry.html#ToolRegistry.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.registry.ToolRegistry.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize an empty tool registry.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolRegistry.register_tool">
+<span class="sig-name descname"><span class="pre">register_tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/registry.html#ToolRegistry.register_tool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.registry.ToolRegistry.register_tool" title="Link to this definition"></a></dt>
+<dd><p>Register a tool with optional custom name and description.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tool</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – The tool function to register</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Optional custom name (defaults to function name)</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Optional description (defaults to docstring)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#lluminary.tools.registry.ToolValidationError" title="lluminary.tools.registry.ToolValidationError"><strong>ToolValidationError</strong></a> – If tool validation fails</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolRegistry.register_tools">
+<span class="sig-name descname"><span class="pre">register_tools</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tools</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/registry.html#ToolRegistry.register_tools"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.registry.ToolRegistry.register_tools" title="Link to this definition"></a></dt>
+<dd><p>Register multiple tools at once.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tools</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a><em>]</em>) – List of tool functions to register</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolRegistry.get_tool">
+<span class="sig-name descname"><span class="pre">get_tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/registry.html#ToolRegistry.get_tool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.registry.ToolRegistry.get_tool" title="Link to this definition"></a></dt>
+<dd><p>Retrieve a registered tool by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Name of the tool to retrieve</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The tool function if found, None otherwise</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolRegistry.list_tools">
+<span class="sig-name descname"><span class="pre">list_tools</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/registry.html#ToolRegistry.list_tools"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.registry.ToolRegistry.list_tools" title="Link to this definition"></a></dt>
+<dd><p>List all registered tools with their metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of tool metadata dictionaries</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><em>List</em></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lluminary.tools.registry.ToolRegistry.get_tool_stats">
+<span class="sig-name descname"><span class="pre">get_tool_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/registry.html#ToolRegistry.get_tool_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.registry.ToolRegistry.get_tool_stats" title="Link to this definition"></a></dt>
+<dd><p>Get execution statistics for a tool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Name of the tool</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of tool statistics if found, None otherwise</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><em>Dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-lluminary.tools.validators">Validators for tool functions.</p>
+<p>This module provides decorators and utilities for validating tool functions.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="lluminary.tools.validators.validate_tool">
+<span class="sig-prename descclassname"><span class="pre">lluminary.tools.validators.</span></span><span class="sig-name descname"><span class="pre">validate_tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tool</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/validators.html#validate_tool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.validators.validate_tool" title="Link to this definition"></a></dt>
+<dd><p>Decorator to validate a tool function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tool</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – The tool function to validate</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The validated tool function</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#lluminary.tools.registry.ToolValidationError" title="lluminary.tools.registry.ToolValidationError"><strong>ToolValidationError</strong></a> – If validation fails</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lluminary.tools.validators.validate_return_type">
+<span class="sig-prename descclassname"><span class="pre">lluminary.tools.validators.</span></span><span class="sig-name descname"><span class="pre">validate_return_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expected_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/validators.html#validate_return_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.validators.validate_return_type" title="Link to this definition"></a></dt>
+<dd><p>Decorator to validate a tool’s return type at runtime.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>expected_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.13)"><em>Type</em></a>) – The expected return type</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Decorator function</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a></p>
+</dd>
+</dl>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<p>&#64;validate_return_type(Dict[str, Any])
+def my_tool() -&gt; Dict[str, Any]:</p>
+<blockquote>
+<div><p>return {“result”: “success”}</p>
+</div></blockquote>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lluminary.tools.validators.validate_params">
+<span class="sig-prename descclassname"><span class="pre">lluminary.tools.validators.</span></span><span class="sig-name descname"><span class="pre">validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">types</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">named_types</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/validators.html#validate_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.validators.validate_params" title="Link to this definition"></a></dt>
+<dd><p>Decorator to validate parameter types at runtime.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*types</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.13)"><em>Type</em></a>) – Expected types for positional arguments</p></li>
+<li><p><strong>**named_types</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.13)"><em>Type</em></a>) – Expected types for keyword arguments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Decorator function</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a></p>
+</dd>
+</dl>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<p>&#64;validate_params(str, int, optional_param=bool)
+def my_tool(text: str, number: int, optional_param: bool = False):</p>
+<blockquote>
+<div><p>return {“result”: “success”}</p>
+</div></blockquote>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lluminary.tools.validators.validate_nested_structure">
+<span class="sig-prename descclassname"><span class="pre">lluminary.tools.validators.</span></span><span class="sig-name descname"><span class="pre">validate_nested_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/validators.html#validate_nested_structure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.validators.validate_nested_structure" title="Link to this definition"></a></dt>
+<dd><p>Validate that a value’s nested structure is JSON-serializable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>) – The value to validate</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the value is JSON-serializable, False otherwise</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lluminary.tools.validators.json_serializable">
+<span class="sig-prename descclassname"><span class="pre">lluminary.tools.validators.</span></span><span class="sig-name descname"><span class="pre">json_serializable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tool</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lluminary/tools/validators.html#json_serializable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lluminary.tools.validators.json_serializable" title="Link to this definition"></a></dt>
+<dd><p>Decorator to validate that a tool’s return value is JSON-serializable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tool</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – The tool function to validate</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The validated tool function</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a></p>
+</dd>
+</dl>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<p>&#64;json_serializable
+def my_tool() -&gt; Dict[str, Any]:</p>
+<blockquote>
+<div><p>return {“result”: “success”}  # OK
+# return lambda x: x  # Would raise ToolValidationError</p>
+</div></blockquote>
+</div>
+</dd></dl>
+
 </section>
 <section id="exceptions">
 <h2>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading"></a></h2>

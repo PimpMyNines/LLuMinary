@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>lluminary.models.providers.bedrock &mdash; LLuMinary 0.0.1</title>
+  <title>lluminary.models.providers.bedrock &mdash; LLuMinary 1.0.0</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
       <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -269,9 +269,10 @@
 
             <span class="c1"># Check for explicit credentials in config</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;aws_access_key_id&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                <span class="s2">&quot;aws_secret_access_key&quot;</span>
+                    <span class="s2">&quot;aws_secret_access_key&quot;</span>
             <span class="p">):</span>
-                <span class="n">session_kwargs</span><span class="p">[</span><span class="s2">&quot;aws_access_key_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;aws_access_key_id&quot;</span><span class="p">]</span>
+                <span class="n">session_kwargs</span><span class="p">[</span><span class="s2">&quot;aws_access_key_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span>
+                    <span class="s2">&quot;aws_access_key_id&quot;</span><span class="p">]</span>
                 <span class="n">session_kwargs</span><span class="p">[</span><span class="s2">&quot;aws_secret_access_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span>
                     <span class="s2">&quot;aws_secret_access_key&quot;</span>
                 <span class="p">]</span>
@@ -500,7 +501,8 @@
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Error reading image file </span><span class="si">{</span><span class="n">image_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">io_error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;image_processing_error&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">image_path</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">io_error</span><span class="p">)},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">image_path</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">io_error</span><span class="p">)},</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">processing_error</span><span class="p">:</span>
                 <span class="c1"># Handle image processing errors</span>
@@ -609,7 +611,8 @@
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Failed to fetch image URL </span><span class="si">{</span><span class="n">image_url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">request_error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;image_url_error&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">image_url</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">request_error</span><span class="p">)},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">image_url</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">request_error</span><span class="p">)},</span>
                 <span class="p">)</span>
 
             <span class="c1"># Check content size (AWS Bedrock has a 5MB limit)</span>
@@ -639,7 +642,8 @@
                     <span class="k">raise</span> <span class="n">LLMContentError</span><span class="p">(</span>
                         <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Invalid or unsupported image format from URL: </span><span class="si">{</span><span class="n">image_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                         <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">image_url</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">verify_error</span><span class="p">)},</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">image_url</span><span class="p">,</span>
+                                 <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">verify_error</span><span class="p">)},</span>
                     <span class="p">)</span>
 
                 <span class="c1"># Handle different image modes</span>
@@ -676,7 +680,8 @@
                 <span class="k">raise</span> <span class="n">LLMContentError</span><span class="p">(</span>
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Failed to process image from URL </span><span class="si">{</span><span class="n">image_url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">processing_error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">image_url</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">processing_error</span><span class="p">)},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">image_url</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">processing_error</span><span class="p">)},</span>
                 <span class="p">)</span>
 
         <span class="k">except</span> <span class="p">(</span><span class="n">ContentError</span><span class="p">,</span> <span class="n">LLMMistake</span><span class="p">):</span>
@@ -692,7 +697,7 @@
             <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_messages_for_model</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert standard message format into Bedrock&#39;s format.</span>
@@ -727,7 +732,8 @@
                         <span class="s2">&quot;reasoningContent&quot;</span><span class="p">:</span> <span class="p">{</span>
                             <span class="s2">&quot;reasoningText&quot;</span><span class="p">:</span> <span class="p">{</span>
                                 <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;thinking&quot;</span><span class="p">][</span><span class="s2">&quot;thinking&quot;</span><span class="p">],</span>
-                                <span class="s2">&quot;signature&quot;</span><span class="p">:</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;thinking&quot;</span><span class="p">][</span><span class="s2">&quot;thinking_signature&quot;</span><span class="p">],</span>
+                                <span class="s2">&quot;signature&quot;</span><span class="p">:</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;thinking&quot;</span><span class="p">][</span>
+                                    <span class="s2">&quot;thinking_signature&quot;</span><span class="p">],</span>
                             <span class="p">}</span>
                         <span class="p">}</span>
                     <span class="p">}</span>
@@ -743,7 +749,8 @@
                     <span class="c1"># Get image bytes will raise an exception if the file is invalid</span>
                     <span class="n">image_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_image_bytes</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
                     <span class="n">content</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;bytes&quot;</span><span class="p">:</span> <span class="n">image_bytes</span><span class="p">}}}</span>
+                        <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;bytes&quot;</span><span class="p">:</span> <span class="n">image_bytes</span><span class="p">}}}</span>
                     <span class="p">)</span>
 
             <span class="c1"># Process images from URLs</span>
@@ -752,7 +759,8 @@
                     <span class="c1"># Download image will raise an exception if the URL is invalid</span>
                     <span class="n">image_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_download_image_from_url</span><span class="p">(</span><span class="n">image_url</span><span class="p">)</span>
                     <span class="n">content</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;bytes&quot;</span><span class="p">:</span> <span class="n">image_bytes</span><span class="p">}}}</span>
+                        <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;bytes&quot;</span><span class="p">:</span> <span class="n">image_bytes</span><span class="p">}}}</span>
                     <span class="p">)</span>
 
             <span class="c1"># Add tool use information (function calls)</span>
@@ -805,7 +813,7 @@
         <span class="k">return</span> <span class="n">formatted_messages</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_tools_for_model</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert standard tool format into Bedrock&#39;s format.</span>
@@ -876,7 +884,8 @@
                 <span class="k">return</span> <span class="n">LLMAuthenticationError</span><span class="p">(</span>
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API authentication failed: </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
                 <span class="p">)</span>
 
             <span class="c1"># Rate limit and throttling errors</span>
@@ -904,7 +913,8 @@
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API rate limit exceeded: </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
                     <span class="n">retry_after</span><span class="o">=</span><span class="n">retry_after</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
                 <span class="p">)</span>
 
             <span class="c1"># Service availability errors</span>
@@ -921,7 +931,8 @@
                 <span class="k">return</span> <span class="n">LLMServiceUnavailableError</span><span class="p">(</span>
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API service unavailable: </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
                 <span class="p">)</span>
 
             <span class="c1"># Configuration errors</span>
@@ -938,7 +949,8 @@
                 <span class="k">return</span> <span class="n">LLMConfigurationError</span><span class="p">(</span>
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API configuration error: </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
                 <span class="p">)</span>
 
             <span class="c1"># Content moderation and policy issues</span>
@@ -952,7 +964,8 @@
                 <span class="k">return</span> <span class="n">LLMContentError</span><span class="p">(</span>
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API content policy violation: </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
                 <span class="p">)</span>
 
             <span class="c1"># Format errors</span>
@@ -965,7 +978,8 @@
                 <span class="k">return</span> <span class="n">LLMFormatError</span><span class="p">(</span>
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API format error: </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
                 <span class="p">)</span>
 
             <span class="c1"># Tool-related errors</span>
@@ -977,7 +991,8 @@
                 <span class="k">return</span> <span class="n">LLMToolError</span><span class="p">(</span>
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API tool error: </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
                 <span class="p">)</span>
 
             <span class="c1"># Generic fallback for unknown AWS errors</span>
@@ -986,7 +1001,8 @@
                     <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API error: </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;api_error&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span> <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error_code&quot;</span><span class="p">:</span> <span class="n">error_code</span><span class="p">,</span>
+                             <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">},</span>
                 <span class="p">)</span>
 
         <span class="c1"># Handle non-ClientError exceptions</span>
@@ -995,68 +1011,78 @@
 
         <span class="c1"># Check for patterns in other exceptions</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
-            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
-            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;credential&quot;</span><span class="p">,</span> <span class="s2">&quot;access&quot;</span><span class="p">,</span> <span class="s2">&quot;permission&quot;</span><span class="p">,</span> <span class="s2">&quot;auth&quot;</span><span class="p">,</span> <span class="s2">&quot;token&quot;</span><span class="p">,</span> <span class="s2">&quot;key&quot;</span><span class="p">]</span>
+                <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+                <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span>
+                <span class="p">[</span><span class="s2">&quot;credential&quot;</span><span class="p">,</span> <span class="s2">&quot;access&quot;</span><span class="p">,</span> <span class="s2">&quot;permission&quot;</span><span class="p">,</span> <span class="s2">&quot;auth&quot;</span><span class="p">,</span> <span class="s2">&quot;token&quot;</span><span class="p">,</span> <span class="s2">&quot;key&quot;</span><span class="p">]</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="n">LLMAuthenticationError</span><span class="p">(</span>
                 <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API authentication failed: </span><span class="si">{</span><span class="n">error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+                         <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
-            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
-            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;throttl&quot;</span><span class="p">,</span> <span class="s2">&quot;rate&quot;</span><span class="p">,</span> <span class="s2">&quot;limit&quot;</span><span class="p">,</span> <span class="s2">&quot;quota&quot;</span><span class="p">,</span> <span class="s2">&quot;exceeded&quot;</span><span class="p">]</span>
+                <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+                <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;throttl&quot;</span><span class="p">,</span> <span class="s2">&quot;rate&quot;</span><span class="p">,</span> <span class="s2">&quot;limit&quot;</span><span class="p">,</span> <span class="s2">&quot;quota&quot;</span><span class="p">,</span> <span class="s2">&quot;exceeded&quot;</span><span class="p">]</span>
         <span class="p">):</span>
             <span class="n">retry_after</span> <span class="o">=</span> <span class="mi">60</span>  <span class="c1"># Default retry delay</span>
             <span class="k">return</span> <span class="n">LLMRateLimitError</span><span class="p">(</span>
                 <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API rate limit exceeded: </span><span class="si">{</span><span class="n">error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
                 <span class="n">retry_after</span><span class="o">=</span><span class="n">retry_after</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+                         <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
-            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
-            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;unavailable&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="s2">&quot;timeout&quot;</span><span class="p">,</span> <span class="s2">&quot;outage&quot;</span><span class="p">,</span> <span class="s2">&quot;5xx&quot;</span><span class="p">]</span>
+                <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+                <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;unavailable&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="s2">&quot;timeout&quot;</span><span class="p">,</span> <span class="s2">&quot;outage&quot;</span><span class="p">,</span> <span class="s2">&quot;5xx&quot;</span><span class="p">]</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="n">LLMServiceUnavailableError</span><span class="p">(</span>
                 <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API service unavailable: </span><span class="si">{</span><span class="n">error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+                         <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
-            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;param&quot;</span><span class="p">,</span> <span class="s2">&quot;invalid&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">]</span>
+                <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span>
+                <span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;param&quot;</span><span class="p">,</span> <span class="s2">&quot;invalid&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">]</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="n">LLMConfigurationError</span><span class="p">(</span>
                 <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API configuration error: </span><span class="si">{</span><span class="n">error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+                         <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
-            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
-            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">,</span> <span class="s2">&quot;moderation&quot;</span><span class="p">,</span> <span class="s2">&quot;policy&quot;</span><span class="p">,</span> <span class="s2">&quot;abuse&quot;</span><span class="p">]</span>
+                <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+                <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">,</span> <span class="s2">&quot;moderation&quot;</span><span class="p">,</span> <span class="s2">&quot;policy&quot;</span><span class="p">,</span> <span class="s2">&quot;abuse&quot;</span><span class="p">]</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="n">LLMContentError</span><span class="p">(</span>
                 <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API content policy violation: </span><span class="si">{</span><span class="n">error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+                         <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
             <span class="p">)</span>
 
-        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="s2">&quot;xml&quot;</span><span class="p">,</span> <span class="s2">&quot;parse&quot;</span><span class="p">]):</span>
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span>
+                 <span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="s2">&quot;xml&quot;</span><span class="p">,</span> <span class="s2">&quot;parse&quot;</span><span class="p">]):</span>
             <span class="k">return</span> <span class="n">LLMFormatError</span><span class="p">(</span>
                 <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API format error: </span><span class="si">{</span><span class="n">error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+                         <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">]):</span>
             <span class="k">return</span> <span class="n">LLMToolError</span><span class="p">(</span>
                 <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Bedrock API tool error: </span><span class="si">{</span><span class="n">error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;BedrockLLM&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+                         <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="c1"># Default fallback for other errors</span>
@@ -1067,7 +1093,8 @@
             <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_call_with_retry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">retry_delay</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_call_with_retry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">retry_delay</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute an AWS API call with automatic retry for transient errors.</span>
 
@@ -1177,15 +1204,15 @@
         <span class="k">raise</span> <span class="n">last_error</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_raw_generate</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
-        <span class="n">tools</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">thinking_budget</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+            <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+            <span class="n">tools</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">thinking_budget</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a response using AWS Bedrock&#39;s API.</span>
@@ -1255,7 +1282,8 @@
             <span class="c1"># Prepare API request configuration</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="c1"># Prepare inference_config parameters</span>
-                <span class="n">inference_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">temp</span><span class="p">,</span> <span class="s2">&quot;maxTokens&quot;</span><span class="p">:</span> <span class="n">max_tokens</span><span class="p">}</span>
+                <span class="n">inference_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">temp</span><span class="p">,</span>
+                                    <span class="s2">&quot;maxTokens&quot;</span><span class="p">:</span> <span class="n">max_tokens</span><span class="p">}</span>
 
                 <span class="c1"># Set up model-specific parameters</span>
                 <span class="n">additional_model_fields</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1309,22 +1337,23 @@
                     <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_with_retry</span><span class="p">(</span>
-                        <span class="n">make_api_call_without_tools</span><span class="p">,</span> <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">retry_delay</span><span class="o">=</span><span class="mi">1</span>
+                        <span class="n">make_api_call_without_tools</span><span class="p">,</span> <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                        <span class="n">retry_delay</span><span class="o">=</span><span class="mi">1</span>
                     <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="c1"># If the exception is already one of our custom types, re-raise it</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
-                    <span class="n">e</span><span class="p">,</span>
-                    <span class="p">(</span>
-                        <span class="n">AuthenticationError</span><span class="p">,</span>
-                        <span class="n">ConfigurationError</span><span class="p">,</span>
-                        <span class="n">RateLimitError</span><span class="p">,</span>
-                        <span class="n">ServiceUnavailableError</span><span class="p">,</span>
-                        <span class="n">ContentError</span><span class="p">,</span>
-                        <span class="n">FormatError</span><span class="p">,</span>
-                        <span class="n">ToolError</span><span class="p">,</span>
-                        <span class="n">LLMMistake</span><span class="p">,</span>
-                    <span class="p">),</span>
+                        <span class="n">e</span><span class="p">,</span>
+                        <span class="p">(</span>
+                                <span class="n">AuthenticationError</span><span class="p">,</span>
+                                <span class="n">ConfigurationError</span><span class="p">,</span>
+                                <span class="n">RateLimitError</span><span class="p">,</span>
+                                <span class="n">ServiceUnavailableError</span><span class="p">,</span>
+                                <span class="n">ContentError</span><span class="p">,</span>
+                                <span class="n">FormatError</span><span class="p">,</span>
+                                <span class="n">ToolError</span><span class="p">,</span>
+                                <span class="n">LLMMistake</span><span class="p">,</span>
+                        <span class="p">),</span>
                 <span class="p">):</span>
                     <span class="k">raise</span>
                 <span class="c1"># Otherwise, map it using our error mapper</span>
@@ -1337,11 +1366,14 @@
 
                 <span class="c1"># Extract usage information, with fallbacks for missing data</span>
                 <span class="n">usage_stats</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="s2">&quot;read_tokens&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inputTokens&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
-                    <span class="s2">&quot;write_tokens&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outputTokens&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
-                    <span class="s2">&quot;total_tokens&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;totalTokens&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="s2">&quot;read_tokens&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inputTokens&quot;</span><span class="p">,</span>
+                                                                 <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="s2">&quot;write_tokens&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                        <span class="s2">&quot;outputTokens&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                                    <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="s2">&quot;total_tokens&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;totalTokens&quot;</span><span class="p">,</span>
+                                                                  <span class="mi">0</span><span class="p">)</span>
+                                    <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
                     <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span>
                         <span class="p">[</span>
                             <span class="n">msg</span>
@@ -1353,10 +1385,12 @@
 
                 <span class="c1"># Calculate costs based on token usage and model rates</span>
                 <span class="n">costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_costs</span><span class="p">()</span>
-                <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;read_cost&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;read_tokens&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;read_cost&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                    <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;read_tokens&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span>
                     <span class="n">costs</span><span class="p">[</span><span class="s2">&quot;read_token&quot;</span><span class="p">]</span>
                 <span class="p">)</span>
-                <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;write_cost&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;write_tokens&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;write_cost&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                    <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;write_tokens&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span>
                     <span class="n">costs</span><span class="p">[</span><span class="s2">&quot;write_token&quot;</span><span class="p">]</span>
                 <span class="p">)</span>
                 <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;image_cost&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
@@ -1365,13 +1399,14 @@
                     <span class="k">else</span> <span class="mi">0</span>
                 <span class="p">)</span>
                 <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;total_cost&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;read_cost&quot;</span><span class="p">]</span>
-                    <span class="o">+</span> <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;write_cost&quot;</span><span class="p">]</span>
-                    <span class="o">+</span> <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;image_cost&quot;</span><span class="p">]</span>
+                        <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;read_cost&quot;</span><span class="p">]</span>
+                        <span class="o">+</span> <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;write_cost&quot;</span><span class="p">]</span>
+                        <span class="o">+</span> <span class="n">usage_stats</span><span class="p">[</span><span class="s2">&quot;image_cost&quot;</span><span class="p">]</span>
                 <span class="p">)</span>
 
                 <span class="c1"># Round costs to avoid floating-point precision issues</span>
-                <span class="k">for</span> <span class="n">cost_key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;read_cost&quot;</span><span class="p">,</span> <span class="s2">&quot;write_cost&quot;</span><span class="p">,</span> <span class="s2">&quot;image_cost&quot;</span><span class="p">,</span> <span class="s2">&quot;total_cost&quot;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">cost_key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;read_cost&quot;</span><span class="p">,</span> <span class="s2">&quot;write_cost&quot;</span><span class="p">,</span> <span class="s2">&quot;image_cost&quot;</span><span class="p">,</span>
+                                 <span class="s2">&quot;total_cost&quot;</span><span class="p">]:</span>
                     <span class="k">if</span> <span class="n">cost_key</span> <span class="ow">in</span> <span class="n">usage_stats</span><span class="p">:</span>
                         <span class="n">usage_stats</span><span class="p">[</span><span class="n">cost_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">usage_stats</span><span class="p">[</span><span class="n">cost_key</span><span class="p">],</span> <span class="mi">6</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -1401,7 +1436,8 @@
                         <span class="c1"># Extract text content</span>
                         <span class="n">text_content</span> <span class="o">=</span> <span class="n">content_block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
                         <span class="c1"># Extract reasoning content</span>
-                        <span class="n">reasoningContent</span> <span class="o">=</span> <span class="n">content_block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reasoningContent&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                        <span class="n">reasoningContent</span> <span class="o">=</span> <span class="n">content_block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reasoningContent&quot;</span><span class="p">,</span>
+                                                             <span class="kc">None</span><span class="p">)</span>
                         <span class="c1"># Extract tool use information</span>
                         <span class="n">tool_use</span> <span class="o">=</span> <span class="n">content_block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;toolUse&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
@@ -1410,7 +1446,8 @@
                             <span class="n">response_text</span> <span class="o">+=</span> <span class="n">text_content</span>
                         <span class="k">elif</span> <span class="n">reasoningContent</span><span class="p">:</span>
                             <span class="c1"># Extract reasoning/thinking information</span>
-                            <span class="n">reasoning_text</span> <span class="o">=</span> <span class="n">reasoningContent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reasoningText&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                            <span class="n">reasoning_text</span> <span class="o">=</span> <span class="n">reasoningContent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                                <span class="s2">&quot;reasoningText&quot;</span><span class="p">,</span> <span class="p">{})</span>
                             <span class="n">usage_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
                                 <span class="p">{</span>
                                     <span class="s2">&quot;thinking&quot;</span><span class="p">:</span> <span class="n">reasoning_text</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
@@ -1429,9 +1466,9 @@
 
                 <span class="c1"># If no text response was found, this is an error</span>
                 <span class="k">if</span> <span class="p">(</span>
-                    <span class="ow">not</span> <span class="n">response_text</span>
-                    <span class="ow">and</span> <span class="ow">not</span> <span class="n">usage_stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;thinking&quot;</span><span class="p">)</span>
-                    <span class="ow">and</span> <span class="ow">not</span> <span class="n">usage_stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool_use&quot;</span><span class="p">)</span>
+                        <span class="ow">not</span> <span class="n">response_text</span>
+                        <span class="ow">and</span> <span class="ow">not</span> <span class="n">usage_stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;thinking&quot;</span><span class="p">)</span>
+                        <span class="ow">and</span> <span class="ow">not</span> <span class="n">usage_stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool_use&quot;</span><span class="p">)</span>
                 <span class="p">):</span>
                     <span class="k">raise</span> <span class="n">LLMContentError</span><span class="p">(</span>
                         <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Bedrock API returned empty response with no text, thinking, or tool use&quot;</span><span class="p">,</span>
@@ -1455,14 +1492,14 @@
             <span class="k">return</span> <span class="n">response_text</span><span class="p">,</span> <span class="n">usage_stats</span>
 
         <span class="k">except</span> <span class="p">(</span>
-            <span class="n">AuthenticationError</span><span class="p">,</span>
-            <span class="n">ConfigurationError</span><span class="p">,</span>
-            <span class="n">RateLimitError</span><span class="p">,</span>
-            <span class="n">ServiceUnavailableError</span><span class="p">,</span>
-            <span class="n">ContentError</span><span class="p">,</span>
-            <span class="n">FormatError</span><span class="p">,</span>
-            <span class="n">ToolError</span><span class="p">,</span>
-            <span class="n">LLMMistake</span><span class="p">,</span>
+                <span class="n">AuthenticationError</span><span class="p">,</span>
+                <span class="n">ConfigurationError</span><span class="p">,</span>
+                <span class="n">RateLimitError</span><span class="p">,</span>
+                <span class="n">ServiceUnavailableError</span><span class="p">,</span>
+                <span class="n">ContentError</span><span class="p">,</span>
+                <span class="n">FormatError</span><span class="p">,</span>
+                <span class="n">ToolError</span><span class="p">,</span>
+                <span class="n">LLMMistake</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="c1"># Re-raise already mapped exceptions</span>
             <span class="k">raise</span>

@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>lluminary.models.base &mdash; LLuMinary 0.0.1</title>
+  <title>lluminary.models.base &mdash; LLuMinary 1.0.0</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -75,27 +75,350 @@
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Base class for LLM providers.</span>
 <span class="sd">All provider-specific implementations should inherit from this class.</span>
+
+<span class="sd">This base class provides common functionality, type definitions, and standard</span>
+<span class="sd">error handling patterns that all provider implementations should follow.</span>
+<span class="sd">It defines the interface and core behaviors expected from any provider.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">ClassVar</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">..exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LLMAuthenticationError</span><span class="p">,</span>
+    <span class="n">LLMConfigurationError</span><span class="p">,</span>
+    <span class="n">LLMContentError</span><span class="p">,</span>
+    <span class="n">LLMError</span><span class="p">,</span>
+    <span class="n">LLMFormatError</span><span class="p">,</span>
+    <span class="n">LLMMistake</span><span class="p">,</span>
+    <span class="n">LLMProviderError</span><span class="p">,</span>
+    <span class="n">LLMRateLimitError</span><span class="p">,</span>
+    <span class="n">LLMServiceUnavailableError</span><span class="p">,</span>
+    <span class="n">LLMThinkingError</span><span class="p">,</span>
+    <span class="n">LLMToolError</span><span class="p">,</span>
+    <span class="n">LLMValidationError</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.classification.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassificationConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLMMistake</span>
 
 
 <div class="viewcode-block" id="LLM">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LLM</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for LLM provider implementations.</span>
+
+<span class="sd">    All provider implementations must inherit from this class and implement</span>
+<span class="sd">    its abstract methods. This class defines the standard interface that all</span>
+<span class="sd">    LLM providers must conform to, ensuring consistent behavior across different</span>
+<span class="sd">    implementations.</span>
+
+<span class="sd">    Class Variables:</span>
+<span class="sd">        CONTEXT_WINDOW: Maximum token limits per model</span>
+<span class="sd">        COST_PER_MODEL: Cost per token per model</span>
+<span class="sd">        SUPPORTED_MODELS: List of supported model identifiers</span>
+<span class="sd">        THINKING_MODELS: Models supporting thinking/reasoning</span>
+<span class="sd">        EMBEDDING_MODELS: Models supporting embedding generation</span>
+<span class="sd">        RERANKING_MODELS: Models supporting document reranking</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">CONTEXT_WINDOW</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">COST_PER_MODEL</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]]]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">SUPPORTED_MODELS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">THINKING_MODELS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">EMBEDDING_MODELS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Models that support embeddings</span>
     <span class="n">RERANKING_MODELS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Models that support reranking</span>
+
+<div class="viewcode-block" id="LLM.generate">
+<a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.generate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">retry_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">result_processing_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">thinking_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a response with retry logic and error handling.</span>
+
+<span class="sd">        This is the main entry point for generation that handles:</span>
+<span class="sd">        1. Parameter validation</span>
+<span class="sd">        2. Retry logic for recoverable errors</span>
+<span class="sd">        3. Error handling and mapping to standard exceptions</span>
+<span class="sd">        4. Usage statistics tracking</span>
+<span class="sd">        5. Response processing and validation</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event_id: Unique identifier for this generation</span>
+<span class="sd">            system_prompt: Instructions for the model</span>
+<span class="sd">            messages: List of messages to process</span>
+<span class="sd">            max_tokens: Maximum tokens to generate</span>
+<span class="sd">            temp: Temperature for generation</span>
+<span class="sd">            tools: List of tools/functions to use</span>
+<span class="sd">            retry_limit: Maximum number of retries</span>
+<span class="sd">            result_processing_function: Function to process the result</span>
+<span class="sd">            thinking_budget: Number of tokens for thinking (if supported)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple containing:</span>
+<span class="sd">            - Generated response text</span>
+<span class="sd">            - Usage statistics</span>
+<span class="sd">            - Updated messages including the response</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMValidationError: If parameters are invalid</span>
+<span class="sd">            LLMMistake: If generation fails after all retries</span>
+<span class="sd">            LLMProviderError: For provider-specific errors</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">provider_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;LLM&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Generate a unique event ID if not provided</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">event_id</span><span class="p">:</span>
+            <span class="n">event_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Validate all parameters</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Validate basic parameters</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                    <span class="s2">&quot;messages must be a list&quot;</span><span class="p">,</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">messages</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                    <span class="s2">&quot;messages list cannot be empty&quot;</span><span class="p">,</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one message is required for generation&quot;</span>
+                    <span class="p">},</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Validate system prompt</span>
+            <span class="k">if</span> <span class="n">system_prompt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">system_prompt</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                    <span class="s2">&quot;system_prompt must be a string or None&quot;</span><span class="p">,</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">system_prompt</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Validate max_tokens</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_max_tokens</span><span class="p">(</span><span class="n">max_tokens</span><span class="p">)</span>
+
+            <span class="c1"># Validate temperature</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_temperature</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+
+            <span class="c1"># Validate tools if provided</span>
+            <span class="k">if</span> <span class="n">tools</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_validate_tools</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span>
+
+            <span class="c1"># Validate thinking budget if provided</span>
+            <span class="k">if</span> <span class="n">thinking_budget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_thinking_budget</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Model </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> does not support thinking budget&quot;</span><span class="p">,</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">},</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">thinking_budget</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">thinking_budget</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                        <span class="s2">&quot;thinking_budget must be a positive integer&quot;</span><span class="p">,</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s2">&quot;provided&quot;</span><span class="p">:</span> <span class="n">thinking_budget</span><span class="p">,</span>
+                            <span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">thinking_budget</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                        <span class="p">},</span>
+                    <span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">LLMValidationError</span><span class="p">:</span>
+            <span class="c1"># Re-raise validation errors without retry</span>
+            <span class="k">raise</span>
+
+        <span class="c1"># Initialize variables for retry logic</span>
+        <span class="n">attempts</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">raw_response</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">working_messages</span> <span class="o">=</span> <span class="n">messages</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Initialize cumulative usage stats</span>
+        <span class="n">cumulative_usage</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;read_tokens&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;write_tokens&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;total_tokens&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;read_cost&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;write_cost&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;total_cost&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;image_cost&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;retry_count&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">,</span>
+            <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider_name</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Generation with retry loop</span>
+        <span class="k">while</span> <span class="n">attempts</span> <span class="o">&lt;</span> <span class="n">retry_limit</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Generate raw response</span>
+                <span class="n">raw_response</span><span class="p">,</span> <span class="n">usage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_generate</span><span class="p">(</span>
+                    <span class="n">event_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">_attempt_</span><span class="si">{</span><span class="n">attempts</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">system_prompt</span><span class="o">=</span><span class="n">system_prompt</span><span class="p">,</span>
+                    <span class="n">messages</span><span class="o">=</span><span class="n">working_messages</span><span class="p">,</span>
+                    <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+                    <span class="n">temp</span><span class="o">=</span><span class="n">temp</span><span class="p">,</span>
+                    <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+                    <span class="n">thinking_budget</span><span class="o">=</span><span class="n">thinking_budget</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Update usage statistics</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">usage</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cumulative_usage</span><span class="p">:</span>
+                        <span class="n">cumulative_usage</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="n">usage</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+                <span class="c1"># Process and validate response</span>
+                <span class="k">if</span> <span class="n">result_processing_function</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">response</span> <span class="o">=</span> <span class="n">result_processing_function</span><span class="p">(</span><span class="n">raw_response</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">proc_error</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">LLMFormatError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Response processing failed: </span><span class="si">{</span><span class="n">proc_error</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                            <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                                <span class="s2">&quot;raw_response&quot;</span><span class="p">:</span> <span class="n">raw_response</span><span class="p">,</span>
+                                <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">proc_error</span><span class="p">),</span>
+                                <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">proc_error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                            <span class="p">},</span>
+                        <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">response</span> <span class="o">=</span> <span class="n">raw_response</span>
+
+                <span class="c1"># Check for empty response</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">usage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool_use&quot;</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">LLMContentError</span><span class="p">(</span>
+                        <span class="s2">&quot;Model returned empty response with no tool calls&quot;</span><span class="p">,</span>
+                        <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="n">usage</span><span class="p">},</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Prepare response message</span>
+                <span class="n">ai_message</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;message_type&quot;</span><span class="p">:</span> <span class="s2">&quot;ai&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">response</span><span class="p">}</span>
+
+                <span class="c1"># Add tool use data if present</span>
+                <span class="k">if</span> <span class="n">usage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool_use&quot;</span><span class="p">):</span>
+                    <span class="n">ai_message</span><span class="p">[</span><span class="s2">&quot;tool_use&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;tool_use&quot;</span><span class="p">]</span>
+
+                <span class="c1"># Add thinking data if present</span>
+                <span class="k">if</span> <span class="n">usage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;thinking&quot;</span><span class="p">):</span>
+                    <span class="n">ai_message</span><span class="p">[</span><span class="s2">&quot;thinking&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;thinking&quot;</span><span class="p">]</span>
+
+                <span class="c1"># Create updated messages list</span>
+                <span class="n">updated_messages</span> <span class="o">=</span> <span class="n">working_messages</span> <span class="o">+</span> <span class="p">[</span><span class="n">ai_message</span><span class="p">]</span>
+
+                <span class="c1"># Update final usage stats</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;provider&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">provider_name</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;retry_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attempts</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;successful&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="k">return</span> <span class="n">response</span><span class="p">,</span> <span class="n">cumulative_usage</span><span class="p">,</span> <span class="n">updated_messages</span>
+
+            <span class="k">except</span> <span class="p">(</span><span class="n">LLMRateLimitError</span><span class="p">,</span> <span class="n">LLMServiceUnavailableError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># These errors are always retried</span>
+                <span class="n">attempts</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;retry_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attempts</span>
+
+                <span class="k">if</span> <span class="n">attempts</span> <span class="o">&gt;=</span> <span class="n">retry_limit</span><span class="p">:</span>
+                    <span class="c1"># We&#39;ve exhausted retries for rate limit/service errors</span>
+                    <span class="k">raise</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Provider error persisted after </span><span class="si">{</span><span class="n">retry_limit</span><span class="si">}</span><span class="s2"> retries: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s2">&quot;retry_limit&quot;</span><span class="p">:</span> <span class="n">retry_limit</span><span class="p">,</span>
+                            <span class="s2">&quot;last_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+                            <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                        <span class="p">},</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Calculate retry delay with exponential backoff</span>
+                <span class="n">retry_after</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;retry_after&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">retry_after</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">wait_time</span> <span class="o">=</span> <span class="n">retry_after</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">wait_time</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">attempts</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.0</span>  <span class="c1"># 1, 2, 4, 8 seconds...</span>
+
+                <span class="c1"># Add jitter to avoid thundering herd</span>
+                <span class="n">wait_time</span> <span class="o">*=</span> <span class="mf">0.75</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>  <span class="c1"># 75-125% of wait_time</span>
+
+                <span class="c1"># Wait before retrying</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">wait_time</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="n">LLMMistake</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Potentially recoverable errors</span>
+                <span class="n">attempts</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;retry_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attempts</span>
+
+                <span class="k">if</span> <span class="n">attempts</span> <span class="o">&gt;=</span> <span class="n">retry_limit</span><span class="p">:</span>
+                    <span class="c1"># We&#39;ve exhausted retries for recoverable errors</span>
+                    <span class="k">raise</span> <span class="n">LLMMistake</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to get valid response after </span><span class="si">{</span><span class="n">retry_limit</span><span class="si">}</span><span class="s2"> attempts&quot;</span><span class="p">,</span>
+                        <span class="n">error_type</span><span class="o">=</span><span class="s2">&quot;retry_limit_exceeded&quot;</span><span class="p">,</span>
+                        <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s2">&quot;retry_limit&quot;</span><span class="p">:</span> <span class="n">retry_limit</span><span class="p">,</span>
+                            <span class="s2">&quot;last_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+                            <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                        <span class="p">},</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Add failed response to working messages</span>
+                <span class="n">working_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;message_type&quot;</span><span class="p">:</span> <span class="s2">&quot;human&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Error in previous response: </span><span class="si">{</span><span class="n">e</span><span class="si">!s}</span><span class="s2">. Please try again.&quot;</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+            <span class="k">except</span> <span class="p">(</span>
+                <span class="n">LLMAuthenticationError</span><span class="p">,</span>
+                <span class="n">LLMValidationError</span><span class="p">,</span>
+                <span class="n">LLMConfigurationError</span><span class="p">,</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Non-recoverable errors - re-raise immediately</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;error_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;successful&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">raise</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Unexpected errors - map to appropriate type and re-raise</span>
+                <span class="n">mapped_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map_provider_error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">mapped_error</span><span class="p">)</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;error_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">mapped_error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+                <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;successful&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">raise</span> <span class="n">mapped_error</span>
+
+        <span class="c1"># This should never be reached due to the retry loop</span>
+        <span class="k">raise</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+            <span class="s2">&quot;Unexpected end of generation method&quot;</span><span class="p">,</span>
+            <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+            <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">},</span>
+        <span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="LLM.__init__">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.__init__">[docs]</a>
@@ -143,6 +466,102 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_max_tokens</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">context_window</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate max_tokens parameter against model&#39;s context window.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            max_tokens: Maximum tokens to generate</span>
+<span class="sd">            context_window: Optional context window override (defaults to model&#39;s window)</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMValidationError: If max_tokens is invalid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_tokens</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;max_tokens must be an integer&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;provided&quot;</span><span class="p">:</span> <span class="n">max_tokens</span><span class="p">,</span>
+                    <span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">max_tokens</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">max_tokens</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;max_tokens must be greater than 0&quot;</span><span class="p">,</span> <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided&quot;</span><span class="p">:</span> <span class="n">max_tokens</span><span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Get model&#39;s context window if not provided</span>
+        <span class="k">if</span> <span class="n">context_window</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">context_window</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_context_window</span><span class="p">()</span>
+
+        <span class="c1"># Check if max_tokens exceeds context window</span>
+        <span class="k">if</span> <span class="n">max_tokens</span> <span class="o">&gt;</span> <span class="n">context_window</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;max_tokens (</span><span class="si">{</span><span class="n">max_tokens</span><span class="si">}</span><span class="s2">) exceeds model context window (</span><span class="si">{</span><span class="n">context_window</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;max_tokens&quot;</span><span class="p">:</span> <span class="n">max_tokens</span><span class="p">,</span>
+                    <span class="s2">&quot;context_window&quot;</span><span class="p">:</span> <span class="n">context_window</span><span class="p">,</span>
+                    <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate temperature parameter.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            temp: Temperature for generation</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMValidationError: If temperature is invalid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;Temperature must be a number&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided&quot;</span><span class="p">:</span> <span class="n">temp</span><span class="p">,</span> <span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Most providers use temperature in range [0.0, 2.0]</span>
+        <span class="k">if</span> <span class="n">temp</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">temp</span> <span class="o">&gt;</span> <span class="mf">2.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;Temperature should be between 0.0 and 2.0&quot;</span><span class="p">,</span> <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided&quot;</span><span class="p">:</span> <span class="n">temp</span><span class="p">}</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_tools</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate tools parameter for function calling.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tools: List of tool/function definitions</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMValidationError: If tools format is invalid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">..utils.validators</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_tools</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tools</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;tools must be a list&quot;</span><span class="p">,</span> <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Use common validator</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">validate_tools</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid tools format: </span><span class="si">{</span><span class="n">e</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check for required capabilities</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_tool_calling</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_functions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Model </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> does not support function/tool calling&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">},</span>
+            <span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_capabilities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize capability detection for the selected model.</span>
@@ -163,28 +582,282 @@
 
         <span class="c1"># Initialize capability attributes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_text_generation</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">Capability</span><span class="o">.</span><span class="n">TEXT_GENERATION</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
+            <span class="n">Capability</span><span class="o">.</span><span class="n">TEXT_GENERATION</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_text_embeddings</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">Capability</span><span class="o">.</span><span class="n">TEXT_EMBEDDINGS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
+            <span class="n">Capability</span><span class="o">.</span><span class="n">TEXT_EMBEDDINGS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_image_input</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">IMAGE_INPUT</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_image_generation</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">Capability</span><span class="o">.</span><span class="n">IMAGE_GENERATION</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
+            <span class="n">Capability</span><span class="o">.</span><span class="n">IMAGE_GENERATION</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_streaming</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">STREAMING</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_functions</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">FUNCTIONS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_reranking</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">RERANKING</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_thinking_budget</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">Capability</span><span class="o">.</span><span class="n">THINKING_BUDGET</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
+            <span class="n">Capability</span><span class="o">.</span><span class="n">THINKING_BUDGET</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_json_mode</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">JSON_MODE</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_tool_calling</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">TOOL_CALLING</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_vision</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">VISION</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_map_provider_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMError</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Map provider-specific errors to standardized LLM error types.</span>
+
+<span class="sd">        This base implementation provides simple string matching to categorize</span>
+<span class="sd">        common error types. Provider implementations should override this method</span>
+<span class="sd">        with provider-specific error mapping logic.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            error: The original exception from the provider</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            LLMError: Appropriate mapped exception with context</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">provider_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;LLM&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">error_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="c1"># Check for common error patterns</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;auth&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;key&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;credential&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;permission&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;unauthorized&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;access denied&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;token&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;signature&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">LLMAuthenticationError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> authentication failed: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;rate limit&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;quota&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;throttl&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;too many requests&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;requests per minute&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;capacity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;overloaded&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">LLMRateLimitError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> rate limit exceeded: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                <span class="n">retry_after</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>  <span class="c1"># Default retry delay</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;unavailable&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;down&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;outage&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;maintenance&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;500&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;502&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;503&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;504&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;server error&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">LLMServiceUnavailableError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> service unavailable: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;content&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;moderation&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;policy&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;violation&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;harmful&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;inappropriate&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;unsafe&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;blocked&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">LLMContentError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> content policy violation: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;format&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;json&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;xml&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;parse&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;serialization&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;deserialization&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;invalid format&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">LLMFormatError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> format error: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">,</span> <span class="s2">&quot;parameter&quot;</span><span class="p">,</span> <span class="s2">&quot;argument&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">LLMToolError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> tool error: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;thinking&quot;</span><span class="p">,</span> <span class="s2">&quot;reasoning&quot;</span><span class="p">,</span> <span class="s2">&quot;thought&quot;</span><span class="p">,</span> <span class="s2">&quot;budget&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">LLMThinkingError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> thinking error: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">error_message</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;invalid&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;configuration&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;parameter&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;setting&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;not supported&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;unsupported&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;deprecated&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">LLMConfigurationError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> configuration error: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Default case</span>
+        <span class="k">return</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+            <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> error: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+            <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_call_with_retry</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">initial_backoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">backoff_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+        <span class="n">retryable_errors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="ne">Exception</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call a function with exponential backoff retry logic.</span>
+
+<span class="sd">        This method provides standardized retry logic for API calls that may</span>
+<span class="sd">        experience transient failures. It implements exponential backoff with</span>
+<span class="sd">        jitter to avoid overwhelming services during recovery.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            func: The function to call</span>
+<span class="sd">            *args: Positional arguments to pass to the function</span>
+<span class="sd">            max_retries: Maximum number of retry attempts</span>
+<span class="sd">            initial_backoff: Initial backoff time in seconds</span>
+<span class="sd">            backoff_factor: Multiplier for backoff on each retry</span>
+<span class="sd">            retryable_errors: List of exception types that should trigger a retry</span>
+<span class="sd">            **kwargs: Keyword arguments to pass to the function</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Any: The return value from the function</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMError: The mapped exception after all retries are exhausted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">retryable_errors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">retryable_errors</span> <span class="o">=</span> <span class="p">[</span><span class="n">LLMRateLimitError</span><span class="p">,</span> <span class="n">LLMServiceUnavailableError</span><span class="p">]</span>
+
+        <span class="n">retry_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">backoff_time</span> <span class="o">=</span> <span class="n">initial_backoff</span>
+        <span class="n">last_exception</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">while</span> <span class="n">retry_count</span> <span class="o">&lt;=</span> <span class="n">max_retries</span><span class="p">:</span>  <span class="c1"># &lt;= because first attempt is not a retry</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">retryable_errors</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">retry_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">last_exception</span> <span class="o">=</span> <span class="n">e</span>
+
+                <span class="k">if</span> <span class="n">retry_count</span> <span class="o">&gt;</span> <span class="n">max_retries</span><span class="p">:</span>
+                    <span class="c1"># We&#39;ve exhausted retries, re-raise the last error</span>
+                    <span class="k">raise</span>
+
+                <span class="c1"># Get retry-after time if available (for rate limits)</span>
+                <span class="n">retry_after</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">LLMRateLimitError</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;retry_after&quot;</span><span class="p">):</span>
+                    <span class="n">retry_after</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">retry_after</span>
+
+                <span class="c1"># Use retry-after if available, otherwise use exponential backoff</span>
+                <span class="n">wait_time</span> <span class="o">=</span> <span class="n">retry_after</span> <span class="k">if</span> <span class="n">retry_after</span> <span class="k">else</span> <span class="n">backoff_time</span>
+
+                <span class="c1"># Add jitter to avoid thundering herd problem</span>
+                <span class="n">jitter</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">wait_time</span><span class="p">)</span>
+                <span class="n">wait_time</span> <span class="o">+=</span> <span class="n">jitter</span>
+
+                <span class="c1"># Log retry attempt (if provider has a logger)</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;logger&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="n">provider_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+                    <span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Retrying </span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> after error: </span><span class="si">{</span><span class="n">e</span><span class="si">!s}</span><span class="s2">. &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Attempt </span><span class="si">{</span><span class="n">retry_count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">wait_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Wait before retry</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">wait_time</span><span class="p">)</span>
+
+                <span class="c1"># Increase backoff for next retry</span>
+                <span class="n">backoff_time</span> <span class="o">*=</span> <span class="n">backoff_factor</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># For other exceptions, map to appropriate error type and raise</span>
+                <span class="n">mapped_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map_provider_error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">mapped_error</span>
+
+        <span class="c1"># Should never get here, but just in case</span>
+        <span class="k">if</span> <span class="n">last_exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">last_exception</span>
+
+        <span class="c1"># Generic fallback error if we somehow get here</span>
+        <span class="n">provider_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;LLM&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+            <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Failed after </span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2"> retries&quot;</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span>
+        <span class="p">)</span>
+
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_messages_for_model</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert standard message format into model-specific format.</span>
@@ -227,15 +900,15 @@
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_raw_generate</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-            <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-            <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
-            <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">thinking_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+        <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">thinking_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a response from the LLM without error correction.</span>
@@ -265,121 +938,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
-<div class="viewcode-block" id="LLM.embed">
-<a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.embed">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">embed</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get embeddings for a list of texts.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            texts (List[str]): List of texts to embed</span>
-<span class="sd">            model (Optional[str]): Specific embedding model to use, defaults to a provider-specific model</span>
-<span class="sd">            batch_size (int): Number of texts to process in each batch, defaults to 100</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Tuple[List[List[float]], Dict[str, Any]]: Tuple containing:</span>
-<span class="sd">                - List of embedding vectors (one per input text)</span>
-<span class="sd">                - Usage statistics including:</span>
-<span class="sd">                    - tokens: Number of tokens processed</span>
-<span class="sd">                    - cost: Cost of the embedding operation</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            LLMValidationError: If input parameters are invalid</span>
-<span class="sd">            NotImplementedError: If the provider doesn&#39;t implement embedding</span>
-<span class="sd">            LLMProviderError: For provider-specific errors</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">..exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLMValidationError</span>
-
-        <span class="c1"># Validate model has embedding capability</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_text_embeddings</span><span class="p">:</span>
-            <span class="n">available_models</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">model</span>
-                <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_supported_models</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">EMBEDDING_MODELS</span>
-            <span class="p">]</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Model </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> does not support embeddings. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Available embedding models: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">available_models</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-
-        <span class="c1"># Validate input parameters</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;Texts must be a list&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">texts</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;Texts list cannot be empty&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one text is required for embedding&quot;</span><span class="p">},</span>
-            <span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">texts</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Text at index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> must be a string, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
-                <span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">batch_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;batch_size must be a positive integer&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided_value&quot;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">},</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
-                <span class="s2">&quot;model must be a string or None&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
-            <span class="p">)</span>
-
-        <span class="c1"># This method must be implemented by the provider</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Embedding is not implemented for provider </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-        
-        <span class="c1"># Unreachable code, but needed for type checking</span>
-        <span class="k">return</span> <span class="p">[],</span> <span class="p">{</span><span class="s2">&quot;tokens&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;cost&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}</span></div>
-
-
-<div class="viewcode-block" id="LLM.supports_embeddings">
-<a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.supports_embeddings">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">supports_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if this provider supports embeddings.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            bool: True if embeddings are supported, False otherwise</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_text_embeddings</span></div>
-
-
-<div class="viewcode-block" id="LLM.supports_reranking">
-<a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.supports_reranking">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">supports_reranking</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if this LLM instance supports document reranking.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            bool: True if this model supports document reranking, False otherwise</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_reranking</span></div>
-
-
+    <span class="c1"># Include remaining methods from original file</span>
 <div class="viewcode-block" id="LLM.rerank">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.rerank">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rerank</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-            <span class="n">top_n</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">return_scores</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">top_n</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_scores</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rerank a list of documents based on their relevance to a query.</span>
@@ -427,8 +995,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">query</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
                 <span class="s2">&quot;Query cannot be empty&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;Empty query would result in meaningless rankings&quot;</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;Empty query would result in meaningless rankings&quot;</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">documents</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -440,8 +1007,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">documents</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
                 <span class="s2">&quot;Documents list cannot be empty&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one document is required for reranking&quot;</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one document is required for reranking&quot;</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">doc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">documents</span><span class="p">):</span>
@@ -471,29 +1037,23 @@
                 <span class="p">)</span>
 
         <span class="c1"># This method must be implemented by the provider</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="s2">&quot;This method must be implemented by the provider&quot;</span><span class="p">)</span>
-        
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This method must be implemented by the provider&quot;</span><span class="p">)</span>
+
         <span class="c1"># Unreachable code, but needed for type checking</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;ranked_documents&quot;</span><span class="p">:</span> <span class="p">[],</span>
-            <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="p">[],</span>
-            <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="p">[],</span>
-            <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="p">{}</span>
-        <span class="p">}</span></div>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;ranked_documents&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="p">{}}</span></div>
 
 
 <div class="viewcode-block" id="LLM.stream_generate">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.stream_generate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">stream_generate</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-            <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-            <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="n">functions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">functions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stream a response from the LLM, yielding chunks as they become available.</span>
@@ -582,7 +1142,7 @@
             <span class="n">properties</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">param_type</span><span class="p">,</span>
                 <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">param_desc</span>
-                               <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> for function </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> for function </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="p">}</span>
 
         <span class="c1"># Build the tool dictionary</span>
@@ -599,26 +1159,12 @@
         <span class="k">return</span> <span class="n">tool</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_functions_to_tools</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">functions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">functions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a list of functions to a list of tools&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_function_to_tool</span><span class="p">(</span><span class="n">function</span><span class="p">)</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span>
-                <span class="n">functions</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_function_to_tool</span><span class="p">(</span><span class="n">function</span><span class="p">)</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">]</span>
 
-<div class="viewcode-block" id="LLM.generate">
-<a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.generate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-            <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-            <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="n">result_processing_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">retry_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
-            <span class="n">functions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">thinking_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+        <span class="c1"># Second generate method - removed to avoid duplication</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a response with automatic error correction.</span>
 
@@ -756,8 +1302,7 @@
                 <span class="c1"># Track special usage fields</span>
                 <span class="k">if</span> <span class="s2">&quot;thinking&quot;</span> <span class="ow">in</span> <span class="n">usage</span><span class="p">:</span>
                     <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;thinking&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;thinking&quot;</span><span class="p">]</span>
-                    <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;thinking_signature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">usage</span><span class="p">[</span>
-                        <span class="s2">&quot;thinking_signature&quot;</span><span class="p">]</span>
+                    <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;thinking_signature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;thinking_signature&quot;</span><span class="p">]</span>
 
                 <span class="k">if</span> <span class="s2">&quot;tool_use&quot;</span> <span class="ow">in</span> <span class="n">usage</span><span class="p">:</span>
                     <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;tool_use&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;tool_use&quot;</span><span class="p">]</span>
@@ -840,8 +1385,7 @@
                     <span class="sa">f</span><span class="s2">&quot;Provider error during generation: </span><span class="si">{</span><span class="n">e</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;LLM&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
                     <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)},</span>
-                <span class="p">)</span></div>
-
+                <span class="p">)</span>
 
 <div class="viewcode-block" id="LLM.get_context_window">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.get_context_window">[docs]</a>
@@ -904,7 +1448,7 @@
 <div class="viewcode-block" id="LLM.check_context_fit">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.check_context_fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">check_context_fit</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_response_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_response_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if a prompt will fit in the model&#39;s context window.</span>
@@ -919,7 +1463,7 @@
         <span class="n">context_window</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_context_window</span><span class="p">()</span>
         <span class="n">estimated_prompt_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_tokens</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
         <span class="n">max_response</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">max_response_tokens</span> <span class="ow">or</span> <span class="n">context_window</span> <span class="o">//</span> <span class="mi">4</span>
+            <span class="n">max_response_tokens</span> <span class="ow">or</span> <span class="n">context_window</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="p">)</span>  <span class="c1"># Default to 1/4 of context window</span>
 
         <span class="n">total_tokens</span> <span class="o">=</span> <span class="n">estimated_prompt_tokens</span> <span class="o">+</span> <span class="n">max_response</span>
@@ -937,11 +1481,11 @@
 <div class="viewcode-block" id="LLM.estimate_cost">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.estimate_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">estimate_cost</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">expected_response_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">images</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">num_images</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">expected_response_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">images</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_images</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimate the cost for a generation based on input and expected output.</span>
@@ -961,7 +1505,7 @@
         <span class="n">costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_costs</span><span class="p">()</span>
         <span class="n">prompt_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_tokens</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
         <span class="n">response_tokens</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">expected_response_tokens</span> <span class="ow">or</span> <span class="n">prompt_tokens</span>
+            <span class="n">expected_response_tokens</span> <span class="ow">or</span> <span class="n">prompt_tokens</span>
         <span class="p">)</span>  <span class="c1"># Default to same length as prompt</span>
 
         <span class="c1"># Calculate costs</span>
@@ -1027,12 +1571,12 @@
 <div class="viewcode-block" id="LLM.classify">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.classify">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">classify</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-            <span class="n">categories</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-            <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-            <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">categories</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Classify input into predefined categories using the LLM.</span>
@@ -1072,8 +1616,7 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">example</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;Example at index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> must be a dictionary, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">example</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
-                                 <span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">example</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">example</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
                     <span class="p">)</span>
 
                 <span class="n">missing_keys</span> <span class="o">=</span> <span class="n">required_keys</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">example</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
@@ -1115,8 +1658,7 @@
         <span class="k">if</span> <span class="n">max_options</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;max_options (</span><span class="si">{</span><span class="n">max_options</span><span class="si">}</span><span class="s2">) exceeds the number of categories (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;max_options&quot;</span><span class="p">:</span> <span class="n">max_options</span><span class="p">,</span>
-                         <span class="s2">&quot;category_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">)},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;max_options&quot;</span><span class="p">:</span> <span class="n">max_options</span><span class="p">,</span> <span class="s2">&quot;category_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">)},</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">system_prompt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">system_prompt</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -1141,8 +1683,7 @@
         <span class="c1"># Create a processing function that will validate and parse the response</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">process_classification_response</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_classification_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span>
-                                                           <span class="n">max_options</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_classification_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">max_options</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">LLMMistake</span><span class="p">(</span>
                     <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
@@ -1168,10 +1709,10 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_classification_prompt</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">categories</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-            <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">categories</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Format the classification prompt with categories and examples.&quot;&quot;&quot;</span>
         <span class="c1"># Build category list</span>
@@ -1215,7 +1756,7 @@
         <span class="k">return</span> <span class="n">prompt</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_classification_response</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the model&#39;s response into a list of category names.&quot;&quot;&quot;</span>
         <span class="c1"># Try both patterns, ignoring everything outside the tags</span>
@@ -1248,7 +1789,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">category_names</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">numbers</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_combine_system_prompts</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">classification_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">classification_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine classification prompt with user&#39;s system prompt.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">user_prompt</span><span class="p">:</span>
@@ -1258,10 +1799,10 @@
 <div class="viewcode-block" id="LLM.classify_from_file">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.classify_from_file">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">classify_from_file</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">config_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-            <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Classify messages using configuration from a file.</span>

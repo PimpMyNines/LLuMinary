@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; LLuMinary 0.0.1</title>
+  <title>Index &mdash; LLuMinary 1.0.0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -83,9 +83,11 @@
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#J"><strong>J</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
+ | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
@@ -100,13 +102,15 @@
       <ul>
         <li><a href="api.html#lluminary.exceptions.LLMProviderError.__init__">(lluminary.exceptions.LLMProviderError method)</a>
 </li>
-        <li><a href="api.html#lluminary.handler.LLuMinary.__init__">(lluminary.handler.LLuMinary method)</a>
+        <li><a href="api.html#lluminary.handler.LLMHandler.__init__">(lluminary.handler.LLMHandler method)</a>
 </li>
         <li><a href="api.html#lluminary.models.base.LLM.__init__">(lluminary.models.base.LLM method)</a>
 </li>
         <li><a href="api.html#lluminary.models.providers.bedrock.BedrockLLM.__init__">(lluminary.models.providers.bedrock.BedrockLLM method)</a>
 </li>
         <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.__init__">(lluminary.models.providers.cohere.CohereLLM method)</a>
+</li>
+        <li><a href="api.html#lluminary.tools.registry.ToolRegistry.__init__">(lluminary.tools.registry.ToolRegistry method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -126,6 +130,10 @@
 </li>
       </ul></li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#lluminary.tools.registry.ToolMetadata.average_execution_time">average_execution_time (lluminary.tools.registry.ToolMetadata attribute)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="B">B</h2>
@@ -141,7 +149,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationConfig.categories">categories (lluminary.models.classification.config.ClassificationConfig attribute)</a>
 </li>
-      <li><a href="api.html#lluminary.handler.LLuMinary.check_context_fit">check_context_fit() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.handler.LLMHandler.check_context_fit">check_context_fit() (lluminary.handler.LLMHandler method)</a>
 
       <ul>
         <li><a href="api.html#lluminary.models.base.LLM.check_context_fit">(lluminary.models.base.LLM method)</a>
@@ -153,7 +161,7 @@
 </li>
       <li><a href="api.html#lluminary.models.classification.classifier.Classifier">Classifier (class in lluminary.models.classification.classifier)</a>
 </li>
-      <li><a href="api.html#lluminary.handler.LLuMinary.classify">classify() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.handler.LLMHandler.classify">classify() (lluminary.handler.LLMHandler method)</a>
 
       <ul>
         <li><a href="api.html#lluminary.models.base.LLM.classify">(lluminary.models.base.LLM method)</a>
@@ -165,9 +173,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.base.LLM.classify_from_file">classify_from_file() (lluminary.models.base.LLM method)</a>
 </li>
-      <li><a href="api.html#lluminary.handler.LLuMinary.classify_with_usage">classify_with_usage() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.handler.LLMHandler.classify_with_usage">classify_with_usage() (lluminary.handler.LLMHandler method)</a>
 </li>
       <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM">CohereLLM (class in lluminary.models.providers.cohere)</a>
+</li>
+      <li><a href="api.html#lluminary.handler.LLMHandler.config">config (lluminary.handler.LLMHandler attribute)</a>
 </li>
       <li><a href="api.html#lluminary.models.base.LLM.CONTEXT_WINDOW">CONTEXT_WINDOW (lluminary.models.base.LLM attribute)</a>
 
@@ -193,24 +203,26 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.DEFAULT_EMBEDDING_MODEL">DEFAULT_EMBEDDING_MODEL (lluminary.models.providers.cohere.CohereLLM attribute)</a>
 </li>
+      <li><a href="api.html#lluminary.handler.LLMHandler.default_provider">default_provider (lluminary.handler.LLMHandler attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.DEFAULT_RERANKING_MODEL">DEFAULT_RERANKING_MODEL (lluminary.models.providers.cohere.CohereLLM attribute)</a>
 </li>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationConfig.description">description (lluminary.models.classification.config.ClassificationConfig attribute)</a>
+
+      <ul>
+        <li><a href="api.html#lluminary.tools.registry.ToolMetadata.description">(lluminary.tools.registry.ToolMetadata attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#lluminary.models.base.LLM.embed">embed() (lluminary.models.base.LLM method)</a>
-
-      <ul>
-        <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.embed">(lluminary.models.providers.cohere.CohereLLM method)</a>
+      <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.embed">embed() (lluminary.models.providers.cohere.CohereLLM method)</a>
 </li>
-      </ul></li>
       <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.embedding_costs">embedding_costs (lluminary.models.providers.cohere.CohereLLM attribute)</a>
 </li>
       <li><a href="api.html#lluminary.models.base.LLM.EMBEDDING_MODELS">EMBEDDING_MODELS (lluminary.models.base.LLM attribute)</a>
@@ -221,7 +233,7 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#lluminary.handler.LLuMinary.estimate_cost">estimate_cost() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.handler.LLMHandler.estimate_cost">estimate_cost() (lluminary.handler.LLMHandler method)</a>
 
       <ul>
         <li><a href="api.html#lluminary.models.base.LLM.estimate_cost">(lluminary.models.base.LLM method)</a>
@@ -237,11 +249,17 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#lluminary.exceptions.LLMMistake.from_dict">from_dict() (lluminary.exceptions.LLMMistake class method)</a>
+      <li><a href="api.html#lluminary.tools.registry.ToolMetadata.failure_count">failure_count (lluminary.tools.registry.ToolMetadata attribute)</a>
+</li>
+      <li><a href="api.html#lluminary.handler.LLMHandler.fallback_providers">fallback_providers (lluminary.handler.LLMHandler attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#lluminary.exceptions.LLMMistake.from_dict">from_dict() (lluminary.exceptions.LLMMistake class method)</a>
+</li>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationConfig.from_file">from_file() (lluminary.models.classification.config.ClassificationConfig class method)</a>
+</li>
+      <li><a href="api.html#lluminary.tools.registry.ToolMetadata.function">function (lluminary.tools.registry.ToolMetadata attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -249,31 +267,31 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#lluminary.handler.LLuMinary.generate">generate() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.handler.LLMHandler.generate">generate() (lluminary.handler.LLMHandler method)</a>
 
       <ul>
         <li><a href="api.html#lluminary.models.base.LLM.generate">(lluminary.models.base.LLM method)</a>
 </li>
       </ul></li>
-      <li><a href="api.html#lluminary.handler.LLuMinary.generate_with_usage">generate_with_usage() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.handler.LLMHandler.generate_with_usage">generate_with_usage() (lluminary.handler.LLMHandler method)</a>
 </li>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationLibrary.get_config">get_config() (lluminary.models.classification.config.ClassificationLibrary method)</a>
 </li>
-      <li><a href="api.html#lluminary.handler.LLuMinary.get_context_window">get_context_window() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.handler.LLMHandler.get_context_window">get_context_window() (lluminary.handler.LLMHandler method)</a>
 
       <ul>
         <li><a href="api.html#lluminary.models.base.LLM.get_context_window">(lluminary.models.base.LLM method)</a>
 </li>
       </ul></li>
+      <li><a href="api.html#lluminary.handler.LLMHandler.get_embeddings">get_embeddings() (lluminary.handler.LLMHandler method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#lluminary.handler.LLuMinary.get_embeddings">get_embeddings() (lluminary.handler.LLuMinary method)</a>
-</li>
       <li><a href="api.html#lluminary.models.router.get_llm_from_model">get_llm_from_model() (in module lluminary.models.router)</a>
 </li>
       <li><a href="api.html#lluminary.models.base.LLM.get_model_costs">get_model_costs() (lluminary.models.base.LLM method)</a>
 </li>
-      <li><a href="api.html#lluminary.handler.LLuMinary.get_provider">get_provider() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.handler.LLMHandler.get_provider">get_provider() (lluminary.handler.LLMHandler method)</a>
 </li>
       <li><a href="api.html#lluminary.utils.aws.get_secret">get_secret() (in module lluminary.utils.aws)</a>
 </li>
@@ -283,6 +301,10 @@
         <li><a href="api.html#lluminary.models.providers.bedrock.BedrockLLM.get_supported_models">(lluminary.models.providers.bedrock.BedrockLLM method)</a>
 </li>
       </ul></li>
+      <li><a href="api.html#lluminary.tools.registry.ToolRegistry.get_tool">get_tool() (lluminary.tools.registry.ToolRegistry method)</a>
+</li>
+      <li><a href="api.html#lluminary.tools.registry.ToolRegistry.get_tool_stats">get_tool_stats() (lluminary.tools.registry.ToolRegistry method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -294,6 +316,14 @@
   </ul></td>
 </tr></table>
 
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#lluminary.tools.validators.json_serializable">json_serializable() (in module lluminary.tools.validators)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -301,7 +331,11 @@
 </li>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationLibrary.list_configs">list_configs() (lluminary.models.classification.config.ClassificationLibrary method)</a>
 </li>
+      <li><a href="api.html#lluminary.tools.registry.ToolRegistry.list_tools">list_tools() (lluminary.tools.registry.ToolRegistry method)</a>
+</li>
       <li><a href="api.html#lluminary.models.base.LLM">LLM (class in lluminary.models.base)</a>
+</li>
+      <li><a href="api.html#lluminary.handler.LLMHandler.llm_instances">llm_instances (lluminary.handler.LLMHandler attribute)</a>
 </li>
       <li><a href="api.html#lluminary.exceptions.LLMAuthenticationError">LLMAuthenticationError</a>
 </li>
@@ -314,6 +348,8 @@
       <li><a href="api.html#lluminary.exceptions.LLMError">LLMError</a>
 </li>
       <li><a href="api.html#lluminary.exceptions.LLMFormatError">LLMFormatError</a>
+</li>
+      <li><a href="api.html#lluminary.handler.LLMHandler">LLMHandler (class in lluminary.handler)</a>
 </li>
       <li><a href="api.html#lluminary.exceptions.LLMMistake">LLMMistake</a>
 </li>
@@ -331,10 +367,6 @@
 </li>
       <li><a href="api.html#lluminary.exceptions.LLMValidationError">LLMValidationError</a>
 </li>
-      <li><a href="api.html#lluminary.handler.LLuMinary">LLuMinary (class in lluminary.handler)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     lluminary.exceptions
 
@@ -342,6 +374,8 @@
         <li><a href="api.html#module-lluminary.exceptions">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     lluminary.handler
 
@@ -392,6 +426,20 @@
 </li>
       </ul></li>
       <li>
+    lluminary.tools.registry
+
+      <ul>
+        <li><a href="api.html#module-lluminary.tools.registry">module</a>
+</li>
+      </ul></li>
+      <li>
+    lluminary.tools.validators
+
+      <ul>
+        <li><a href="api.html#module-lluminary.tools.validators">module</a>
+</li>
+      </ul></li>
+      <li>
     lluminary.utils.aws
 
       <ul>
@@ -399,6 +447,8 @@
 </li>
       </ul></li>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationLibrary.load_configs">load_configs() (lluminary.models.classification.config.ClassificationLibrary method)</a>
+</li>
+      <li><a href="api.html#lluminary.handler.LLMHandler.logger">logger (lluminary.handler.LLMHandler attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -430,6 +480,10 @@
 </li>
         <li><a href="api.html#module-lluminary.models.router">lluminary.models.router</a>
 </li>
+        <li><a href="api.html#module-lluminary.tools.registry">lluminary.tools.registry</a>
+</li>
+        <li><a href="api.html#module-lluminary.tools.validators">lluminary.tools.validators</a>
+</li>
         <li><a href="api.html#module-lluminary.utils.aws">lluminary.utils.aws</a>
 </li>
       </ul></li>
@@ -440,6 +494,18 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationConfig.name">name (lluminary.models.classification.config.ClassificationConfig attribute)</a>
+
+      <ul>
+        <li><a href="api.html#lluminary.tools.registry.ToolMetadata.name">(lluminary.tools.registry.ToolMetadata attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#lluminary.tools.registry.ToolMetadata.parameters">parameters (lluminary.tools.registry.ToolMetadata attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -451,18 +517,24 @@
 </li>
       <li><a href="api.html#lluminary.models.router.register_provider">register_provider() (in module lluminary.models.router)</a>
 </li>
-      <li><a href="api.html#lluminary.handler.LLuMinary.register_tools">register_tools() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.tools.registry.ToolRegistry.register_tool">register_tool() (lluminary.tools.registry.ToolRegistry method)</a>
 </li>
+      <li><a href="api.html#lluminary.handler.LLMHandler.register_tools">register_tools() (lluminary.handler.LLMHandler method)</a>
+
+      <ul>
+        <li><a href="api.html#lluminary.tools.registry.ToolRegistry.register_tools">(lluminary.tools.registry.ToolRegistry method)</a>
+</li>
+      </ul></li>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationLibrary.remove_config">remove_config() (lluminary.models.classification.config.ClassificationLibrary method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.base.LLM.rerank">rerank() (lluminary.models.base.LLM method)</a>
 
       <ul>
         <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.rerank">(lluminary.models.providers.cohere.CohereLLM method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.reranking_costs">reranking_costs (lluminary.models.providers.cohere.CohereLLM attribute)</a>
 </li>
       <li><a href="api.html#lluminary.models.base.LLM.RERANKING_MODELS">RERANKING_MODELS (lluminary.models.base.LLM attribute)</a>
@@ -473,6 +545,8 @@
       </ul></li>
       <li><a href="api.html#lluminary.exceptions.LLMRateLimitError.retry_after">retry_after (lluminary.exceptions.LLMRateLimitError property)</a>
 </li>
+      <li><a href="api.html#lluminary.tools.registry.ToolMetadata.return_type">return_type (lluminary.tools.registry.ToolMetadata attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -481,12 +555,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationConfig.save">save() (lluminary.models.classification.config.ClassificationConfig method)</a>
 </li>
-      <li><a href="api.html#lluminary.handler.LLuMinary.stream_generate">stream_generate() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.handler.LLMHandler.stream_generate">stream_generate() (lluminary.handler.LLMHandler method)</a>
 
       <ul>
         <li><a href="api.html#lluminary.models.base.LLM.stream_generate">(lluminary.models.base.LLM method)</a>
 </li>
       </ul></li>
+      <li><a href="api.html#lluminary.tools.registry.ToolMetadata.success_count">success_count (lluminary.tools.registry.ToolMetadata attribute)</a>
+</li>
       <li><a href="api.html#lluminary.models.base.LLM.SUPPORTED_MODELS">SUPPORTED_MODELS (lluminary.models.base.LLM attribute)</a>
 
       <ul>
@@ -495,16 +571,14 @@
         <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.SUPPORTED_MODELS">(lluminary.models.providers.cohere.CohereLLM attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api.html#lluminary.handler.LLuMinary.supports_embeddings">supports_embeddings() (lluminary.handler.LLuMinary method)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#lluminary.handler.LLMHandler.supports_embeddings">supports_embeddings() (lluminary.handler.LLMHandler method)</a>
 
       <ul>
-        <li><a href="api.html#lluminary.models.base.LLM.supports_embeddings">(lluminary.models.base.LLM method)</a>
-</li>
         <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.supports_embeddings">(lluminary.models.providers.cohere.CohereLLM method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.base.LLM.supports_image_input">supports_image_input() (lluminary.models.base.LLM method)</a>
 
       <ul>
@@ -513,14 +587,10 @@
         <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.supports_image_input">(lluminary.models.providers.cohere.CohereLLM method)</a>
 </li>
       </ul></li>
-      <li><a href="api.html#lluminary.handler.LLuMinary.supports_images">supports_images() (lluminary.handler.LLuMinary method)</a>
+      <li><a href="api.html#lluminary.handler.LLMHandler.supports_images">supports_images() (lluminary.handler.LLMHandler method)</a>
 </li>
-      <li><a href="api.html#lluminary.models.base.LLM.supports_reranking">supports_reranking() (lluminary.models.base.LLM method)</a>
-
-      <ul>
-        <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.supports_reranking">(lluminary.models.providers.cohere.CohereLLM method)</a>
+      <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.supports_reranking">supports_reranking() (lluminary.models.providers.cohere.CohereLLM method)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -535,8 +605,6 @@
         <li><a href="api.html#lluminary.models.providers.cohere.CohereLLM.THINKING_MODELS">(lluminary.models.providers.cohere.CohereLLM attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.exceptions.LLMMistake.to_dict">to_dict() (lluminary.exceptions.LLMMistake method)</a>
 
       <ul>
@@ -545,7 +613,17 @@
         <li><a href="api.html#lluminary.models.classification.config.ClassificationConfig.to_dict">(lluminary.models.classification.config.ClassificationConfig method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationConfig.to_file">to_file() (lluminary.models.classification.config.ClassificationConfig method)</a>
+</li>
+      <li><a href="api.html#lluminary.tools.registry.ToolMetadata">ToolMetadata (class in lluminary.tools.registry)</a>
+</li>
+      <li><a href="api.html#lluminary.tools.registry.ToolRegistry">ToolRegistry (class in lluminary.tools.registry)</a>
+</li>
+      <li><a href="api.html#lluminary.tools.registry.ToolValidationError">ToolValidationError</a>
+</li>
+      <li><a href="api.html#lluminary.tools.registry.ToolMetadata.total_execution_time">total_execution_time (lluminary.tools.registry.ToolMetadata attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -555,14 +633,22 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.classification.config.ClassificationConfig.validate">validate() (lluminary.models.classification.config.ClassificationConfig method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lluminary.models.base.LLM.validate_model">validate_model() (lluminary.models.base.LLM method)</a>
 
       <ul>
         <li><a href="api.html#lluminary.models.providers.bedrock.BedrockLLM.validate_model">(lluminary.models.providers.bedrock.BedrockLLM method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#lluminary.tools.validators.validate_nested_structure">validate_nested_structure() (in module lluminary.tools.validators)</a>
+</li>
+      <li><a href="api.html#lluminary.tools.validators.validate_params">validate_params() (in module lluminary.tools.validators)</a>
+</li>
+      <li><a href="api.html#lluminary.tools.validators.validate_return_type">validate_return_type() (in module lluminary.tools.validators)</a>
+</li>
+      <li><a href="api.html#lluminary.tools.validators.validate_tool">validate_tool() (in module lluminary.tools.validators)</a>
+</li>
   </ul></td>
 </tr></table>
 
