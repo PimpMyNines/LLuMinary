@@ -118,7 +118,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert config to dictionary format.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            for_list: If True, returns categories as a list of keys instead of a dictionary</span>
+<span class="sd">            for_list: If True, returns categories as a list of keys</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -178,7 +178,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config_dir</span> <span class="o">=</span> <span class="n">config_dir</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">configs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ClassificationConfig</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="ClassificationLibrary.load_configs">
 <a class="viewcode-back" href="../../../../api.html#lluminary.models.classification.config.ClassificationLibrary.load_configs">[docs]</a>
