@@ -5,6 +5,7 @@ This module focuses specifically on testing the authentication
 mechanisms of the OpenAI provider in isolation.
 """
 import os
+import traceback
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -18,7 +19,7 @@ def test_auth_with_aws_secrets():
     mock_secret = {"api_key": "test-secret-key"}
     
     with patch("src.llmhandler.models.providers.openai.get_secret", return_value=mock_secret) as mock_get_secret, \
-         patch("openai.OpenAI") as mock_openai_client:
+         patch("src.llmhandler.models.providers.openai.OpenAI") as mock_openai_client:
         
         # Create instance and call auth
         openai_llm = OpenAILLM("gpt-4o")
@@ -31,7 +32,7 @@ def test_auth_with_aws_secrets():
         assert openai_llm.config["api_key"] == "test-secret-key"
         
         # Verify OpenAI client was initialized with correct API key
-        mock_openai_client.assert_called_once_with(api_key="test-secret-key")
+        mock_openai_client.assert_called_once_with(api_key="test-secret-key", base_url=None)
 
 
 def test_auth_with_environment_variables():
@@ -39,17 +40,17 @@ def test_auth_with_environment_variables():
     # Mock environment variable and make get_secret raise an exception
     with patch.dict(os.environ, {"OPENAI_API_KEY": "env-api-key"}), \
          patch("src.llmhandler.models.providers.openai.get_secret", side_effect=Exception("Secret not found")), \
-         patch("openai.OpenAI") as mock_openai_client:
+         patch("src.llmhandler.models.providers.openai.OpenAI") as mock_openai_client:
         
         # Create instance and call auth - should fall back to env var
         openai_llm = OpenAILLM("gpt-4o")
+        openai_llm.auth()
         
-        # We need to catch the exception and verify it contains information about checking env vars
-        with pytest.raises(Exception) as excinfo:
-            openai_llm.auth()
+        # Verify API key was properly stored from environment variable
+        assert openai_llm.config["api_key"] == "env-api-key"
         
-        # Verify exception message suggests checking environment variables
-        assert "Secret not found" in str(excinfo.value)
+        # Verify OpenAI client was initialized with correct API key
+        mock_openai_client.assert_called_once_with(api_key="env-api-key", base_url=None)
 
 
 def test_auth_failure_handling():
@@ -67,7 +68,7 @@ def test_auth_failure_handling():
         with patch("src.llmhandler.models.providers.openai.get_secret", 
                    side_effect=Exception(error_msg)), \
              patch.dict(os.environ, {}, clear=True), \
-             patch("openai.OpenAI"):
+             patch("src.llmhandler.models.providers.openai.OpenAI"):
             
             # Create instance
             openai_llm = OpenAILLM("gpt-4o")
@@ -76,6 +77,7 @@ def test_auth_failure_handling():
             with pytest.raises(Exception) as excinfo:
                 openai_llm.auth()
             
-            # Verify error message
+            # Verify error message - check that it contains both the original error message
+            # and the standard "OpenAI authentication failed" prefix
             assert error_msg in str(excinfo.value)
             assert "OpenAI authentication failed" in str(excinfo.value)

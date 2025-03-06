@@ -10,7 +10,9 @@
 - Run tests with coverage: `python -m pytest tests/ --cov=src/llmhandler --cov-report=term`
 - Install development dependencies: `pip install -e ".[dev]"`
 - Install AWS dependencies: `pip install -e ".[aws]"`
-- Build package: `python setup.py sdist bdist_wheel`
+- Build package: `python -m build`
+- Check package: `twine check dist/*`
+- Build docs: `sphinx-build -b html docs/source docs/build/html`
 
 ## Code Style Guidelines
 - Python version: 3.10+
@@ -22,11 +24,20 @@
 - Design: Follow single responsibility principle and provider registry pattern
 - Tests: Unit tests required for all new functionality (target 90%+ coverage)
 
+## Package Structure Guidelines
+- Use pyproject.toml for all package configuration (PEP 621)
+- Organize code into logical modules with clear separation of concerns
+- Package all non-Python files using package_data in pyproject.toml
+- Follow single-source versioning pattern via version.py
+- Include proper typing support with py.typed marker
+- Document all public APIs with appropriate docstrings
+
 ## Provider Integration
 - Maintain consistent interfaces across providers (OpenAI, Anthropic, Google, Cohere, Bedrock)
 - Support: text generation, embeddings, streaming, reranking, image input, function calling
 - Always implement token counting and cost tracking for each provider
 - Follow provider_template.py pattern when adding new providers
+- Implement proper error handling with standardized exception types
 
 ## Current Status
 - 203 unit tests now passing:
@@ -73,15 +84,57 @@
   - `cross_provider`: Tests that verify behavior across providers
   - `streaming`: Streaming functionality tests
   - `cost`: Cost tracking tests
+  - `rate_limiting`: Tests for rate limiting behaviors
+  - `provider_errors`: Tests for provider error handling
+  - `dynamic_model_selection`: Tests for model selection
+  - `optional_parameters`: Tests for provider-specific parameters
 
-## Next Steps
-- Continue implementing tests for provider implementations:
-  - Bedrock Provider (15% → 75%+)
-  - Provider Template (0% → 75%+)
-  - Complete Google Provider tests (14% → 75%+)
-- Add type checking with mypy
-- Improve robustness and error handling in integration tests
-- Implement better integration between tools and LLM providers
-- Set up CI/CD pipeline for running tests automatically
-- Add performance benchmarking tests
-- Implement provider-specific feature tests for untested capabilities
+## Packaging & Distribution Best Practices
+- Use `python -m build` for building both wheel and sdist
+- Verify packages with `twine check` before publishing
+- Set up automated GitHub Actions for testing and publishing
+- Implement proper versioning with semantic versioning
+- Maintain backward compatibility when possible
+- Include comprehensive README and documentation
+- Configure CI checks for linting, type checking, and formatting
+- Set up proper PyPI publishing credentials in GitHub Secrets
+
+## GitHub Actions CI/CD Pipeline
+A robust CI/CD pipeline should include:
+- Testing on multiple Python versions (3.8, 3.9, 3.10)
+- Code quality checks (linting, formatting, type hints)
+- Test coverage reporting
+- Package building and validation
+- Automated PyPI publishing for tagged releases
+- Documentation building and publishing
+
+## Consolidated Task List
+1. Complete provider test coverage
+   - OpenAI Provider (40% → 75%+) - CRITICAL
+   - Anthropic Provider (38% → 75%+) - CRITICAL
+   - Provider Template (47% → 75%+)
+2. Improve packaging configuration
+   - Update pyproject.toml with complete metadata
+   - Configure package data inclusion
+   - Set up proper entry points
+   - Implement single-source versioning
+3. Implement CI/CD pipeline
+   - Complete GitHub Actions workflow with testing, linting, and type checking
+   - Set up version bumping and tagging
+   - Configure publishing to PyPI
+   - Implement semantic versioning automation
+4. Enhance documentation
+   - Add comprehensive docstrings
+   - Generate API documentation with Sphinx
+   - Create usage examples
+   - Add architecture diagrams
+5. Implement quality assurance tools
+   - Add linting with ruff
+   - Add formatting with black and isort
+   - Add type checking with mypy
+   - Set up pre-commit hooks
+6. Standardize provider implementations
+   - Document provider testing patterns
+   - Enhance error handling across providers
+   - Implement clearer parameter validation
+   - Create unified approach to provider-specific features

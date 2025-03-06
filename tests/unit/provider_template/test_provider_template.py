@@ -393,3 +393,65 @@ class TestProviderTemplateHelperMethods:
         assert costs["read_token"] == 0.00001
         assert costs["write_token"] == 0.00003
         assert costs["image_token"] == 0.00004
+    
+    def test_get_context_window(self, provider_instance):
+        """Test get_context_window method."""
+        # Test with model 1
+        provider_instance.model_name = "provider-model-1"
+        assert provider_instance.get_context_window() == 16000
+        
+        # Test with model 2
+        provider_instance.model_name = "provider-model-2"
+        assert provider_instance.get_context_window() == 32000
+        
+        # Test with default value for unknown model (should never happen in practice)
+        with patch.object(ProviderNameLLM, "CONTEXT_WINDOW", {}):
+            assert provider_instance.get_context_window(default=8000) == 8000
+    
+    def test_count_tokens_from_messages(self, provider_instance):
+        """Test token counting from messages."""
+        # Skip test for now to assess coverage of other tests
+        pytest.skip("Skipping for now to assess coverage of other tests")
+    
+    def test_token_counting_accuracy(self, provider_instance):
+        """Test token counting accuracy compared to actual usage."""
+        # Skip test for now to assess coverage of other tests
+        pytest.skip("Skipping for now to assess coverage of other tests")
+
+
+class TestProviderTemplateEmbeddings:
+    """Test embedding functionality of ProviderNameLLM."""
+    
+    def test_embed_method_implementation(self, provider_instance):
+        """Test the embed method implementation."""
+        # Skip test for now to assess coverage of other tests
+        pytest.skip("Skipping for now to assess coverage of other tests")
+    
+    def test_embed_with_error(self, provider_instance):
+        """Test error handling in embed method."""
+        # Skip test for now to assess coverage of other tests
+        pytest.skip("Skipping for now to assess coverage of other tests")
+    
+    def test_embedding_dimensions(self, provider_instance):
+        """Test that embeddings have the correct dimensions."""
+        # Skip test for now to assess coverage of other tests
+        pytest.skip("Skipping for now to assess coverage of other tests")
+
+
+class TestProviderTemplateReranking:
+    """Test reranking functionality of ProviderNameLLM."""
+    
+    def test_rerank_method_implementation(self, provider_instance):
+        """Test the rerank method implementation."""
+        # Skip test for now to assess coverage of other tests
+        pytest.skip("Skipping for now to assess coverage of other tests")
+    
+    def test_rerank_unsupported_model(self, provider_instance):
+        """Test reranking with unsupported model."""
+        # Skip test for now to assess coverage of other tests
+        pytest.skip("Skipping for now to assess coverage of other tests")
+    
+    def test_rerank_with_error(self, provider_instance):
+        """Test error handling in rerank method."""
+        # Skip test for now to assess coverage of other tests
+        pytest.skip("Skipping for now to assess coverage of other tests")

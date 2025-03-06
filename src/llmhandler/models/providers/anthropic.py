@@ -74,14 +74,30 @@ Into Anthropic's format:
 - Provides token usage and cost tracking
 """
 import base64
+import json
+import os
+import time
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import requests
 from PIL import Image
 
 from ..base import LLM
 from ...utils import get_secret
+from ...exceptions import (
+    AuthenticationError,
+    ConfigurationError,
+    ContentError,
+    FormatError,
+    LLMHandlerError,
+    LLMMistake,
+    ProviderError,
+    RateLimitError,
+    ServiceUnavailableError,
+    ToolError,
+    ThinkingError
+)
 
 
 class AnthropicLLM(LLM):
@@ -152,23 +168,77 @@ class AnthropicLLM(LLM):
         This method:
         1. Uses API key from config if already provided in constructor
         2. Tries to get the API key from AWS Secrets Manager if not provided
+        3. Falls back to environment variables
 
         Raises:
-            Exception: If authentication fails and no API key is available
+            AuthenticationError: If authentication fails and no valid API key is found
         """
         # If API key is already set in config, we're already authenticated
         if "api_key" in self.config and self.config["api_key"]:
             return
 
         try:
-            from ..utils import get_secret
-
-            # Get the API key from Secrets Manager
-            secret = get_secret("anthropic_api_key", required_keys=["api_key"])
-            self.config["api_key"] = secret["api_key"]
-
+            try:
+                # Try to get the API key from Secrets Manager
+                secret = get_secret("anthropic_api_key", required_keys=["api_key"])
+                self.config["api_key"] = secret["api_key"]
+            except Exception as secret_error:
+                # If Secrets Manager fails, check environment variables
+                api_key = os.environ.get("ANTHROPIC_API_KEY")
+                if not api_key:
+                    # Re-raise using proper error type with context
+                    raise AuthenticationError(
+                        message="Failed to get API key for Anthropic",
+                        provider="anthropic",
+                        details={
+                            "secret_error": str(secret_error),
+                            "tried_sources": ["AWS Secrets Manager", "environment variables"]
+                        }
+                    )
+                self.config["api_key"] = api_key
+            
+            # Verify the API key by making a test call
+            try:
+                # Simple validation with a HEAD request to the models endpoint
+                response = requests.head(
+                    "https://api.anthropic.com/v1/models",
+                    headers={
+                        "x-api-key": self.config["api_key"],
+                        "anthropic-version": "2023-06-01"
+                    }
+                )
+                
+                if response.status_code == 401:
+                    raise AuthenticationError(
+                        message="Invalid Anthropic API key",
+                        provider="anthropic",
+                        details={"status_code": response.status_code}
+                    )
+                elif response.status_code != 200:
+                    raise ProviderError(
+                        message=f"Anthropic API returned status code {response.status_code} during authentication check",
+                        provider="anthropic",
+                        details={"status_code": response.status_code}
+                    )
+                
+            except requests.RequestException as request_error:
+                # Network errors during validation
+                raise ProviderError(
+                    message="Failed to validate Anthropic API key: Network error",
+                    provider="anthropic",
+                    details={"error": str(request_error)}
+                )
+            
+        except LLMHandlerError:
+            # Let our custom exceptions propagate
+            raise
         except Exception as e:
-            raise Exception(f"Anthropic authentication failed: {str(e)}")
+            # Catch-all for unexpected errors
+            raise AuthenticationError(
+                message="Anthropic authentication failed",
+                provider="anthropic",
+                details={"error": str(e)}
+            )
 
     def _encode_image(self, image_path: str) -> str:
         """
@@ -187,27 +257,61 @@ class AnthropicLLM(LLM):
             str: Base64 encoded image string
 
         Raises:
-            Exception: If image processing fails
+            ProviderError: If image file doesn't exist or can't be read
+            FormatError: If image format is invalid or can't be processed
         """
         try:
-            with open(image_path, "rb") as image_file:
-                # Convert to JPEG format
-                img = Image.open(image_file)
+            # Check if the file exists
+            if not os.path.exists(image_path):
+                raise ProviderError(
+                    message=f"Image file not found: {image_path}",
+                    provider="anthropic",
+                    details={"image_path": image_path}
+                )
+                
+            # Process the image
+            try:
+                with open(image_path, "rb") as image_file:
+                    # Convert to JPEG format
+                    img = Image.open(image_file)
 
-                # Handle transparency (RGBA or LA modes) by adding white background
-                if img.mode in ("RGBA", "LA"):
-                    background = Image.new("RGB", img.size, (255, 255, 255))
-                    background.paste(img, mask=img.split()[-1])
-                    img = background
-                elif img.mode != "RGB":
-                    img = img.convert("RGB")
+                    # Handle transparency (RGBA or LA modes) by adding white background
+                    if img.mode in ("RGBA", "LA"):
+                        background = Image.new("RGB", img.size, (255, 255, 255))
+                        background.paste(img, mask=img.split()[-1])
+                        img = background
+                    elif img.mode != "RGB":
+                        img = img.convert("RGB")
 
-                # Save as JPEG in memory with 95% quality (Anthropic's recommendation)
-                output = BytesIO()
-                img.save(output, format="JPEG", quality=95)
-                return base64.b64encode(output.getvalue()).decode("utf-8")
+                    # Save as JPEG in memory with 95% quality (Anthropic's recommendation)
+                    output = BytesIO()
+                    img.save(output, format="JPEG", quality=95)
+                    return base64.b64encode(output.getvalue()).decode("utf-8")
+            except (IOError, OSError) as io_error:
+                # File read errors
+                raise ProviderError(
+                    message=f"Failed to read image file: {image_path}",
+                    provider="anthropic",
+                    details={"error": str(io_error), "image_path": image_path}
+                )
+            except Exception as format_error:
+                # Image format/processing errors
+                raise FormatError(
+                    message=f"Failed to process image: {image_path}",
+                    provider="anthropic",
+                    details={"error": str(format_error), "image_path": image_path}
+                )
+                
+        except LLMHandlerError:
+            # Let our custom exceptions propagate
+            raise
         except Exception as e:
-            raise Exception(f"Failed to encode image {image_path}: {str(e)}")
+            # Catch-all for unexpected errors
+            raise ProviderError(
+                message=f"Unexpected error processing image: {image_path}",
+                provider="anthropic",
+                details={"error": str(e), "image_path": image_path}
+            )
 
     def _download_image_from_url(self, image_url: str) -> str:
         """
@@ -225,32 +329,62 @@ class AnthropicLLM(LLM):
             str: Base64 encoded image string
 
         Raises:
-            Exception: If download or encoding fails
+            ProviderError: If download fails or network error occurs
+            FormatError: If image format is invalid or can't be processed
         """
         try:
-            response = requests.get(image_url, timeout=10)
-            response.raise_for_status()
+            # Download the image with timeout
+            try:
+                response = requests.get(image_url, timeout=10)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                # Use a specific error type for network issues
+                raise ProviderError(
+                    message=f"Failed to download image from URL: {image_url}",
+                    provider="anthropic",
+                    details={
+                        "error": str(e),
+                        "url": image_url,
+                        "status_code": getattr(response, "status_code", None) if "response" in locals() else None
+                    }
+                )
 
-            # Convert to JPEG format
-            img = Image.open(BytesIO(response.content))
+            # Process the image
+            try:
+                # Convert to JPEG format
+                img = Image.open(BytesIO(response.content))
 
-            # Handle transparency (RGBA or LA modes) by adding white background
-            if img.mode in ("RGBA", "LA"):
-                background = Image.new("RGB", img.size, (255, 255, 255))
-                background.paste(img, mask=img.split()[-1])
-                img = background
-            elif img.mode != "RGB":
-                img = img.convert("RGB")
+                # Handle transparency (RGBA or LA modes) by adding white background
+                if img.mode in ("RGBA", "LA"):
+                    background = Image.new("RGB", img.size, (255, 255, 255))
+                    background.paste(img, mask=img.split()[-1])
+                    img = background
+                elif img.mode != "RGB":
+                    img = img.convert("RGB")
 
-            # Save as JPEG in memory with 95% quality
-            output = BytesIO()
-            img.save(output, format="JPEG", quality=95)
-            return base64.b64encode(output.getvalue()).decode("utf-8")
+                # Save as JPEG in memory with 95% quality
+                output = BytesIO()
+                img.save(output, format="JPEG", quality=95)
+                return base64.b64encode(output.getvalue()).decode("utf-8")
+                
+            except Exception as e:
+                # Image processing errors
+                raise FormatError(
+                    message=f"Failed to process image from URL: {image_url}",
+                    provider="anthropic",
+                    details={"error": str(e), "url": image_url}
+                )
 
-        except requests.RequestException as e:
-            raise Exception(f"Failed to download image from {image_url}: {str(e)}")
+        except LLMHandlerError:
+            # Let our custom exceptions propagate
+            raise
         except Exception as e:
-            raise Exception(f"Failed to process image from {image_url}: {str(e)}")
+            # Catch-all for unexpected errors
+            raise ProviderError(
+                message=f"Unexpected error processing image from URL: {image_url}",
+                provider="anthropic",
+                details={"error": str(e), "url": image_url}
+            )
 
     def _format_messages_for_model(
         self, messages: List[Dict[str, Any]]
@@ -271,112 +405,173 @@ class AnthropicLLM(LLM):
             List[Dict[str, Any]]: Messages formatted for Anthropic API
 
         Raises:
-            Exception: If message formatting fails, particularly during image processing
+            FormatError: If message formatting fails due to invalid structure
+            ProviderError: If image processing fails
         """
-        formatted_messages = []
+        try:
+            formatted_messages = []
 
-        for msg in messages:
-            # Map message type to Anthropic role:
-            # - "ai" -> "assistant" (AI responses)
-            # - any other value -> "user" (user inputs, tools)
-            role = "assistant" if msg["message_type"] == "ai" else "user"
-            content_parts = []
+            for msg_index, msg in enumerate(messages):
+                try:
+                    # Check for required message_type field
+                    if "message_type" not in msg:
+                        raise FormatError(
+                            message=f"Missing required field 'message_type' in message at index {msg_index}",
+                            provider="anthropic",
+                            details={"message": msg}
+                        )
+                        
+                    # Map message type to Anthropic role:
+                    # - "ai" -> "assistant" (AI responses)
+                    # - any other value -> "user" (user inputs, tools)
+                    role = "assistant" if msg["message_type"] == "ai" else "user"
+                    content_parts = []
 
-            # Process image files from local paths
-            if msg.get("image_paths"):
-                for image_path in msg["image_paths"]:
-                    try:
-                        # Encode image and add as an image content part
-                        base64_image = self._encode_image(image_path)
+                    # Process image files from local paths
+                    if msg.get("image_paths"):
+                        for image_path in msg["image_paths"]:
+                            # _encode_image will raise appropriate errors if needed
+                            base64_image = self._encode_image(image_path)
+                            content_parts.append(
+                                {
+                                    "type": "image",
+                                    "source": {
+                                        "type": "base64",
+                                        "media_type": "image/jpeg",
+                                        "data": base64_image,
+                                    },
+                                }
+                            )
+
+                    # Process images from URLs
+                    if msg.get("image_urls"):
+                        for image_url in msg["image_urls"]:
+                            # _download_image_from_url will raise appropriate errors if needed
+                            base64_image = self._download_image_from_url(image_url)
+                            content_parts.append(
+                                {
+                                    "type": "image",
+                                    "source": {
+                                        "type": "base64",
+                                        "media_type": "image/jpeg",
+                                        "data": base64_image,
+                                    },
+                                }
+                            )
+
+                    # Add thinking information (Claude 3.7 specific)
+                    if msg.get("thinking"):
+                        if not isinstance(msg["thinking"], dict) or "thinking" not in msg["thinking"] or "thinking_signature" not in msg["thinking"]:
+                            raise FormatError(
+                                message="Invalid 'thinking' structure in message",
+                                provider="anthropic",
+                                details={"thinking": msg.get("thinking")}
+                            )
+                            
                         content_parts.append(
                             {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": "image/jpeg",
-                                    "data": base64_image,
-                                },
+                                "type": "thinking",
+                                "thinking": msg["thinking"]["thinking"],
+                                "signature": msg["thinking"]["thinking_signature"],
                             }
                         )
-                    except Exception as e:
-                        # Raise exception to halt processing if image fails
-                        raise Exception(
-                            f"Failed to process image file {image_path}: {str(e)}"
-                        )
 
-            # Process images from URLs
-            if msg.get("image_urls"):
-                for image_url in msg["image_urls"]:
-                    try:
-                        # Download, encode image and add as an image content part
-                        base64_image = self._download_image_from_url(image_url)
+                    # Add text content if present
+                    if "message" in msg and msg["message"]:
+                        if not isinstance(msg["message"], str):
+                            raise FormatError(
+                                message="Message content must be a string",
+                                provider="anthropic",
+                                details={"message": msg["message"]}
+                            )
+                            
+                        content_parts.append({"type": "text", "text": msg["message"]})
+
+                    # Add tool use information (function calls)
+                    if msg.get("tool_use"):
+                        if not isinstance(msg["tool_use"], dict) or "id" not in msg["tool_use"] or "name" not in msg["tool_use"] or "input" not in msg["tool_use"]:
+                            raise FormatError(
+                                message="Invalid 'tool_use' structure in message",
+                                provider="anthropic",
+                                details={"tool_use": msg.get("tool_use")}
+                            )
+                            
                         content_parts.append(
                             {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": "image/jpeg",
-                                    "data": base64_image,
-                                },
+                                "type": "tool_use",
+                                "id": msg["tool_use"]["id"],
+                                "name": msg["tool_use"]["name"],
+                                "input": msg["tool_use"]["input"],
                             }
                         )
-                    except Exception as e:
-                        # Raise exception to halt processing if image fails
-                        raise Exception(
-                            f"Failed to process image URL {image_url}: {str(e)}"
+
+                    # Add tool result information (function responses)
+                    if msg.get("tool_result"):
+                        if not isinstance(msg["tool_result"], dict) or "tool_id" not in msg["tool_result"]:
+                            raise FormatError(
+                                message="Invalid 'tool_result' structure in message",
+                                provider="anthropic",
+                                details={"tool_result": msg.get("tool_result")}
+                            )
+                            
+                        # Format the result string based on success or failure
+                        result = ""
+                        if msg["tool_result"].get("success"):
+                            if "result" not in msg["tool_result"]:
+                                raise FormatError(
+                                    message="Missing 'result' field in successful tool_result",
+                                    provider="anthropic",
+                                    details={"tool_result": msg["tool_result"]}
+                                )
+                            result = "Tool Call Successful: " + str(msg["tool_result"]["result"])
+                        else:
+                            if "error" not in msg["tool_result"]:
+                                raise FormatError(
+                                    message="Missing 'error' field in failed tool_result",
+                                    provider="anthropic",
+                                    details={"tool_result": msg["tool_result"]}
+                                )
+                            result = "Tool Call Failed: " + str(msg["tool_result"]["error"])
+
+                        content_parts.append(
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": msg["tool_result"]["tool_id"],
+                                "content": result,
+                            }
                         )
 
-            # Add thinking information (Claude 3.7 specific)
-            if msg.get("thinking"):
-                content_parts.append(
-                    {
-                        "type": "thinking",
-                        "thinking": msg["thinking"]["thinking"],
-                        "signature": msg["thinking"]["thinking_signature"],
-                    }
-                )
+                    # If no content was added, add a fallback message
+                    # This ensures we don't send an empty content array which would be invalid
+                    if not content_parts:
+                        content_parts.append({"type": "text", "text": "No content available"})
 
-            # Add text content if present
-            if "message" in msg and msg["message"]:
-                content_parts.append({"type": "text", "text": msg["message"]})
+                    # Add the completed message with role and content parts
+                    formatted_messages.append({"role": role, "content": content_parts})
+                    
+                except LLMHandlerError:
+                    # Let our custom exceptions propagate
+                    raise
+                except Exception as e:
+                    # Wrap other errors with message context
+                    raise FormatError(
+                        message=f"Failed to format message at index {msg_index}",
+                        provider="anthropic",
+                        details={"error": str(e), "message": msg}
+                    )
 
-            # Add tool use information (function calls)
-            if msg.get("tool_use"):
-                content_parts.append(
-                    {
-                        "type": "tool_use",
-                        "id": msg["tool_use"]["id"],
-                        "name": msg["tool_use"]["name"],
-                        "input": msg["tool_use"]["input"],
-                    }
-                )
-
-            # Add tool result information (function responses)
-            if msg.get("tool_result"):
-                # Format the result string based on success or failure
-                result = ""
-                if msg["tool_result"].get("success"):
-                    result = "Tool Call Successful: " + msg["tool_result"]["result"]
-                else:
-                    result = "Tool Call Failed: " + msg["tool_result"]["error"]
-
-                content_parts.append(
-                    {
-                        "type": "tool_result",
-                        "tool_use_id": msg["tool_result"]["tool_id"],
-                        "content": result,
-                    }
-                )
-
-            # If no content was added, add a fallback message
-            # This ensures we don't send an empty content array which would be invalid
-            if not content_parts:
-                content_parts.append({"type": "text", "text": "No content available"})
-
-            # Add the completed message with role and content parts
-            formatted_messages.append({"role": role, "content": content_parts})
-
-        return formatted_messages
+            return formatted_messages
+            
+        except LLMHandlerError:
+            # Let our custom exceptions propagate
+            raise
+        except Exception as e:
+            # Catch-all for unexpected errors
+            raise FormatError(
+                message="Failed to format messages for Anthropic API",
+                provider="anthropic",
+                details={"error": str(e)}
+            )
 
     def _raw_generate(
         self,
@@ -414,11 +609,22 @@ class AnthropicLLM(LLM):
             - Usage statistics (tokens, costs, tool use, thinking)
 
         Raises:
-            Exception: If the API call fails
+            LLMHandlerError: Appropriate error subtype based on the failure
         """
         try:
-            # Format messages for Anthropic's API
-            formatted_messages = self._format_messages_for_model(messages)
+            # Format messages for Anthropic's API (will raise appropriate errors)
+            try:
+                formatted_messages = self._format_messages_for_model(messages)
+            except LLMHandlerError:
+                # Let our custom exceptions propagate
+                raise
+            except Exception as e:
+                # Wrap other formatting errors
+                raise FormatError(
+                    message=f"Failed to format messages for Anthropic API: {str(e)}",
+                    provider="anthropic",
+                    details={"error": str(e)}
+                )
 
             # Prepare request body with required parameters
             request_body = {
@@ -431,10 +637,24 @@ class AnthropicLLM(LLM):
 
             # Add tools if provided
             if tools:
+                # Validate tools format
+                if not isinstance(tools, list):
+                    raise ConfigurationError(
+                        message="Tools parameter must be a list",
+                        provider="anthropic",
+                        details={"tools": tools}
+                    )
                 request_body["tools"] = tools
 
             # Configure thinking if budget is provided and model supports it
             if thinking_budget:
+                if self.model_name not in self.THINKING_MODELS:
+                    raise ConfigurationError(
+                        message=f"Thinking budget is only supported for these models: {self.THINKING_MODELS}",
+                        provider="anthropic",
+                        details={"model": self.model_name, "thinking_budget": thinking_budget}
+                    )
+                
                 # Enable thinking with specified token budget
                 request_body["thinking"] = {
                     "type": "enabled",
@@ -445,22 +665,47 @@ class AnthropicLLM(LLM):
                 # Set temperature to 1 for thinking models (recommended)
                 request_body["temperature"] = 1
 
-            # Make API call to Anthropic
-            response = requests.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": self.config["api_key"],
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
-                json=request_body,
-            )
-
-            # Check for HTTP errors
-            response.raise_for_status()
-
+            # Make API call to Anthropic with retry logic
+            try:
+                response = self._call_with_retry(
+                    method="POST",
+                    url="https://api.anthropic.com/v1/messages",
+                    headers={
+                        "x-api-key": self.config["api_key"],
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json",
+                    },
+                    json=request_body,
+                    max_retries=3
+                )
+            except LLMHandlerError:
+                # Let our custom exceptions propagate
+                raise
+                
             # Parse response JSON
-            response_data = response.json()
+            try:
+                response_data = response.json()
+            except json.JSONDecodeError as e:
+                raise FormatError(
+                    message="Failed to parse JSON response from Anthropic API",
+                    provider="anthropic",
+                    details={"error": str(e), "response_text": response.text[:1000]}  # First 1000 chars for context
+                )
+
+            # Validate response structure
+            if "content" not in response_data:
+                raise FormatError(
+                    message="Missing 'content' field in Anthropic API response",
+                    provider="anthropic",
+                    details={"response": response_data}
+                )
+                
+            if "usage" not in response_data:
+                raise FormatError(
+                    message="Missing 'usage' field in Anthropic API response",
+                    provider="anthropic",
+                    details={"response": response_data}
+                )
 
             # Extract usage information
             usage = response_data.get("usage", {})
@@ -497,9 +742,12 @@ class AnthropicLLM(LLM):
 
             # Extract text response and any special content
             response_text = ""
+            has_content = False
+            
             for content in response_data["content"]:
                 # Combine all text content parts
                 if content["type"] == "text":
+                    has_content = True
                     response_text += content.get("text", "")
 
                 # Extract thinking content if present
@@ -509,14 +757,136 @@ class AnthropicLLM(LLM):
 
                 # Extract tool use information if present
                 if content["type"] == "tool_use":
+                    has_content = True
                     usage_stats["tool_use"] = content
+            
+            # Check if we received any actual content
+            if not has_content and not usage_stats.get("tool_use"):
+                raise ContentError(
+                    message="Empty response from Anthropic API (no text or tool use)",
+                    provider="anthropic",
+                    details={"response": response_data}
+                )
 
             return response_text, usage_stats
 
+        except LLMHandlerError:
+            # Let our custom exceptions propagate
+            raise
         except Exception as e:
-            # Propagate all exceptions
-            raise Exception(str(e))
+            # Map any other exceptions
+            raise self._map_anthropic_error(e)
 
+    def _map_anthropic_error(self, error: Exception, response: Optional[requests.Response] = None) -> LLMHandlerError:
+        """
+        Map Anthropic-specific errors to standardized LLMHandler error types.
+        
+        This method analyzes an exception from the Anthropic API and converts it
+        to the appropriate LLMHandler exception type with relevant context.
+        
+        Args:
+            error: The original Anthropic exception
+            response: Optional HTTP response object with status code and headers
+            
+        Returns:
+            LLMHandlerError: The mapped exception with detailed context
+        """
+        error_str = str(error).lower()
+        status_code = getattr(response, "status_code", None) if response else None
+        
+        # Try to parse error details from response if available
+        error_details = {}
+        if response and hasattr(response, "json"):
+            try:
+                error_data = response.json()
+                if isinstance(error_data, dict):
+                    error_details = error_data
+            except:
+                pass
+                
+        # Authentication errors
+        if "api key" in error_str or "authentication" in error_str or "auth" in error_str or status_code == 401:
+            return AuthenticationError(
+                message="Anthropic authentication failed: Invalid API key",
+                provider="anthropic",
+                details={"error": str(error), "response": error_details}
+            )
+        
+        # Rate limiting errors
+        if "rate limit" in error_str or "too many requests" in error_str or status_code == 429:
+            # Try to extract retry-after header if available
+            retry_after = None
+            if response and hasattr(response, "headers"):
+                retry_after_header = response.headers.get("retry-after")
+                if retry_after_header and retry_after_header.isdigit():
+                    retry_after = int(retry_after_header)
+            
+            return RateLimitError(
+                message="Anthropic rate limit exceeded",
+                provider="anthropic",
+                retry_after=retry_after,
+                details={"error": str(error), "response": error_details}
+            )
+        
+        # Context length errors
+        if "context" in error_str and ("length" in error_str or "window" in error_str or "too long" in error_str):
+            return ProviderError(
+                message="Anthropic model context length exceeded",
+                provider="anthropic",
+                details={
+                    "error": str(error),
+                    "model": self.model_name,
+                    "context_window": self.get_context_window()
+                }
+            )
+        
+        # Content policy violations
+        if "content policy" in error_str or "content_policy" in error_str or "violation" in error_str:
+            return ContentError(
+                message="Anthropic content policy violation",
+                provider="anthropic",
+                details={"error": str(error), "response": error_details}
+            )
+        
+        # Parameter validation errors
+        if "invalid" in error_str and ("parameter" in error_str or "argument" in error_str):
+            return ConfigurationError(
+                message="Invalid parameter for Anthropic API",
+                provider="anthropic",
+                details={"error": str(error), "response": error_details}
+            )
+        
+        # Server errors (5xx)
+        if status_code and str(status_code).startswith("5") or "server" in error_str or "service" in error_str:
+            return ServiceUnavailableError(
+                message="Anthropic API server error",
+                provider="anthropic",
+                details={"error": str(error), "status_code": status_code, "response": error_details}
+            )
+        
+        # Tool/function related errors
+        if "function" in error_str or "tool" in error_str:
+            return ToolError(
+                message="Anthropic tool/function error",
+                provider="anthropic",
+                details={"error": str(error), "response": error_details}
+            )
+            
+        # Thinking related errors
+        if "thinking" in error_str or "budget" in error_str:
+            return ThinkingError(
+                message="Anthropic thinking error",
+                provider="anthropic",
+                details={"error": str(error), "response": error_details}
+            )
+        
+        # Default fallback
+        return ProviderError(
+            message=f"Anthropic API error: {str(error)}",
+            provider="anthropic",
+            details={"error": str(error), "status_code": status_code, "response": error_details}
+        )
+    
     def get_supported_models(self) -> list[str]:
         """
         Get the list of supported model identifiers.
@@ -537,6 +907,112 @@ class AnthropicLLM(LLM):
             bool: True if the model is supported, False otherwise
         """
         return model_name in self.SUPPORTED_MODELS
+        
+    def _call_with_retry(
+        self,
+        method: str,
+        url: str,
+        max_retries: int = 3,
+        initial_backoff: float = 1.0,
+        backoff_factor: float = 2.0,
+        retry_status_codes: List[int] = None,
+        **kwargs
+    ) -> requests.Response:
+        """
+        Call Anthropic API with exponential backoff retry logic.
+        
+        This method implements a retry mechanism for handling transient errors
+        such as rate limits and server errors. It uses exponential backoff
+        to avoid overwhelming the API during retries.
+        
+        Args:
+            method: HTTP method to use (e.g., 'GET', 'POST')
+            url: The API endpoint URL
+            max_retries: Maximum number of retry attempts
+            initial_backoff: Initial backoff time in seconds
+            backoff_factor: Multiplier for backoff on each retry
+            retry_status_codes: HTTP status codes that should trigger a retry
+            **kwargs: Additional arguments to pass to requests
+            
+        Returns:
+            The response from the API
+            
+        Raises:
+            LLMHandlerError: Mapped exception based on the error type
+        """
+        if retry_status_codes is None:
+            retry_status_codes = [429, 500, 502, 503, 504]  # Default retryable status codes
+            
+        retry_count = 0
+        backoff_time = initial_backoff
+        last_response = None
+        
+        while retry_count <= max_retries:  # <= because first attempt is not a retry
+            try:
+                # Make the request
+                response = requests.request(method, url, **kwargs)
+                last_response = response
+                
+                # If status code indicates success, return the response
+                if response.status_code < 400:
+                    return response
+                    
+                # If status code is in retry_status_codes, retry
+                if response.status_code in retry_status_codes and retry_count < max_retries:
+                    retry_count += 1
+                    
+                    # Get retry-after if available (for rate limits)
+                    retry_after = None
+                    if response.status_code == 429 and "retry-after" in response.headers:
+                        retry_after_header = response.headers.get("retry-after")
+                        if retry_after_header and retry_after_header.isdigit():
+                            retry_after = float(retry_after_header)
+                    
+                    # Use retry-after if available, otherwise use exponential backoff
+                    wait_time = retry_after if retry_after else backoff_time
+                    
+                    # Sleep before retry
+                    time.sleep(wait_time)
+                    
+                    # Increase backoff for next retry
+                    backoff_time *= backoff_factor
+                    continue
+                
+                # If we get here, it's an error we don't want to retry or we've exhausted retries
+                error_message = f"Anthropic API error ({response.status_code})"
+                try:
+                    error_data = response.json()
+                    if isinstance(error_data, dict) and "error" in error_data:
+                        error_message = f"{error_message}: {error_data['error']}"
+                except:
+                    pass
+                    
+                # Map the error to appropriate type and raise
+                raise self._map_anthropic_error(Exception(error_message), response)
+                
+            except requests.RequestException as e:
+                # Network errors might be retryable
+                if retry_count < max_retries:
+                    retry_count += 1
+                    time.sleep(backoff_time)
+                    backoff_time *= backoff_factor
+                    continue
+                
+                # If we've exhausted retries, map and raise
+                raise self._map_anthropic_error(e)
+                
+        # Should never get here, but just in case
+        if last_response:
+            raise self._map_anthropic_error(
+                Exception(f"API call failed after {max_retries} retries"),
+                last_response
+            )
+            
+        # Generic fallback
+        raise ProviderError(
+            message=f"API call failed after {max_retries} retries",
+            provider="anthropic"
+        )
 
     def _convert_function_to_tool(self, function: Callable) -> Dict[str, Any]:
         """Convert a function to Anthropic tool format
@@ -617,56 +1093,87 @@ class AnthropicLLM(LLM):
             Tuple[str, Dict[str, Any]]: Tuples of (text_chunk, partial_usage_data)
 
         Raises:
-            Exception: If streaming fails
+            LLMHandlerError: With appropriate error subtype based on the failure
         """
-        # Import Anthropic here to avoid import errors if not installed
         try:
-            import anthropic
-        except ImportError:
-            raise ImportError(
-                "Anthropic package not installed. Install with 'pip install anthropic'"
-            )
+            # Import Anthropic here to avoid import errors if not installed
+            try:
+                import anthropic
+            except ImportError:
+                raise ProviderError(
+                    message="Anthropic package not installed",
+                    provider="anthropic",
+                    details={"required_package": "anthropic", "install_command": "pip install anthropic"}
+                )
 
-        # Initialize client if needed
-        if not hasattr(self, "client"):
-            self.auth()
+            # Initialize client if needed
+            if not hasattr(self, "client"):
+                # Authentication will raise proper errors if it fails
+                self.auth()
+                # Create the client
+                self.client = anthropic.Anthropic(api_key=self.config["api_key"])
 
-        # Convert messages to Anthropic format
-        formatted_messages = self._format_messages_for_model(messages)
+            # Convert messages to Anthropic format
+            try:
+                formatted_messages = self._format_messages_for_model(messages)
+            except LLMHandlerError:
+                # Let our custom exceptions propagate
+                raise
+            except Exception as e:
+                # Wrap other formatting errors
+                raise FormatError(
+                    message=f"Failed to format messages for Anthropic streaming: {str(e)}",
+                    provider="anthropic",
+                    details={"error": str(e)}
+                )
 
-        # Prepare tools if functions are provided
-        tools = None
-        if functions:
-            tools = []
-            for function in functions:
-                # Parse function signature and create tool schema
-                name = getattr(function, "__name__", str(function))
-                docstring = getattr(function, "__doc__", "")
-                schema = {
-                    "name": name,
-                    "description": docstring or f"Call {name} function",
-                    "input_schema": {},  # Simplified schema
-                }
-                tools.append(schema)
+            # Prepare tools if functions are provided
+            tools = None
+            if functions:
+                try:
+                    tools = []
+                    for function in functions:
+                        # Convert function to tool using the utility method
+                        tools.append(self._convert_function_to_tool(function))
+                except Exception as e:
+                    raise ConfigurationError(
+                        message="Failed to convert functions to tools for Anthropic",
+                        provider="anthropic",
+                        details={"error": str(e)}
+                    )
 
-        # Count images for cost calculation
-        image_count = 0
-        for message in messages:
-            if message.get("message_type") == "human":
-                image_count += len(message.get("image_paths", []))
-                image_count += len(message.get("image_urls", []))
+            # Count images for cost calculation
+            image_count = 0
+            for message in messages:
+                if message.get("message_type") == "human":
+                    image_count += len(message.get("image_paths", []))
+                    image_count += len(message.get("image_urls", []))
 
-        try:
-            # Create a streaming request
-            response = self.client.messages.create(
-                model=self.model_name,
-                system=system_prompt,
-                messages=formatted_messages,
-                max_tokens=max_tokens,
-                temperature=temp,
-                tools=tools,
-                stream=True,  # Enable streaming
-            )
+            try:
+                # Create a streaming request
+                response = self.client.messages.create(
+                    model=self.model_name,
+                    system=system_prompt,
+                    messages=formatted_messages,
+                    max_tokens=max_tokens,
+                    temperature=temp,
+                    tools=tools,
+                    stream=True,  # Enable streaming
+                )
+            except anthropic.APIError as api_error:
+                # Map Anthropic API errors to our custom types
+                status_code = getattr(api_error, "status_code", None)
+                if hasattr(api_error, "response") and hasattr(api_error.response, "json"):
+                    try:
+                        error_data = api_error.response.json()
+                        raise self._map_anthropic_error(api_error, api_error.response)
+                    except (ValueError, AttributeError):
+                        pass
+                # Use basic error mapping if we can't get more details
+                raise self._map_anthropic_error(api_error)
+            except Exception as e:
+                # Map other errors
+                raise self._map_anthropic_error(e)
 
             # Initialize variables to accumulate data
             accumulated_text = ""
@@ -691,20 +1198,34 @@ class AnthropicLLM(LLM):
                 input_tokens += int(len(system_prompt.split()) * 1.3)
 
             # Process each chunk as it arrives
-            for chunk in response:
-                # Check for content delta
-                if hasattr(chunk, "delta") and hasattr(chunk.delta, "text"):
-                    content = chunk.delta.text
-                    if content:
-                        accumulated_text += content
-                        # Rough token estimation: 1 token per character / 4
-                        token_estimate = max(1, len(content) // 4)
-                        accumulated_tokens += token_estimate
+            try:
+                for chunk in response:
+                    # Check for content delta
+                    if hasattr(chunk, "delta") and hasattr(chunk.delta, "text"):
+                        content = chunk.delta.text
+                        if content:
+                            accumulated_text += content
+                            # Rough token estimation: 1 token per character / 4
+                            token_estimate = max(1, len(content) // 4)
+                            accumulated_tokens += token_estimate
 
-                        # Call the callback if provided
-                        if callback:
-                            # Create partial usage data
-                            partial_usage = {
+                            # Call the callback if provided
+                            if callback:
+                                # Create partial usage data
+                                partial_usage = {
+                                    "event_id": event_id,
+                                    "model": self.model_name,
+                                    "read_tokens": input_tokens,
+                                    "write_tokens": accumulated_tokens,
+                                    "images": image_count,
+                                    "total_tokens": input_tokens + accumulated_tokens,
+                                    "is_complete": False,
+                                    "tool_use": tool_call_data,
+                                }
+                                callback(content, partial_usage)
+
+                            # Yield the content chunk and partial usage data
+                            yield content, {
                                 "event_id": event_id,
                                 "model": self.model_name,
                                 "read_tokens": input_tokens,
@@ -714,41 +1235,37 @@ class AnthropicLLM(LLM):
                                 "is_complete": False,
                                 "tool_use": tool_call_data,
                             }
-                            callback(content, partial_usage)
 
-                        # Yield the content chunk and partial usage data
-                        yield content, {
-                            "event_id": event_id,
-                            "model": self.model_name,
-                            "read_tokens": input_tokens,
-                            "write_tokens": accumulated_tokens,
-                            "images": image_count,
-                            "total_tokens": input_tokens + accumulated_tokens,
-                            "is_complete": False,
-                            "tool_use": tool_call_data,
-                        }
+                    # Check for tool calls in the delta
+                    if hasattr(chunk, "delta") and hasattr(chunk.delta, "tool_use"):
+                        tool_use = chunk.delta.tool_use
+                        if tool_use:
+                            tool_id = tool_use.id
 
-                # Check for tool calls in the delta
-                if hasattr(chunk, "delta") and hasattr(chunk.delta, "tool_use"):
-                    tool_use = chunk.delta.tool_use
-                    if tool_use:
-                        tool_id = tool_use.id
-
-                        # Initialize or update tool call data
-                        if tool_id not in tool_call_data:
-                            tool_call_data[tool_id] = {
-                                "id": tool_id,
-                                "name": tool_use.name
-                                if hasattr(tool_use, "name")
-                                else "",
-                                "arguments": tool_use.input
-                                if hasattr(tool_use, "input")
-                                else "",
-                                "type": "function",
-                            }
-                        elif hasattr(tool_use, "input") and tool_use.input:
-                            # Append to existing arguments if this is a partial update
-                            tool_call_data[tool_id]["arguments"] += tool_use.input
+                            # Initialize or update tool call data
+                            if tool_id not in tool_call_data:
+                                tool_call_data[tool_id] = {
+                                    "id": tool_id,
+                                    "name": tool_use.name
+                                    if hasattr(tool_use, "name")
+                                    else "",
+                                    "arguments": tool_use.input
+                                    if hasattr(tool_use, "input")
+                                    else "",
+                                    "type": "function",
+                                }
+                            elif hasattr(tool_use, "input") and tool_use.input:
+                                # Append to existing arguments if this is a partial update
+                                tool_call_data[tool_id]["arguments"] += tool_use.input
+            except anthropic.APIError as api_error:
+                # Handle streaming errors differently - map but preserve what we've got so far
+                mapped_error = self._map_anthropic_error(api_error)
+                mapped_error.details["partial_text"] = accumulated_text
+                mapped_error.details["tool_calls"] = tool_call_data
+                raise mapped_error
+            except Exception as stream_error:
+                # Map other streaming errors
+                raise self._map_anthropic_error(stream_error)
 
             # Calculate costs
             model_costs = self.get_model_costs()
@@ -757,8 +1274,8 @@ class AnthropicLLM(LLM):
 
             # Calculate image cost if applicable
             image_cost = 0
-            if image_count > 0 and "image_token" in model_costs:
-                image_cost = image_count * model_costs["image_token"]
+            if image_count > 0 and "image_cost" in model_costs and model_costs["image_cost"]:
+                image_cost = image_count * model_costs["image_cost"]
 
             total_cost = read_cost + write_cost + image_cost
 
@@ -785,5 +1302,9 @@ class AnthropicLLM(LLM):
             # Yield an empty string with the final usage data to signal completion
             yield "", final_usage
 
+        except LLMHandlerError:
+            # Let our custom exceptions propagate
+            raise
         except Exception as e:
-            raise Exception(f"Error streaming from Anthropic: {str(e)}")
+            # Map other streaming errors
+            raise self._map_anthropic_error(e)

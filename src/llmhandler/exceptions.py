@@ -48,6 +48,78 @@ class ProviderError(LLMHandlerError):
         }
 
 
+class AuthenticationError(ProviderError):
+    """
+    Exception raised when authentication with a provider fails.
+    This could be due to invalid, expired, or missing credentials.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(message, provider, details)
+
+
+class RateLimitError(ProviderError):
+    """
+    Exception raised when a provider's rate limit is exceeded.
+    Includes information about retry delays when available.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        retry_after: Optional[int] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        if details is None:
+            details = {}
+        
+        if retry_after is not None:
+            details["retry_after"] = retry_after
+            
+        super().__init__(message, provider, details)
+        
+    @property
+    def retry_after(self) -> Optional[int]:
+        """Get the recommended retry delay in seconds."""
+        return self.details.get("retry_after")
+
+
+class ConfigurationError(ProviderError):
+    """
+    Exception raised when there's an issue with provider configuration.
+    This could include invalid model names, incompatible parameters, etc.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(message, provider, details)
+
+
+class ServiceUnavailableError(ProviderError):
+    """
+    Exception raised when a provider service is temporarily unavailable.
+    This typically indicates a temporary outage or maintenance.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(message, provider, details)
+
+
 class LLMMistake(LLMHandlerError):
     """
     Custom exception class for LLM-related errors.
@@ -118,3 +190,63 @@ class LLMMistake(LLMHandlerError):
             provider=data.get("provider"),
             details=data.get("details", {}),
         )
+
+
+class FormatError(LLMMistake):
+    """
+    Exception raised when an LLM's response has formatting issues.
+    This could include invalid JSON, XML, or other expected formats.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(message, error_type="format", provider=provider, details=details)
+
+
+class ContentError(LLMMistake):
+    """
+    Exception raised when an LLM's response content is problematic.
+    This could include empty responses, incorrect reasoning, or hallucinations.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(message, error_type="content", provider=provider, details=details)
+
+
+class ToolError(LLMMistake):
+    """
+    Exception raised when there's an issue with tool/function usage in an LLM response.
+    This could include invalid parameters, incorrect tool selection, etc.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(message, error_type="tool", provider=provider, details=details)
+
+
+class ThinkingError(LLMMistake):
+    """
+    Exception raised when there's an issue with the LLM's thinking process.
+    This applies to models with explicit thinking/reasoning steps.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(message, error_type="thinking", provider=provider, details=details)

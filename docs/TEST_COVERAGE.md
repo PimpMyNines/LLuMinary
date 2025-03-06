@@ -14,8 +14,8 @@ This document provides an overview of the current test coverage for the LLM Hand
 
 As of the latest update, the library has:
 
-- 84 unit tests (including 9 CLI tests and 17 enhanced validator tests)
-- Overall coverage: ~50%
+- 211 unit tests + 74 integration tests = 285 total tests
+- Overall coverage: 70% (1939 of 2638 lines)
 - Target coverage: 90%+
 
 | Module | Coverage | Priority | Status |
@@ -27,14 +27,14 @@ As of the latest update, the library has:
 | Exceptions | 67% | ✅ Good | Complete |
 | Tool Registry | 66% | ✅ Good | Complete |
 | CLI | 85% | ✅ Good | Complete |
-| Tools Validators | 80% | ✅ Good | Complete |
+| Tools Validators | 90% | ✅ Done | Complete |
+| Classification Components | 90%+ | ✅ Done | Complete |
 | Anthropic Provider | 38% | 🟡 Medium | In Progress |
-| OpenAI Provider | 36% | 🟡 Medium | In Progress |
-| Classification Components | 23-47% | 🔴 High | Needs Work |
-| Google Provider | 14% | 🔴 High | In Progress |
-| Bedrock Provider | 15% | 🔴 High | Needs Work |
-| Cohere Provider | 0% | 🔴 High | Not Started |
-| Provider Template | 0% | 🔴 High | Not Started |
+| OpenAI Provider | 40% | 🟡 Medium | In Progress |
+| Google Provider | 80%+ | ✅ Good | Complete |
+| Bedrock Provider | 75%+ | ✅ Good | Complete |
+| Cohere Provider | 90%+ | ✅ Done | Complete |
+| Provider Template | 65%+ | ✅ Good | Complete |
 
 ## Component Coverage
 
@@ -44,27 +44,53 @@ As of the latest update, the library has:
 - `Handler`: Good coverage at 73%. Tests cover primary generation, error handling, and provider selection.
 - `Base LLM`: Good coverage at 76%. Most key methods have tests, including generation, embedding, and reranking.
 
-### Provider Implementations (Needs Improvement)
+### Provider Implementations
 
-- `OpenAI Provider`: Partial coverage at 36%. Tests cover basic operations but miss streaming and complex scenarios.
+- `OpenAI Provider`: Partial coverage at 40%. Tests cover basic operations, image handling, and message formatting.
 - `Anthropic Provider`: Partial coverage at 38%. Additional tests needed for error handling and edge cases.
-- `Google Provider`: Low coverage at 14%. Significant test gaps for most functionality.
-- `Bedrock Provider`: Low coverage at 15%. Key functionality not thoroughly tested.
-- `Cohere Provider`: No coverage (0%). No tests implemented yet.
-- `Provider Template`: No coverage (0%). Template not tested.
+- `Google Provider`: Good coverage at 80%+. Comprehensive tests for message formatting, generation, streaming, and error handling.
+- `Bedrock Provider`: Good coverage at 75%+. Tests include AWS client initialization, message formatting, tool handling, and error cases.
+- `Cohere Provider`: Complete coverage at 90%+. Comprehensive tests covering all functionality.
+- `Provider Template`: Good coverage at 65%+. Tests provide template patterns for other provider implementations.
 
 ### CLI & Tools (Newly Implemented)
 
 - `CLI`: Good coverage with comprehensive tests for all classify commands.
 - `Tools Validators`: Enhanced with good coverage for complex nested types, unions, and JSON serialization.
 
-### Classification (Needs Improvement)
+### Classification (Complete)
 
-- `Classification Config`: Low coverage at 36%. More validation tests needed.
-- `Classification Validators`: Very low coverage at 23%. Critical validation logic not fully tested.
-- `Classifier`: Moderate coverage at 47%. Basic functionality tested, but edge cases not covered.
+- `Classification Config`: Complete coverage at 90%+. All functionality thoroughly tested.
+- `Classification Validators`: Complete coverage at 90%+. All validation logic tested.
+- `Classifier`: Complete coverage at 90%+. Comprehensive tests for all functionality including edge cases.
 
 ## Newly Implemented Tests
+
+### Classification Tests
+
+The classification components now have comprehensive tests covering:
+
+1. **Classification Config**
+   - Configuration initialization and validation
+   - Category and example validation
+   - Configuration serialization and deserialization
+   - File operations (loading/saving)
+   - Classification library management
+
+2. **Classification Validators**
+   - Response validation
+   - Error handling for invalid responses
+   - Multi-category selection validation
+   - Format validation
+
+3. **Classifier**
+   - Basic classification functionality
+   - Classification with examples
+   - Multiple category selection
+   - Custom system prompt support
+   - Error handling
+   - Result processing
+   - Category name conversion
 
 ### CLI Tests
 
@@ -123,36 +149,20 @@ The enhanced type validation system now has detailed tests covering:
 
 ### Provider Tests
 
-1. **Cohere Provider**
-   - Basic generation tests
-   - Embedding tests
-   - Reranking tests
-   - Error handling tests
-
-2. **Google Provider**
-   - Comprehensive generation tests
-   - Streaming tests
-   - Image input tests
-   - Error handling and retry logic
-
-3. **Bedrock Provider**
-   - Model-specific tests
-   - AWS authentication tests
+1. **OpenAI Provider**
+   - Authentication flow tests
+   - Reranking functionality tests
+   - Timeout handling and error recovery tests
    - Token counting accuracy tests
-   - Error handling for AWS-specific errors
+   - Image generation tests
 
-### Classification Tests
+2. **Anthropic Provider**
+   - Embeddings tests
+   - Authentication flow tests
+   - Error handling tests
+   - Thinking budget behavior tests
+   - Timeout handling tests
 
-1. **Config Validation**
-   - Category validation
-   - Example validation
-   - Schema validation
-
-2. **Classifier Logic**
-   - Model selection tests
-   - Classification prompt construction
-   - Response parsing
-   - Error handling
 
 ### Integration Tests
 

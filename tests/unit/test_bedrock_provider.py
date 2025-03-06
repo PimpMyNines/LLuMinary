@@ -49,6 +49,29 @@ def test_bedrock_initialization(bedrock_llm):
     # Check that model settings are properly configured
     assert bedrock_llm.model_name in bedrock_llm.CONTEXT_WINDOW
     assert bedrock_llm.model_name in bedrock_llm.COST_PER_MODEL
+    
+def test_auth_error_handling():
+    """Test authentication error handling."""
+    from src.llmhandler.exceptions import AuthenticationError
+    
+    # Test auth error handling by forcing an exception
+    with patch("boto3.session.Session") as mock_session:
+        # Set up mock to raise exception
+        mock_session.side_effect = Exception("AWS credentials not found")
+        
+        # Create a new LLM instance that will use our mocked boto3
+        llm = BedrockLLM(model_name="us.anthropic.claude-3-5-sonnet-20241022-v2:0")
+        
+        # Call auth directly and verify it raises the right exception
+        with pytest.raises(AuthenticationError) as exc:
+            llm.auth()
+        
+        # Verify exception details
+        exception = exc.value
+        assert isinstance(exception, AuthenticationError)
+        assert "Bedrock authentication failed" in str(exception)
+        assert exception.provider == "BedrockLLM"
+        assert "original_error" in exception.details
 
 
 def test_message_formatting(bedrock_llm):
@@ -132,6 +155,13 @@ def test_supported_model_lists(bedrock_llm):
 
 def test_error_handling(bedrock_llm):
     """Test basic error handling."""
+    from src.llmhandler.exceptions import (
+        LLMMistake, 
+        AuthenticationError, 
+        RateLimitError,
+        ServiceUnavailableError
+    )
+    
     # Test validation error when trying to use an unsupported model
     unsupported_model = "invalid-model-name"
     with pytest.raises(ValueError) as excinfo:
@@ -148,7 +178,7 @@ def test_error_handling(bedrock_llm):
     assert "not supported" in str(excinfo.value).lower()
     
     # Test configuration error
-    with pytest.raises(Exception):
+    with pytest.raises(LLMMistake):
         # Remove the client from config to cause an error
         bedrock_llm.config.pop("client", None)
         
@@ -158,6 +188,138 @@ def test_error_handling(bedrock_llm):
             system_prompt="You are a helpful assistant",
             messages=[{"message_type": "human", "message": "Hello"}],
         )
+        
+def test_boto_client_errors(bedrock_llm):
+    """Test AWS boto client error handling."""
+    from botocore.exceptions import ClientError
+    from src.llmhandler.exceptions import (
+        LLMMistake,
+        RateLimitError,
+        ServiceUnavailableError,
+        AuthenticationError
+    )
+    
+    # Create a mock response for boto3 client error
+    def create_client_error(code, message):
+        return ClientError(
+            error_response={
+                "Error": {
+                    "Code": code,
+                    "Message": message
+                }
+            },
+            operation_name="converse"
+        )
+    
+    # Define error test cases
+    error_test_cases = [
+        # Rate limit errors
+        {
+            "error": create_client_error("ThrottlingException", "Request throttled"),
+            "expected_exception": RateLimitError,
+            "expected_message": "rate limit exceeded",
+        },
+        {
+            "error": create_client_error("TooManyRequestsException", "Too many requests"),
+            "expected_exception": RateLimitError,
+            "expected_message": "rate limit exceeded",
+        },
+        # Authentication errors
+        {
+            "error": create_client_error("AccessDeniedException", "Access denied"),
+            "expected_exception": AuthenticationError,
+            "expected_message": "authentication failed",
+        },
+        # Service errors
+        {
+            "error": create_client_error("ServiceUnavailableException", "Service unavailable"),
+            "expected_exception": ServiceUnavailableError,
+            "expected_message": "service unavailable",
+        },
+        # Generic API errors
+        {
+            "error": create_client_error("ValidationException", "Invalid request"),
+            "expected_exception": LLMMistake,
+            "expected_message": "Bedrock API error",
+        },
+    ]
+    
+    # Replace the mock client with one that raises errors
+    for test_case in error_test_cases:
+        # Configure the mock to raise our error
+        bedrock_llm.config["client"] = MagicMock()
+        bedrock_llm.config["client"].converse.side_effect = test_case["error"]
+        
+        # Make the API call and check for the expected exception
+        with pytest.raises(test_case["expected_exception"]) as exc:
+            bedrock_llm._raw_generate(
+                event_id="test",
+                system_prompt="You are a helpful assistant",
+                messages=[{"message_type": "human", "message": "Test error handling"}],
+                max_tokens=100,
+                temp=0.7,
+                top_k=40
+            )
+        
+        # Check exception properties
+        exception = exc.value
+        assert test_case["expected_message"] in str(exception).lower()
+        assert exception.provider == "BedrockLLM"
+        
+        # Check specific exception properties
+        if isinstance(exception, RateLimitError):
+            assert exception.retry_after is not None
+            assert exception.retry_after > 0
+        
+        if isinstance(exception, LLMMistake):
+            assert exception.error_type == "api_error"
+            
+        assert "details" in dir(exception)
+        assert "original_error" in exception.details
+        
+def test_image_processing_errors():
+    """Test image processing error handling."""
+    from src.llmhandler.exceptions import LLMMistake
+    
+    # Create a fresh instance with mocked dependencies
+    with patch.object(BedrockLLM, "auth"):
+        llm = BedrockLLM(model_name="us.anthropic.claude-3-5-sonnet-20241022-v2:0")
+    
+    # Test file not found error
+    with patch("open", side_effect=FileNotFoundError("File not found")):
+        with pytest.raises(LLMMistake) as exc:
+            llm._get_image_bytes("/path/to/nonexistent.jpg")
+        
+        exception = exc.value
+        assert isinstance(exception, LLMMistake)
+        assert "Failed to read image" in str(exception)
+        assert exception.error_type == "image_processing_error"
+        assert exception.provider == "BedrockLLM"
+        assert "path" in exception.details
+        
+    # Test general image processing error
+    with patch("open") as mock_open, patch("PIL.Image.open", side_effect=Exception("Invalid image format")):
+        # Mock the file open but fail on image processing
+        mock_open.return_value.__enter__.return_value = MagicMock()
+        
+        with pytest.raises(LLMMistake) as exc:
+            llm._get_image_bytes("/path/to/corrupted.jpg")
+            
+        exception = exc.value
+        assert isinstance(exception, LLMMistake)
+        assert "Failed to process image" in str(exception)
+        assert exception.error_type == "image_processing_error"
+        
+    # Test URL download error
+    with patch("requests.get", side_effect=Exception("Failed to download")):
+        with pytest.raises(LLMMistake) as exc:
+            llm._download_image_from_url("https://example.com/image.jpg")
+            
+        exception = exc.value
+        assert isinstance(exception, LLMMistake)
+        assert "Failed to download image" in str(exception)
+        assert exception.error_type == "image_url_error"
+        assert "url" in exception.details
 
 
 def test_tool_formatting(bedrock_llm):

@@ -148,24 +148,66 @@ class GoogleLLM(LLM):
         then initializes the Google Gemini client with the appropriate API version.
 
         Raises:
-            Exception: If authentication fails
+            AuthenticationError: If authentication fails
         """
+        from ...exceptions import AuthenticationError
+        
         try:
-            # Get the API key from Secrets Manager
-            secret = get_secret("google_api_key", required_keys=["api_key"])
-            api_key = secret["api_key"]
+            # Try to get API key from environment variables first
+            import os
+            api_key = os.environ.get("GOOGLE_API_KEY")
+            
+            # If not in environment, get from Secrets Manager
+            if not api_key:
+                try:
+                    secret = get_secret("google_api_key", required_keys=["api_key"])
+                    api_key = secret["api_key"]
+                except Exception as secret_error:
+                    raise AuthenticationError(
+                        message=f"Failed to retrieve Google API key: {str(secret_error)}",
+                        provider="GoogleLLM",
+                        details={
+                            "original_error": str(secret_error),
+                            "message": "API key not found in environment or secrets manager"
+                        }
+                    )
+            
+            if not api_key:
+                raise AuthenticationError(
+                    message="Google API key not found in environment or secrets manager",
+                    provider="GoogleLLM",
+                    details={"source_checked": ["GOOGLE_API_KEY", "AWS Secrets Manager"]}
+                )
 
             # Initialize the Google client with appropriate API version
             # Note: Experimental models may require different API versions
-            if self.model_name == "gemini-2.0-flash-thinking-exp-01-21":
-                self.client = genai.Client(
-                    api_key=api_key, http_options={"api_version": "v1alpha"}
+            try:
+                if self.model_name == "gemini-2.0-flash-thinking-exp-01-21":
+                    self.client = genai.Client(
+                        api_key=api_key, http_options={"api_version": "v1alpha"}
+                    )
+                else:
+                    self.client = genai.Client(api_key=api_key)
+            except Exception as client_error:
+                raise AuthenticationError(
+                    message=f"Failed to initialize Google client: {str(client_error)}",
+                    provider="GoogleLLM",
+                    details={
+                        "original_error": str(client_error),
+                        "model": self.model_name
+                    }
                 )
-            else:
-                self.client = genai.Client(api_key=api_key)
 
+        except AuthenticationError:
+            # Re-raise authentication errors directly
+            raise
         except Exception as e:
-            raise Exception(f"Google authentication failed: {str(e)}")
+            # Map generic errors to authentication errors
+            raise AuthenticationError(
+                message=f"Google authentication failed: {str(e)}",
+                provider="GoogleLLM",
+                details={"original_error": str(e)}
+            )
 
     def _process_image(self, image_source: str, is_url: bool = False) -> Any:
         """
@@ -182,22 +224,130 @@ class GoogleLLM(LLM):
             PIL.Image.Image: Processed image for the API
 
         Raises:
-            Exception: If image processing fails
+            ContentError: If the image content is invalid or unsupported
+            LLMMistake: If image processing fails due to other reasons
         """
+        from ...exceptions import ContentError, LLMMistake
+        
         try:
             if is_url:
                 # For URLs, fetch the image content first
-                response = requests.get(image_source, timeout=10)
-                response.raise_for_status()
+                try:
+                    response = requests.get(image_source, timeout=10)
+                    response.raise_for_status()
+                except requests.RequestException as req_error:
+                    # Detailed handling of different HTTP errors
+                    status_code = getattr(req_error.response, 'status_code', None)
+                    if status_code == 404:
+                        raise LLMMistake(
+                            message=f"Image URL not found (404): {image_source}",
+                            error_type="image_url_error",
+                            provider="GoogleLLM",
+                            details={
+                                "source": image_source,
+                                "status_code": 404,
+                                "original_error": str(req_error)
+                            }
+                        )
+                    elif status_code in (401, 403):
+                        raise LLMMistake(
+                            message=f"Access denied to image URL (unauthorized): {image_source}",
+                            error_type="image_url_error",
+                            provider="GoogleLLM",
+                            details={
+                                "source": image_source,
+                                "status_code": status_code,
+                                "original_error": str(req_error)
+                            }
+                        )
+                    elif status_code and status_code >= 500:
+                        raise LLMMistake(
+                            message=f"Server error when fetching image URL: {image_source}",
+                            error_type="image_url_error",
+                            provider="GoogleLLM",
+                            details={
+                                "source": image_source,
+                                "status_code": status_code,
+                                "original_error": str(req_error)
+                            }
+                        )
+                    else:
+                        # General request exception
+                        raise LLMMistake(
+                            message=f"Failed to fetch image URL: {image_source}",
+                            error_type="image_url_error",
+                            provider="GoogleLLM",
+                            details={
+                                "source": image_source,
+                                "original_error": str(req_error)
+                            }
+                        )
+                
                 # Convert response content to PIL Image
-                image_data = BytesIO(response.content)
-                return Image.open(image_data)
+                try:
+                    image_data = BytesIO(response.content)
+                    image = Image.open(image_data)
+                    
+                    # Validate image 
+                    image.verify()  # Verify that it's a valid image
+                    
+                    # Reopen for processing (verify closes the file)
+                    image_data.seek(0)
+                    return Image.open(image_data)
+                except Exception as img_error:
+                    # Image format or content errors
+                    raise ContentError(
+                        message=f"Invalid or unsupported image format from URL: {image_source}",
+                        provider="GoogleLLM",
+                        details={
+                            "source": image_source,
+                            "original_error": str(img_error)
+                        }
+                    )
             else:
-                # For local paths, load directly using PIL
-                return Image.open(image_source)
+                # For local paths, validate the path first
+                if not pathlib.Path(image_source).exists():
+                    raise LLMMistake(
+                        message=f"Image file not found: {image_source}",
+                        error_type="image_processing_error",
+                        provider="GoogleLLM",
+                        details={"source": image_source}
+                    )
+                
+                try:
+                    # Attempt to open and validate the image
+                    image = Image.open(image_source)
+                    
+                    # Verify image is valid
+                    image.verify()
+                    
+                    # Reopen for processing (verify closes the file)
+                    return Image.open(image_source)
+                except Exception as img_error:
+                    # Image format or content errors
+                    raise ContentError(
+                        message=f"Invalid or unsupported image format: {image_source}",
+                        provider="GoogleLLM",
+                        details={
+                            "source": image_source,
+                            "original_error": str(img_error)
+                        }
+                    )
+                
+        except (LLMMistake, ContentError):
+            # Re-raise our custom exceptions directly
+            raise
         except Exception as e:
-            raise Exception(
-                f"Failed to process image {'URL' if is_url else 'file'} {image_source}: {str(e)}"
+            # Catch-all for unexpected errors
+            error_type = "image_url_error" if is_url else "image_processing_error"
+            raise LLMMistake(
+                message=f"Failed to process image {'URL' if is_url else 'file'} {image_source}: {str(e)}",
+                error_type=error_type,
+                provider="GoogleLLM",
+                details={
+                    "source": image_source,
+                    "original_error": str(e)
+                }
             )
 
     def _format_messages_for_model(self, messages: List[Dict[str, Any]]) -> List[Any]:
@@ -245,9 +395,17 @@ class GoogleLLM(LLM):
                 try:
                     image_part = self._process_image(image_path)
                     parts.append(image_part)
+                except LLMMistake:
+                    # Re-raise LLMMistake exceptions
+                    raise
                 except Exception as e:
-                    raise Exception(
-                        f"Failed to process image file {image_path}: {str(e)}"
+                    # Convert to LLMMistake if not already
+                    from ...exceptions import LLMMistake
+                    raise LLMMistake(
+                        message=f"Failed to process image file {image_path}: {str(e)}",
+                        error_type="image_processing_error",
+                        provider="GoogleLLM",
+                        details={"path": image_path, "original_error": str(e)}
                     )
 
             # Process image URLs
@@ -255,9 +413,17 @@ class GoogleLLM(LLM):
                 try:
                     image_part = self._process_image(image_url, is_url=True)
                     parts.append(image_part)
+                except LLMMistake:
+                    # Re-raise LLMMistake exceptions
+                    raise
                 except Exception as e:
-                    raise Exception(
-                        f"Failed to process image URL {image_url}: {str(e)}"
+                    # Convert to LLMMistake if not already
+                    from ...exceptions import LLMMistake
+                    raise LLMMistake(
+                        message=f"Failed to process image URL {image_url}: {str(e)}",
+                        error_type="image_url_error",
+                        provider="GoogleLLM",
+                        details={"url": image_url, "original_error": str(e)}
                     )
 
             # Add function call information (outgoing tool use)
@@ -292,6 +458,223 @@ class GoogleLLM(LLM):
             formatted_contents.append(current_content)
 
         return formatted_contents
+
+    def _map_google_error(self, error: Exception) -> Exception:
+        """
+        Map a Google API exception to an appropriate LLMHandler exception.
+
+        This method examines the error message and type to determine the most
+        appropriate custom exception to raise, providing standardized error
+        handling across providers.
+
+        Args:
+            error: Original Google API exception
+
+        Returns:
+            Exception: Appropriate LLMHandler exception
+        """
+        from ...exceptions import (
+            AuthenticationError,
+            ConfigurationError,
+            ContentError,
+            FormatError,
+            LLMMistake,
+            RateLimitError,
+            ServiceUnavailableError,
+            ToolError
+        )
+
+        error_message = str(error).lower()
+        error_type = type(error).__name__
+
+        # Authentication and permission errors
+        if (
+            "api key" in error_message or
+            "authentication" in error_message or
+            "credential" in error_message or
+            "permission" in error_message or
+            "authorization" in error_message or
+            "unauthenticated" in error_message or
+            "access denied" in error_message
+        ):
+            return AuthenticationError(
+                message=f"Google authentication failed: {str(error)}",
+                provider="GoogleLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+
+        # Rate limit errors
+        if (
+            "rate limit" in error_message or
+            "quota" in error_message or
+            "too many requests" in error_message or
+            "request rate" in error_message or
+            "resource exhausted" in error_message or
+            "limit exceeded" in error_message
+        ):
+            # Extract retry-after value if available, or use default
+            retry_after = 60  # Default retry delay in seconds
+            if hasattr(error, "retry_after"):
+                retry_after = error.retry_after
+            elif "retry after" in error_message:
+                # Try to extract retry time from message
+                try:
+                    # Simple extraction; might need refinement for different formats
+                    import re
+                    match = re.search(r"retry after (\d+)", error_message)
+                    if match:
+                        retry_after = int(match.group(1))
+                except (ValueError, IndexError):
+                    pass
+
+            return RateLimitError(
+                message=f"Google API rate limit exceeded: {str(error)}",
+                provider="GoogleLLM",
+                retry_after=retry_after,
+                details={"original_error": str(error), "error_type": error_type}
+            )
+
+        # Service availability errors
+        if (
+            "unavailable" in error_message or
+            "server error" in error_message or
+            "service error" in error_message or
+            "internal server error" in error_message or
+            "503" in error_message or
+            "502" in error_message or
+            "500" in error_message or
+            "backend error" in error_message or
+            "deadline exceeded" in error_message or
+            "timeout" in error_message
+        ):
+            return ServiceUnavailableError(
+                message=f"Google API service unavailable: {str(error)}",
+                provider="GoogleLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+
+        # Configuration errors
+        if (
+            "invalid model" in error_message or
+            "model not found" in error_message or
+            "configuration" in error_message or
+            "invalid parameter" in error_message or
+            "invalid value" in error_message or
+            "incorrect request" in error_message or
+            "unsupported" in error_message
+        ):
+            return ConfigurationError(
+                message=f"Google API configuration error: {str(error)}",
+                provider="GoogleLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+
+        # Content moderation/policy violations
+        if (
+            "content" in error_message and "policy" in error_message or
+            "safety" in error_message or
+            "harmful" in error_message or
+            "inappropriate" in error_message or
+            "blocked" in error_message or
+            "violation" in error_message or
+            "moderation" in error_message
+        ):
+            return ContentError(
+                message=f"Google API content policy violation: {str(error)}",
+                provider="GoogleLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+
+        # Format errors
+        if (
+            "format" in error_message or
+            "invalid json" in error_message or
+            "parse error" in error_message or
+            "serialization" in error_message or
+            "deserialization" in error_message
+        ):
+            return FormatError(
+                message=f"Google API format error: {str(error)}",
+                provider="GoogleLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+
+        # Tool/function errors
+        if (
+            "function" in error_message or
+            "tool" in error_message
+        ):
+            return ToolError(
+                message=f"Google API tool error: {str(error)}",
+                provider="GoogleLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+
+        # Default case: general LLMMistake
+        return LLMMistake(
+            message=f"Google API error: {str(error)}",
+            error_type="api_error",
+            provider="GoogleLLM",
+            details={"original_error": str(error), "error_type": error_type}
+        )
+
+    def _call_with_retry(self, func, *args, max_retries=3, retry_delay=1, **kwargs):
+        """
+        Execute an API call with automatic retry for transient errors.
+
+        This method implements an exponential backoff retry mechanism for
+        handling transient errors from the Google API, such as rate limiting
+        or temporary service unavailability.
+
+        Args:
+            func: Function to call
+            *args: Positional arguments to pass to the function
+            max_retries: Maximum number of retry attempts
+            retry_delay: Initial delay between retries (in seconds)
+            **kwargs: Keyword arguments to pass to the function
+
+        Returns:
+            Any: Result of the function call
+
+        Raises:
+            Exception: Re-raises the last exception after all retry attempts fail
+        """
+        from ...exceptions import RateLimitError, ServiceUnavailableError
+        import time
+        import random
+
+        attempts = 0
+        last_error = None
+
+        while attempts <= max_retries:
+            try:
+                return func(*args, **kwargs)
+            except (RateLimitError, ServiceUnavailableError) as e:
+                last_error = e
+                attempts += 1
+
+                if attempts > max_retries:
+                    # Re-raise the exception after max retries
+                    raise
+
+                # Determine retry delay with exponential backoff and jitter
+                # If the error provides a retry_after value, use that
+                if isinstance(e, RateLimitError) and e.retry_after:
+                    delay = e.retry_after
+                else:
+                    # Otherwise, use exponential backoff with jitter
+                    delay = min(retry_delay * (2 ** (attempts - 1)), 60)  # Cap at 60 seconds
+                    # Add jitter to avoid thundering herd
+                    delay = delay * (0.5 + random.random())
+
+                # Wait before retrying
+                time.sleep(delay)
+            except Exception as e:
+                # For all other exceptions, don't retry
+                raise
+
+        # If we reach here, all retries failed
+        raise last_error
 
     def _raw_generate(
         self,
@@ -328,56 +711,110 @@ class GoogleLLM(LLM):
             - Usage statistics (tokens, costs, tool use)
 
         Raises:
-            Exception: If the API call fails
+            LLMMistake: If the API call fails with a recoverable error
+            AuthenticationError: If authentication fails
+            RateLimitError: If rate limits are exceeded
+            ServiceUnavailableError: If the service is unavailable
         """
+        from ...exceptions import (
+            AuthenticationError, 
+            ConfigurationError,
+            LLMMistake,
+            RateLimitError, 
+            ServiceUnavailableError
+        )
+        
         try:
             # Ensure we're authenticated
             if self.client is None:
-                self.auth()
+                try:
+                    self.auth()
+                except Exception as e:
+                    # Map any authentication errors through our error mapping system
+                    raise self._map_google_error(e)
 
             # Format messages for Google's API
-            formatted_contents = self._format_messages_for_model(messages)
+            try:
+                formatted_contents = self._format_messages_for_model(messages)
+            except LLMMistake:
+                # Re-raise LLMMistake exceptions directly
+                raise
+            except Exception as e:
+                # Map other message formatting errors
+                raise self._map_google_error(e)
 
             # Create generation config with appropriate parameters
-            if tools:
-                # If tools are provided, configure them in the request
-                # Setting automatic_function_calling to disable prevents the model
-                # from automatically choosing a function without explicit instructions
-                config = types.GenerateContentConfig(
-                    max_output_tokens=max_tokens,
-                    temperature=temp,
-                    tools=tools,
-                    automatic_function_calling={"disable": True},
-                )
-            else:
-                # Basic config without tools
-                config = types.GenerateContentConfig(
-                    max_output_tokens=max_tokens, temperature=temp
+            try:
+                if tools:
+                    # If tools are provided, configure them in the request
+                    # Setting automatic_function_calling to disable prevents the model
+                    # from automatically choosing a function without explicit instructions
+                    config = types.GenerateContentConfig(
+                        max_output_tokens=max_tokens,
+                        temperature=temp,
+                        tools=tools,
+                        automatic_function_calling={"disable": True},
+                    )
+                else:
+                    # Basic config without tools
+                    config = types.GenerateContentConfig(
+                        max_output_tokens=max_tokens, temperature=temp
+                    )
+
+                # Add system instruction if provided
+                if system_prompt:
+                    config.system_instruction = system_prompt
+            except Exception as e:
+                # Configuration errors
+                raise ConfigurationError(
+                    message=f"Failed to configure Google API request: {str(e)}",
+                    provider="GoogleLLM",
+                    details={"original_error": str(e)}
                 )
 
-            # Add system instruction if provided
-            if system_prompt:
-                config.system_instruction = system_prompt
-
-            # Make the API request to generate content
-            response = self.client.models.generate_content(
-                model=self.model_name, contents=formatted_contents, config=config
-            )
+            # Make the API request to generate content with retry logic
+            def api_call():
+                return self.client.models.generate_content(
+                    model=self.model_name, contents=formatted_contents, config=config
+                )
+            
+            try:
+                response = self._call_with_retry(api_call, max_retries=3, retry_delay=1)
+            except Exception as e:
+                # Map API call errors through our error mapping system
+                if isinstance(e, (AuthenticationError, RateLimitError, ServiceUnavailableError, LLMMistake)):
+                    # Re-raise error types that are already properly mapped
+                    raise
+                else:
+                    # Map other errors
+                    raise self._map_google_error(e)
 
             # Extract usage information from response metadata
             # Note: For some API versions, these fields may not be available
-            usage_metadata = getattr(response, "usage_metadata", None) or {}
-            input_tokens = getattr(usage_metadata, "prompt_token_count", 0) or 0
-            output_tokens = getattr(usage_metadata, "candidates_token_count", 0) or 0
-            total_tokens = getattr(usage_metadata, "total_token_count", None) or (
-                input_tokens + output_tokens
-            )
+            try:
+                usage_metadata = getattr(response, "usage_metadata", None) or {}
+                input_tokens = getattr(usage_metadata, "prompt_token_count", 0) or 0
+                output_tokens = getattr(usage_metadata, "candidates_token_count", 0) or 0
+                total_tokens = getattr(usage_metadata, "total_token_count", None) or (
+                    input_tokens + output_tokens
+                )
+            except Exception as e:
+                # Default to zero counts if usage metadata extraction fails
+                input_tokens = 0
+                output_tokens = 0
+                total_tokens = 0
 
             # Extract the text response, handling potential errors gracefully
             try:
                 response_text = getattr(response, "text", None) or ""
-            except:
-                response_text = ""
+            except Exception as e:
+                # Handle missing text in response as a content error
+                from ...exceptions import ContentError
+                raise ContentError(
+                    message=f"Failed to extract text from Google API response: {str(e)}",
+                    provider="GoogleLLM",
+                    details={"original_error": str(e)}
+                )
 
             # Count how many images were included in the request
             num_images = sum(
@@ -413,14 +850,27 @@ class GoogleLLM(LLM):
                         "name": tool_use[0].name,
                         "input": tool_use[0].args,
                     }
-            except:
-                # If extraction fails, continue without tool use info
+            except Exception as e:
+                # No need to raise an exception for tool extraction failures
+                # Log the error and continue
                 pass
 
             return response_text, usage_stats
 
+        except (
+            AuthenticationError,
+            ConfigurationError,
+            RateLimitError,
+            ServiceUnavailableError,
+            LLMMistake
+        ):
+            # Re-raise already mapped exceptions
+            raise
         except Exception as e:
-            raise Exception(f"Google API generation failed: {str(e)}")
+            # Catch-all for any other exceptions
+            # Map to appropriate exception type
+            mapped_error = self._map_google_error(e)
+            raise mapped_error
 
     def supports_image_input(self) -> bool:
         """
@@ -466,8 +916,24 @@ class GoogleLLM(LLM):
             Tuple[str, Dict[str, Any]]: Tuples of (text_chunk, partial_usage_data)
 
         Raises:
-            Exception: If streaming fails
+            LLMMistake: If the API call fails with a recoverable error
+            AuthenticationError: If authentication fails
+            RateLimitError: If rate limits are exceeded
+            ServiceUnavailableError: If the service is unavailable
+            ImportError: If the Google Generative AI package is not installed
         """
+        # Import required exceptions
+        from ...exceptions import (
+            AuthenticationError, 
+            ConfigurationError,
+            ContentError,
+            FormatError,
+            LLMMistake, 
+            RateLimitError, 
+            ServiceUnavailableError,
+            ToolError
+        )
+        
         # Import Google Generative AI here to avoid import errors if not installed
         try:
             import google.generativeai as genai
@@ -480,35 +946,50 @@ class GoogleLLM(LLM):
 
         # Initialize client if needed
         if not hasattr(self, "genai"):
-            self.auth()
+            try:
+                self.auth()
+            except Exception as e:
+                # Map any authentication errors through our error mapping system
+                raise self._map_google_error(e)
 
         # Convert messages to Google format
         try:
             formatted_messages = self._format_messages_for_model(messages)
+        except LLMMistake:
+            # Re-raise LLMMistake exceptions directly
+            raise
         except Exception as e:
-            raise Exception(f"Error formatting messages for Google: {str(e)}")
+            # Map other message formatting errors
+            raise self._map_google_error(e)
 
         # Prepare function declarations if functions are provided
-        function_declarations = None
-        if functions:
-            function_declarations = []
-            for function in functions:
-                # Parse function signature and create declaration
-                name = getattr(function, "__name__", str(function))
-                docstring = getattr(function, "__doc__", "")
+        try:
+            function_declarations = None
+            if functions:
+                function_declarations = []
+                for function in functions:
+                    # Parse function signature and create declaration
+                    name = getattr(function, "__name__", str(function))
+                    docstring = getattr(function, "__doc__", "")
 
-                # Simplified schema - in a real implementation, you'd parse the function signature
-                function_declarations.append(
-                    {
-                        "name": name,
-                        "description": docstring or f"Call {name} function",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {},
-                            "required": [],
-                        },
-                    }
-                )
+                    # Simplified schema - in a real implementation, you'd parse the function signature
+                    function_declarations.append(
+                        {
+                            "name": name,
+                            "description": docstring or f"Call {name} function",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {},
+                                "required": [],
+                            },
+                        }
+                    )
+        except Exception as e:
+            raise ToolError(
+                message=f"Failed to prepare function declarations for Google streaming: {str(e)}",
+                provider="GoogleLLM",
+                details={"original_error": str(e)}
+            )
 
         # Count images for cost calculation
         image_count = 0
@@ -518,14 +999,22 @@ class GoogleLLM(LLM):
                 image_count += len(message.get("image_urls", []))
 
         # Prepare system instruction if provided
-        if system_prompt:
-            # For Google, we add the system prompt as a user message at the beginning
-            system_content = content_types.Content(
-                role="user", parts=[content_types.Part.from_text(system_prompt)]
-            )
-            formatted_messages.insert(0, system_content)
-
         try:
+            if system_prompt:
+                # For Google, we add the system prompt as a user message at the beginning
+                system_content = content_types.Content(
+                    role="user", parts=[content_types.Part.from_text(system_prompt)]
+                )
+                formatted_messages.insert(0, system_content)
+        except Exception as e:
+            raise ConfigurationError(
+                message=f"Failed to configure system prompt for Google streaming: {str(e)}",
+                provider="GoogleLLM",
+                details={"original_error": str(e)}
+            )
+
+        # Define the streaming function to be called with retries
+        def stream_request():
             # Create the model
             model = genai.GenerativeModel(
                 model_name=self.model_name,
@@ -540,9 +1029,13 @@ class GoogleLLM(LLM):
             )
 
             # Create a streaming request
-            response = model.generate_content(
+            return model.generate_content(
                 formatted_messages, stream=True  # Enable streaming
             )
+
+        try:
+            # Initialize response with retry logic
+            response = self._call_with_retry(stream_request, max_retries=3, retry_delay=1)
 
             # Initialize variables to accumulate data
             accumulated_text = ""
@@ -625,19 +1118,23 @@ class GoogleLLM(LLM):
                     ):
                         for part in candidate.content.parts:
                             if hasattr(part, "function_call"):
-                                function_call = part.function_call
-                                tool_id = (
-                                    f"func_{len(tool_call_data)}"  # Generate an ID
-                                )
+                                try:
+                                    function_call = part.function_call
+                                    tool_id = (
+                                        f"func_{len(tool_call_data)}"  # Generate an ID
+                                    )
 
-                                tool_call_data[tool_id] = {
-                                    "id": tool_id,
-                                    "name": function_call.name,
-                                    "arguments": str(
-                                        function_call.args
-                                    ),  # Convert args to string
-                                    "type": "function",
-                                }
+                                    tool_call_data[tool_id] = {
+                                        "id": tool_id,
+                                        "name": function_call.name,
+                                        "arguments": str(
+                                            function_call.args
+                                        ),  # Convert args to string
+                                        "type": "function",
+                                    }
+                                except Exception as e:
+                                    # Log but don't fail the streaming process
+                                    pass
 
             # Calculate costs
             model_costs = self.get_model_costs()
@@ -646,8 +1143,8 @@ class GoogleLLM(LLM):
 
             # Calculate image cost if applicable
             image_cost = 0
-            if image_count > 0 and "image_token" in model_costs:
-                image_cost = image_count * model_costs["image_token"]
+            if image_count > 0 and "image_cost" in model_costs:
+                image_cost = image_count * model_costs["image_cost"]
 
             total_cost = read_cost + write_cost + image_cost
 
@@ -659,10 +1156,10 @@ class GoogleLLM(LLM):
                 "write_tokens": accumulated_tokens,
                 "images": image_count,
                 "total_tokens": input_tokens + accumulated_tokens,
-                "read_cost": read_cost,
-                "write_cost": write_cost,
-                "image_cost": image_cost,
-                "total_cost": total_cost,
+                "read_cost": round(read_cost, 6),
+                "write_cost": round(write_cost, 6),
+                "image_cost": round(image_cost, 6),
+                "total_cost": round(total_cost, 6),
                 "is_complete": True,
                 "tool_use": tool_call_data,
             }
@@ -674,5 +1171,16 @@ class GoogleLLM(LLM):
             # Yield an empty string with the final usage data to signal completion
             yield "", final_usage
 
+        except (
+            AuthenticationError,
+            ConfigurationError,
+            RateLimitError,
+            ServiceUnavailableError,
+            LLMMistake
+        ):
+            # Re-raise already mapped exceptions
+            raise
         except Exception as e:
-            raise Exception(f"Error streaming from Google: {str(e)}")
+            # Map to appropriate exception type via the error mapper
+            mapped_error = self._map_google_error(e)
+            raise mapped_error

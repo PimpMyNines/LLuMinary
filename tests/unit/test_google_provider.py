@@ -137,6 +137,8 @@ def test_auth(mock_google_client):
 @patch("PIL.Image.open")
 def test_process_image(mock_image_open, mock_requests_get, google_llm):
     """Test image processing for both file paths and URLs."""
+    from src.llmhandler.exceptions import LLMMistake
+    
     # Setup mock response for URL
     mock_response = MagicMock()
     mock_response.content = b"fake_image_data"
@@ -159,9 +161,32 @@ def test_process_image(mock_image_open, mock_requests_get, google_llm):
 
     # Test error handling for invalid URL
     mock_requests_get.side_effect = Exception("Failed to fetch image")
-    with pytest.raises(Exception) as exc:
+    with pytest.raises(LLMMistake) as exc:
         google_llm._process_image("https://example.com/bad_image.jpg", is_url=True)
-    assert "Failed to process image URL" in str(exc.value)
+    
+    # Verify LLMMistake exception details
+    exception = exc.value
+    assert isinstance(exception, LLMMistake)
+    assert "Failed to process image URL" in str(exception)
+    assert exception.error_type == "image_url_error"
+    assert exception.provider == "GoogleLLM"
+    assert "source" in exception.details
+    assert "original_error" in exception.details
+    
+    # Test error handling for invalid file path
+    mock_requests_get.side_effect = None
+    mock_image_open.side_effect = FileNotFoundError("No such file")
+    with pytest.raises(LLMMistake) as exc:
+        google_llm._process_image("/path/to/nonexistent/image.jpg")
+    
+    # Verify LLMMistake exception details for file error
+    exception = exc.value
+    assert isinstance(exception, LLMMistake)
+    assert "Failed to process image file" in str(exception)
+    assert exception.error_type == "image_processing_error"
+    assert exception.provider == "GoogleLLM"
+    assert "source" in exception.details
+    assert "original_error" in exception.details
 
 
 def test_format_messages_for_model(google_llm):
@@ -310,31 +335,39 @@ def test_image_handling(google_llm, mock_google_client):
 
 def test_error_handling(google_llm, mock_google_client):
     """Test error handling during generation."""
+    # Import relevant exception classes
+    from src.llmhandler.exceptions import (
+        LLMMistake, 
+        AuthenticationError,
+        RateLimitError,
+        ServiceUnavailableError
+    )
+    
     # Define error cases to test
     error_cases = [
         # Rate limit error
         {
             "exception": Exception("Rate limit exceeded"),
-            "expected_contains": "rate limit",
-            "error_type": "rate_limit",
+            "expected_exception": RateLimitError,
+            "expected_contains": "rate limit exceeded",
         },
         # Authentication error
         {
             "exception": Exception("Invalid API key provided"),
-            "expected_contains": "api key",
-            "error_type": "authentication",
+            "expected_exception": LLMMistake,
+            "expected_contains": "Google API generation failed",
         },
-        # Context length error
+        # Service unavailable error
         {
-            "exception": Exception("Input too long"),
-            "expected_contains": "input too long",
-            "error_type": "context_length",
+            "exception": Exception("Service temporarily unavailable"),
+            "expected_exception": ServiceUnavailableError,
+            "expected_contains": "service unavailable",
         },
         # Server error
         {
-            "exception": Exception("Service temporarily unavailable"),
-            "expected_contains": "service",
-            "error_type": "server_error",
+            "exception": Exception("Server error occurred"),
+            "expected_exception": LLMMistake,
+            "expected_contains": "Google API generation failed",
         },
     ]
     
@@ -348,22 +381,34 @@ def test_error_handling(google_llm, mock_google_client):
         messages = [{"message_type": "human", "message": "Generate an error"}]
         
         # Call generate and expect an exception
-        with pytest.raises(LLMMistake) as exc_info:
+        with pytest.raises(error_case["expected_exception"]) as exc_info:
             google_llm._raw_generate(
                 event_id="test_event", system_prompt="", messages=messages
             )
         
         # Verify exception type and message
         exception = exc_info.value
-        assert isinstance(exception, LLMMistake)
-        assert "Google API generation failed" in str(exception)
-        assert str(error_case["exception"]) in str(exception)
+        assert isinstance(exception, error_case["expected_exception"])
+        assert error_case["expected_contains"] in str(exception).lower()
+        assert "Google" in str(exception)
         
+        # For LLMMistake, check error_type and provider fields
+        if isinstance(exception, LLMMistake):
+            assert exception.provider == "GoogleLLM"
+            assert exception.error_type == "api_error"
+            assert "original_error" in exception.details
+        
+        # For RateLimitError, check retry_after
+        if isinstance(exception, RateLimitError):
+            assert exception.provider == "GoogleLLM"
+            assert exception.retry_after is not None
+            assert exception.retry_after > 0
+            
         # Reset for next test
         client_instance.models.generate_content.side_effect = None
         client_instance.models.generate_content.reset_mock()
     
-    # Test invalid model error - use a different approach since this is caught earlier
+    # Test invalid model error
     with pytest.raises(ValueError) as exc_info:
         # Create a new instance with an invalid model
         with patch.object(GoogleLLM, "auth"):

@@ -163,23 +163,129 @@ class BedrockLLM(LLM):
         This method uses the AWS SDK to create a Bedrock runtime client,
         which automatically uses AWS credentials from the environment,
         AWS configuration files, or IAM roles.
+        
+        Authentication methods are tried in this order:
+        1. Explicitly provided AWS credentials in config
+        2. Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+        3. AWS configuration files (~/.aws/credentials)
+        4. IAM role attached to the instance (EC2, Lambda, etc.)
 
         Raises:
-            Exception: If authentication fails or Bedrock access is denied
+            AuthenticationError: If authentication fails or Bedrock access is denied
         """
+        from ...exceptions import AuthenticationError, ConfigurationError
+        
         try:
             import boto3
-            from botocore.exceptions import ClientError
+            from botocore.exceptions import ClientError, NoCredentialsError, ProfileNotFound
+            
+            # Initialize parameters for session creation
+            session_kwargs = {}
+            client_kwargs = {"service_name": "bedrock-runtime"}
+            
+            # Check for explicit credentials in config
+            if self.config.get("aws_access_key_id") and self.config.get("aws_secret_access_key"):
+                session_kwargs["aws_access_key_id"] = self.config["aws_access_key_id"]
+                session_kwargs["aws_secret_access_key"] = self.config["aws_secret_access_key"]
+                
+                # Include session token if provided (for temporary credentials)
+                if self.config.get("aws_session_token"):
+                    session_kwargs["aws_session_token"] = self.config["aws_session_token"]
+            
+            # Check for explicit region in config
+            if self.config.get("region_name"):
+                session_kwargs["region_name"] = self.config["region_name"]
+                client_kwargs["region_name"] = self.config["region_name"]
+            
+            # Check for explicit profile in config
+            if self.config.get("profile_name"):
+                session_kwargs["profile_name"] = self.config["profile_name"]
+            
+            # Create the AWS session with appropriate parameters
+            try:
+                session = boto3.session.Session(**session_kwargs)
+            except (NoCredentialsError, ProfileNotFound) as e:
+                # Handle specific session creation errors
+                raise AuthenticationError(
+                    message=f"AWS Bedrock authentication failed: {str(e)}",
+                    provider="BedrockLLM",
+                    details={
+                        "original_error": str(e),
+                        "error_type": type(e).__name__,
+                        "credential_source": "Failed to create session with provided credentials"
+                    }
+                )
+            
+            # Check for explicit endpoint URL in config
+            if self.config.get("endpoint_url"):
+                client_kwargs["endpoint_url"] = self.config["endpoint_url"]
+            
+            # Create the Bedrock client with appropriate parameters
+            try:
+                client = session.client(**client_kwargs)
+                
+                # Validate access by making a simple API call
+                try:
+                    # List models to verify access (common validation method)
+                    client.list_foundation_models(maxResults=1)
+                except ClientError as e:
+                    # Handle specific Bedrock access errors
+                    error_code = e.response["Error"]["Code"]
+                    error_message = e.response["Error"]["Message"]
+                    
+                    # Map to appropriate error type
+                    if error_code in [
+                        "AccessDeniedException", 
+                        "UnauthorizedException",
+                        "InvalidSignatureException"
+                    ]:
+                        raise AuthenticationError(
+                            message=f"AWS Bedrock access denied: {error_message}",
+                            provider="BedrockLLM",
+                            details={
+                                "error_code": error_code,
+                                "original_error": error_message,
+                                "action": "Ensure IAM permissions include bedrock:ListFoundationModels"
+                            }
+                        )
+                    elif error_code in ["ValidationException", "InvalidRequestException"]:
+                        # Configuration error (likely incorrect endpoint or region)
+                        raise ConfigurationError(
+                            message=f"AWS Bedrock configuration error: {error_message}",
+                            provider="BedrockLLM",
+                            details={
+                                "error_code": error_code,
+                                "original_error": error_message,
+                                "region": client.meta.region_name,
+                                "endpoint": client.meta.endpoint_url
+                            }
+                        )
+                    else:
+                        # Re-raise mapped through our error mapper
+                        raise self._map_aws_error(e)
+                
+                # Store the client in config for later use
+                self.config["client"] = client
+                
+            except (NoCredentialsError, ProfileNotFound) as e:
+                # Handle specific client creation errors
+                raise AuthenticationError(
+                    message=f"AWS Bedrock client creation failed: {str(e)}",
+                    provider="BedrockLLM",
+                    details={
+                        "original_error": str(e),
+                        "error_type": type(e).__name__,
+                        "credential_source": "No credentials found in environment, config, or instance role"
+                    }
+                )
 
-            # Create a Bedrock client to test access
-            session = boto3.session.Session()
-            client = session.client(service_name="bedrock-runtime")
-
-            # Store the client in config for later use
-            self.config["client"] = client
-
+        except (AuthenticationError, ConfigurationError):
+            # Re-raise already typed errors
+            raise
         except Exception as e:
-            raise Exception(f"AWS Bedrock authentication failed: {str(e)}")
+            # Map any other errors through our error mapping system
+            mapped_error = self._map_aws_error(e)
+            raise mapped_error
 
     def _get_image_bytes(self, image_path: str) -> bytes:
         """
@@ -196,27 +302,124 @@ class BedrockLLM(LLM):
             bytes: Raw image bytes in PNG format
 
         Raises:
-            Exception: If reading or processing fails
+            ContentError: If the image content is invalid or unsupported
+            LLMMistake: If reading or processing fails for other reasons
         """
+        from ...exceptions import ContentError, LLMMistake
+        import os
+        import pathlib
+        
         try:
+            # First validate the path exists
+            if not os.path.exists(image_path):
+                raise LLMMistake(
+                    message=f"Image file not found: {image_path}",
+                    error_type="image_processing_error",
+                    provider="BedrockLLM",
+                    details={"path": image_path}
+                )
+            
+            # Check file access permissions
+            if not os.access(image_path, os.R_OK):
+                raise LLMMistake(
+                    message=f"Permission denied reading image file: {image_path}",
+                    error_type="image_processing_error",
+                    provider="BedrockLLM",
+                    details={"path": image_path, "error": "Permission denied"}
+                )
+            
+            # Check if it's actually a file (not a directory)
+            if not os.path.isfile(image_path):
+                raise LLMMistake(
+                    message=f"Not a valid image file: {image_path}",
+                    error_type="image_processing_error",
+                    provider="BedrockLLM",
+                    details={"path": image_path, "error": "Not a file"}
+                )
+            
+            # Check file size (AWS Bedrock has a 5MB limit)
+            file_size = os.path.getsize(image_path)
+            if file_size > 5 * 1024 * 1024:  # 5MB in bytes
+                raise LLMMistake(
+                    message=f"Image file too large: {image_path} ({file_size} bytes). Maximum size is 5MB.",
+                    error_type="image_processing_error",
+                    provider="BedrockLLM",
+                    details={"path": image_path, "size": file_size, "max_size": 5 * 1024 * 1024}
+                )
+            
             # Open and convert image to PNG format
-            with open(image_path, "rb") as f:
-                img = Image.open(f)
-                if img.mode in ("RGBA", "LA"):
-                    # Keep alpha channel for PNG
-                    pass
-                elif img.mode != "RGB":
-                    img = img.convert("RGB")
+            try:
+                with open(image_path, "rb") as f:
+                    img = Image.open(f)
+                    
+                    # Verify image format is valid
+                    try:
+                        img.verify()  # Verify that it's a valid image
+                        # Reopen the image since verify() closes it
+                        with open(image_path, "rb") as f:
+                            img = Image.open(f)
+                    except Exception as verify_error:
+                        raise ContentError(
+                            message=f"Invalid or corrupted image file: {image_path}",
+                            provider="BedrockLLM",
+                            details={"path": image_path, "original_error": str(verify_error)}
+                        )
+                    
+                    # Handle different image modes
+                    if img.mode in ("RGBA", "LA"):
+                        # Keep alpha channel for PNG
+                        pass
+                    elif img.mode != "RGB":
+                        img = img.convert("RGB")
+                    
+                    # Check dimensions (AWS Bedrock has limits)
+                    width, height = img.size
+                    if width > 4096 or height > 4096:
+                        # Resize large images (AWS Bedrock max is typically 4096x4096)
+                        aspect_ratio = width / height
+                        if width > height:
+                            new_width = min(width, 4096)
+                            new_height = int(new_width / aspect_ratio)
+                        else:
+                            new_height = min(height, 4096)
+                            new_width = int(new_height * aspect_ratio)
+                        
+                        img = img.resize((new_width, new_height), Image.LANCZOS)
 
-                # Save as PNG in memory
-                output = BytesIO()
-                img.save(output, format="PNG")
-                return output.getvalue()
+                    # Save as PNG in memory
+                    output = BytesIO()
+                    img.save(output, format="PNG")
+                    return output.getvalue()
+            except ContentError:
+                # Re-raise ContentError directly
+                raise
+            except (IOError, OSError) as io_error:
+                # Handle file I/O errors
+                raise LLMMistake(
+                    message=f"Error reading image file {image_path}: {str(io_error)}",
+                    error_type="image_processing_error",
+                    provider="BedrockLLM",
+                    details={"path": image_path, "original_error": str(io_error)}
+                )
+            except Exception as processing_error:
+                # Handle image processing errors
+                raise ContentError(
+                    message=f"Failed to process image {image_path}: {str(processing_error)}",
+                    provider="BedrockLLM",
+                    details={"path": image_path, "original_error": str(processing_error)}
+                )
 
-        except FileNotFoundError as e:
-            raise Exception(f"Failed to read image {image_path}: {str(e)}")
+        except (ContentError, LLMMistake):
+            # Re-raise specialized errors
+            raise
         except Exception as e:
-            raise Exception(f"Failed to process image {image_path}: {str(e)}")
+            # Catch-all for unexpected errors
+            raise LLMMistake(
+                message=f"Unexpected error processing image {image_path}: {str(e)}",
+                error_type="image_processing_error",
+                provider="BedrockLLM",
+                details={"path": image_path, "original_error": str(e)}
+            )
 
     def _download_image_from_url(self, image_url: str) -> bytes:
         """
@@ -235,29 +438,130 @@ class BedrockLLM(LLM):
             bytes: Raw image bytes in PNG format
 
         Raises:
-            Exception: If download or processing fails
+            ContentError: If the image content is invalid or unsupported
+            LLMMistake: If download or processing fails for other reasons
         """
+        from ...exceptions import ContentError, LLMMistake
+        
         try:
-            response = requests.get(image_url, timeout=10)
-            response.raise_for_status()
+            # Fetch the image from URL with proper error handling
+            try:
+                response = requests.get(image_url, timeout=10)
+                response.raise_for_status()
+            except requests.HTTPError as http_error:
+                # Handle different HTTP error codes
+                status_code = http_error.response.status_code if hasattr(http_error, 'response') else None
+                
+                if status_code == 404:
+                    raise LLMMistake(
+                        message=f"Image URL not found (404): {image_url}",
+                        error_type="image_url_error",
+                        provider="BedrockLLM",
+                        details={"url": image_url, "status_code": 404, "original_error": str(http_error)}
+                    )
+                elif status_code in (401, 403):
+                    raise LLMMistake(
+                        message=f"Access denied to image URL: {image_url}",
+                        error_type="image_url_error",
+                        provider="BedrockLLM",
+                        details={"url": image_url, "status_code": status_code, "original_error": str(http_error)}
+                    )
+                elif status_code and status_code >= 500:
+                    raise LLMMistake(
+                        message=f"Server error when fetching image URL: {image_url}",
+                        error_type="image_url_error",
+                        provider="BedrockLLM",
+                        details={"url": image_url, "status_code": status_code, "original_error": str(http_error)}
+                    )
+                else:
+                    raise LLMMistake(
+                        message=f"HTTP error when fetching image URL {image_url}: {str(http_error)}",
+                        error_type="image_url_error",
+                        provider="BedrockLLM",
+                        details={"url": image_url, "status_code": status_code, "original_error": str(http_error)}
+                    )
+            except requests.RequestException as request_error:
+                raise LLMMistake(
+                    message=f"Failed to fetch image URL {image_url}: {str(request_error)}",
+                    error_type="image_url_error",
+                    provider="BedrockLLM",
+                    details={"url": image_url, "original_error": str(request_error)}
+                )
+            
+            # Check content size (AWS Bedrock has a 5MB limit)
+            content_size = len(response.content)
+            if content_size > 5 * 1024 * 1024:  # 5MB in bytes
+                raise LLMMistake(
+                    message=f"Image from URL too large: {image_url} ({content_size} bytes). Maximum size is 5MB.",
+                    error_type="image_url_error",
+                    provider="BedrockLLM",
+                    details={"url": image_url, "size": content_size, "max_size": 5 * 1024 * 1024}
+                )
+            
+            # Process the image data
+            try:
+                img = Image.open(BytesIO(response.content))
+                
+                # Verify image format is valid
+                try:
+                    img.verify()
+                    # Reopen since verify() closes the image
+                    img = Image.open(BytesIO(response.content))
+                except Exception as verify_error:
+                    raise ContentError(
+                        message=f"Invalid or unsupported image format from URL: {image_url}",
+                        provider="BedrockLLM",
+                        details={"url": image_url, "original_error": str(verify_error)}
+                    )
+                
+                # Handle different image modes
+                if img.mode in ("RGBA", "LA"):
+                    # Keep alpha channel for PNG
+                    pass
+                elif img.mode != "RGB":
+                    img = img.convert("RGB")
+                
+                # Check dimensions (AWS Bedrock has limits)
+                width, height = img.size
+                if width > 4096 or height > 4096:
+                    # Resize large images (AWS Bedrock max is typically 4096x4096)
+                    aspect_ratio = width / height
+                    if width > height:
+                        new_width = min(width, 4096)
+                        new_height = int(new_width / aspect_ratio)
+                    else:
+                        new_height = min(height, 4096)
+                        new_width = int(new_height * aspect_ratio)
+                    
+                    img = img.resize((new_width, new_height), Image.LANCZOS)
+                
+                # Save as PNG in memory
+                output = BytesIO()
+                img.save(output, format="PNG")
+                return output.getvalue()
+                
+            except ContentError:
+                # Re-raise ContentError directly
+                raise
+            except Exception as processing_error:
+                # Handle image processing errors
+                raise ContentError(
+                    message=f"Failed to process image from URL {image_url}: {str(processing_error)}",
+                    provider="BedrockLLM",
+                    details={"url": image_url, "original_error": str(processing_error)}
+                )
 
-            # Convert to PNG format
-            img = Image.open(BytesIO(response.content))
-            if img.mode in ("RGBA", "LA"):
-                # Keep alpha channel for PNG
-                pass
-            elif img.mode != "RGB":
-                img = img.convert("RGB")
-
-            # Save as PNG in memory
-            output = BytesIO()
-            img.save(output, format="PNG")
-            return output.getvalue()
-
-        except requests.RequestException as e:
-            raise Exception(f"Failed to download image from {image_url}: {str(e)}")
+        except (ContentError, LLMMistake):
+            # Re-raise specialized errors
+            raise
         except Exception as e:
-            raise Exception(f"Failed to process image from {image_url}: {str(e)}")
+            # Catch-all for unexpected errors
+            raise LLMMistake(
+                message=f"Unexpected error processing image URL {image_url}: {str(e)}",
+                error_type="image_url_error",
+                provider="BedrockLLM",
+                details={"url": image_url, "original_error": str(e)}
+            )
 
     def _format_messages_for_model(
         self, messages: List[Dict[str, Any]]
@@ -406,6 +710,354 @@ class BedrockLLM(LLM):
 
         return {"tools": formatted_tools}
 
+    def _map_aws_error(self, error: Exception) -> Exception:
+        """
+        Map AWS specific errors to LLMHandler custom exceptions.
+        
+        This method examines AWS ClientError and other exceptions to determine
+        the most appropriate custom exception to raise, providing standardized
+        error handling across all providers.
+        
+        Args:
+            error: Original AWS exception (usually ClientError)
+            
+        Returns:
+            Exception: Appropriate LLMHandler exception
+        """
+        from botocore.exceptions import ClientError
+        from ...exceptions import (
+            AuthenticationError,
+            ConfigurationError,
+            ContentError,
+            FormatError,
+            LLMMistake,
+            RateLimitError,
+            ServiceUnavailableError,
+            ToolError
+        )
+        
+        # Handle AWS ClientError with structured error information
+        if isinstance(error, ClientError):
+            # Extract error code and message from ClientError
+            error_code = error.response["Error"]["Code"]
+            error_message = str(error)
+            
+            # Authentication and authorization errors
+            if error_code in [
+                "AccessDeniedException", 
+                "UnauthorizedException",
+                "InvalidSignatureException",
+                "ExpiredTokenException",
+                "TokenRefreshRequired",
+                "InvalidAccessKeyId",
+                "SignatureDoesNotMatch",
+                "MissingAuthenticationToken"
+            ]:
+                return AuthenticationError(
+                    message=f"Bedrock API authentication failed: {error_message}",
+                    provider="BedrockLLM",
+                    details={
+                        "error_code": error_code,
+                        "original_error": error_message
+                    }
+                )
+            
+            # Rate limit and throttling errors
+            elif error_code in [
+                "ThrottlingException",
+                "TooManyRequestsException",
+                "RequestLimitExceeded",
+                "ServiceQuotaExceededException",
+                "LimitExceededException",
+                "RateLimitExceededException",
+                "ProvisionedThroughputExceededException"
+            ]:
+                # Extract retry-after if available
+                retry_after = 30  # Default retry delay for AWS
+                headers = error.response.get("ResponseMetadata", {}).get("HTTPHeaders", {})
+                if headers and "retry-after" in headers:
+                    try:
+                        retry_after = int(headers["retry-after"])
+                    except (ValueError, TypeError):
+                        pass
+                
+                return RateLimitError(
+                    message=f"Bedrock API rate limit exceeded: {error_message}",
+                    provider="BedrockLLM",
+                    retry_after=retry_after,
+                    details={
+                        "error_code": error_code,
+                        "original_error": error_message
+                    }
+                )
+            
+            # Service availability errors
+            elif error_code in [
+                "ServiceUnavailableException",
+                "InternalServerException",
+                "ServiceFailure",
+                "InternalFailure",
+                "InternalServiceError",
+                "ServiceException",
+                "ServerException",
+                "503"
+            ]:
+                return ServiceUnavailableError(
+                    message=f"Bedrock API service unavailable: {error_message}",
+                    provider="BedrockLLM",
+                    details={
+                        "error_code": error_code,
+                        "original_error": error_message
+                    }
+                )
+            
+            # Configuration errors
+            elif error_code in [
+                "ValidationException",
+                "InvalidParameterException",
+                "InvalidRequestException",
+                "MalformedPolicyDocumentException",
+                "InvalidInputException",
+                "ModelNotReadyException",
+                "BadRequestException",
+                "400"
+            ]:
+                return ConfigurationError(
+                    message=f"Bedrock API configuration error: {error_message}",
+                    provider="BedrockLLM",
+                    details={
+                        "error_code": error_code,
+                        "original_error": error_message
+                    }
+                )
+            
+            # Content moderation and policy issues
+            elif error_code in [
+                "ContentException",
+                "ContentModerationException",
+                "AbuseDetected",
+                "InvalidContentTypeException",
+                "ContentLengthExceededException"
+            ]:
+                return ContentError(
+                    message=f"Bedrock API content policy violation: {error_message}",
+                    provider="BedrockLLM",
+                    details={
+                        "error_code": error_code,
+                        "original_error": error_message
+                    }
+                )
+                
+            # Format errors
+            elif error_code in [
+                "SerializationException", 
+                "MalformedQueryString",
+                "ParserError",
+                "MalformedInputException"
+            ]:
+                return FormatError(
+                    message=f"Bedrock API format error: {error_message}",
+                    provider="BedrockLLM",
+                    details={
+                        "error_code": error_code,
+                        "original_error": error_message
+                    }
+                )
+                
+            # Tool-related errors
+            elif error_code in [
+                "ToolException",
+                "InvalidToolException",
+                "ToolExecutionFailure"
+            ]:
+                return ToolError(
+                    message=f"Bedrock API tool error: {error_message}",
+                    provider="BedrockLLM",
+                    details={
+                        "error_code": error_code,
+                        "original_error": error_message
+                    }
+                )
+                
+            # Generic fallback for unknown AWS errors
+            else:
+                return LLMMistake(
+                    message=f"Bedrock API error: {error_message}",
+                    error_type="api_error",
+                    provider="BedrockLLM",
+                    details={
+                        "error_code": error_code,
+                        "original_error": error_message
+                    }
+                )
+        
+        # Handle non-ClientError exceptions
+        error_message = str(error).lower()
+        error_type = type(error).__name__
+        
+        # Check for patterns in other exceptions
+        if any(term in error_message for term in ["credential", "access", "permission", "auth", "token", "key"]):
+            return AuthenticationError(
+                message=f"Bedrock API authentication failed: {str(error)}",
+                provider="BedrockLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+            
+        elif any(term in error_message for term in ["throttl", "rate", "limit", "quota", "exceeded"]):
+            retry_after = 60  # Default retry delay
+            return RateLimitError(
+                message=f"Bedrock API rate limit exceeded: {str(error)}",
+                provider="BedrockLLM",
+                retry_after=retry_after,
+                details={"original_error": str(error), "error_type": error_type}
+            )
+            
+        elif any(term in error_message for term in ["unavailable", "down", "timeout", "outage", "5xx"]):
+            return ServiceUnavailableError(
+                message=f"Bedrock API service unavailable: {str(error)}",
+                provider="BedrockLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+            
+        elif any(term in error_message for term in ["config", "param", "invalid", "model"]):
+            return ConfigurationError(
+                message=f"Bedrock API configuration error: {str(error)}",
+                provider="BedrockLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+            
+        elif any(term in error_message for term in ["content", "moderation", "policy", "abuse"]):
+            return ContentError(
+                message=f"Bedrock API content policy violation: {str(error)}",
+                provider="BedrockLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+            
+        elif any(term in error_message for term in ["format", "json", "xml", "parse"]):
+            return FormatError(
+                message=f"Bedrock API format error: {str(error)}",
+                provider="BedrockLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+            
+        elif any(term in error_message for term in ["tool", "function"]):
+            return ToolError(
+                message=f"Bedrock API tool error: {str(error)}",
+                provider="BedrockLLM",
+                details={"original_error": str(error), "error_type": error_type}
+            )
+        
+        # Default fallback for other errors
+        return LLMMistake(
+            message=f"Bedrock API error: {str(error)}",
+            error_type="api_error",
+            provider="BedrockLLM",
+            details={"original_error": str(error), "error_type": error_type}
+        )
+    
+    def _call_with_retry(self, func, *args, max_retries=3, retry_delay=1, **kwargs):
+        """
+        Execute an AWS API call with automatic retry for transient errors.
+        
+        This method implements an exponential backoff retry mechanism for handling 
+        transient errors from AWS, such as throttling or temporary service 
+        unavailability.
+        
+        Args:
+            func: Function to call
+            *args: Positional arguments to pass to the function
+            max_retries: Maximum number of retry attempts
+            retry_delay: Initial delay between retries (in seconds)
+            **kwargs: Keyword arguments to pass to the function
+            
+        Returns:
+            Any: Result of the function call
+            
+        Raises:
+            Exception: Re-raises the last exception after all retry attempts fail
+        """
+        from ...exceptions import RateLimitError, ServiceUnavailableError
+        import time
+        import random
+        from botocore.exceptions import ClientError
+        
+        attempts = 0
+        last_error = None
+        
+        while attempts <= max_retries:
+            try:
+                return func(*args, **kwargs)
+            except (RateLimitError, ServiceUnavailableError) as e:
+                last_error = e
+                attempts += 1
+                
+                if attempts > max_retries:
+                    # Re-raise the exception after max retries
+                    raise
+                
+                # Determine retry delay with exponential backoff and jitter
+                # If the error provides a retry_after value, use that
+                if isinstance(e, RateLimitError) and e.retry_after:
+                    delay = e.retry_after
+                else:
+                    # Otherwise use exponential backoff with jitter
+                    delay = min(retry_delay * (2 ** (attempts - 1)), 60)  # Cap at 60 seconds
+                    # Add jitter to avoid thundering herd
+                    delay = delay * (0.5 + random.random())
+                
+                # Wait before retrying
+                time.sleep(delay)
+            except ClientError as e:
+                # For ClientError, check if it's a retryable error
+                error_code = e.response["Error"]["Code"]
+                
+                if error_code in [
+                    "ThrottlingException",
+                    "TooManyRequestsException",
+                    "ServiceQuotaExceededException",
+                    "LimitExceededException",
+                    "ProvisionedThroughputExceededException",
+                    "ServiceUnavailableException",
+                    "InternalServerException",
+                    "ServiceFailure"
+                ]:
+                    # Map to our custom exception
+                    mapped_error = self._map_aws_error(e)
+                    last_error = mapped_error
+                    attempts += 1
+                    
+                    if attempts > max_retries:
+                        # Re-raise the mapped exception after max retries
+                        raise mapped_error
+                    
+                    # Get retry-after if available from headers
+                    headers = e.response.get("ResponseMetadata", {}).get("HTTPHeaders", {})
+                    if headers and "retry-after" in headers:
+                        try:
+                            delay = int(headers["retry-after"])
+                        except (ValueError, TypeError):
+                            # Fall back to exponential backoff with jitter
+                            delay = min(retry_delay * (2 ** (attempts - 1)), 60)
+                            delay = delay * (0.5 + random.random())
+                    else:
+                        # Use exponential backoff with jitter
+                        delay = min(retry_delay * (2 ** (attempts - 1)), 60)
+                        delay = delay * (0.5 + random.random())
+                    
+                    # Wait before retrying
+                    time.sleep(delay)
+                else:
+                    # For non-retryable ClientError, map and raise immediately
+                    mapped_error = self._map_aws_error(e)
+                    raise mapped_error
+            except Exception as e:
+                # For all other exceptions, map and raise immediately
+                mapped_error = self._map_aws_error(e)
+                raise mapped_error
+        
+        # If we reach here, all retries failed
+        raise last_error
+
     def _raw_generate(
         self,
         event_id: str,
@@ -445,21 +1097,45 @@ class BedrockLLM(LLM):
             - Usage statistics (tokens, costs, tool use, thinking)
 
         Raises:
-            Exception: If the API call fails or returns an error after retries
+            AuthenticationError: If authentication fails
+            ConfigurationError: For model or parameter errors
+            RateLimitError: If rate limits are exceeded
+            ServiceUnavailableError: If AWS service is unavailable
+            ContentError: For content policy violations
+            LLMMistake: For other API errors
         """
-        import time
-
-        from botocore.exceptions import ClientError
-
-        # Define retry parameters
-        max_retries = 3
-        base_delay = 1  # Base delay in seconds
-
-        for attempt in range(max_retries):
+        from ...exceptions import (
+            AuthenticationError,
+            ConfigurationError,
+            ContentError,
+            FormatError,
+            LLMMistake,
+            RateLimitError,
+            ServiceUnavailableError,
+            ToolError
+        )
+        
+        try:
+            # Ensure we're authenticated
+            if "client" not in self.config:
+                try:
+                    self.auth()
+                except Exception as e:
+                    # Map any authentication errors through our error mapping system
+                    raise self._map_aws_error(e)
+            
+            # Format messages for AWS Bedrock
             try:
-                # Format messages for Bedrock's API
                 formatted_messages = self._format_messages_for_model(messages)
-
+            except LLMMistake:
+                # Re-raise LLMMistake exceptions
+                raise
+            except Exception as e:
+                # Map message formatting errors
+                raise self._map_aws_error(e)
+            
+            # Prepare API request configuration
+            try:
                 # Prepare inference_config parameters
                 inference_config = {"temperature": temp, "maxTokens": max_tokens}
 
@@ -478,36 +1154,60 @@ class BedrockLLM(LLM):
                         "type": "enabled",
                         "budget_tokens": thinking_budget,
                     }
-
-                # Make Converse API Call with tools if provided
+            except Exception as e:
+                # Handle configuration errors
+                raise ConfigurationError(
+                    message=f"Failed to configure Bedrock API request: {str(e)}",
+                    provider="BedrockLLM",
+                    details={"original_error": str(e)}
+                )
+            
+            # Define API call functions for retry mechanism
+            def make_api_call_with_tools():
+                formatted_tools = self._format_tools_for_model(tools)
+                return self.config["client"].converse(
+                    modelId=self.model_name,
+                    messages=formatted_messages,
+                    system=[{"text": system_prompt}],
+                    inferenceConfig=inference_config,
+                    additionalModelRequestFields=additional_model_fields,
+                    toolConfig=formatted_tools,
+                )
+                
+            def make_api_call_without_tools():
+                return self.config["client"].converse(
+                    modelId=self.model_name,
+                    messages=formatted_messages,
+                    system=[{"text": system_prompt}],
+                    inferenceConfig=inference_config,
+                    additionalModelRequestFields=additional_model_fields,
+                )
+            
+            # Make the API call with retry logic
+            try:
                 if tools:
-                    formatted_tools = self._format_tools_for_model(tools)
-                    response = self.config["client"].converse(
-                        modelId=self.model_name,
-                        messages=formatted_messages,
-                        system=[{"text": system_prompt}],
-                        inferenceConfig=inference_config,
-                        additionalModelRequestFields=additional_model_fields,
-                        toolConfig=formatted_tools,
-                    )
+                    response = self._call_with_retry(make_api_call_with_tools, max_retries=3, retry_delay=1)
                 else:
-                    # Make standard call without tools
-                    response = self.config["client"].converse(
-                        modelId=self.model_name,
-                        messages=formatted_messages,
-                        system=[{"text": system_prompt}],
-                        inferenceConfig=inference_config,
-                        additionalModelRequestFields=additional_model_fields,
-                    )
-
+                    response = self._call_with_retry(make_api_call_without_tools, max_retries=3, retry_delay=1)
+            except Exception as e:
+                # If the exception is already one of our custom types, re-raise it
+                if isinstance(e, (AuthenticationError, ConfigurationError, RateLimitError, 
+                                ServiceUnavailableError, ContentError, FormatError, 
+                                ToolError, LLMMistake)):
+                    raise
+                # Otherwise, map it using our error mapper
+                raise self._map_aws_error(e)
+            
+            # Process the response and extract usage information
+            try:
                 # Initialize response text and usage statistics
                 response_text = ""
 
-                # Extract usage information and calculate costs
+                # Extract usage information, with fallbacks for missing data
                 usage_stats = {
-                    "read_tokens": response.get("usage", {}).get("inputTokens", 0),
-                    "write_tokens": response.get("usage", {}).get("outputTokens", 0),
-                    "total_tokens": response.get("usage", {}).get("totalTokens", 0),
+                    "read_tokens": response.get("usage", {}).get("inputTokens", 0) or 0,
+                    "write_tokens": response.get("usage", {}).get("outputTokens", 0) or 0,
+                    "total_tokens": response.get("usage", {}).get("totalTokens", 0) or 0,
                     "images": len(
                         [
                             msg
@@ -518,17 +1218,11 @@ class BedrockLLM(LLM):
                 }
 
                 # Calculate costs based on token usage and model rates
-                usage_stats["read_cost"] = (
-                    usage_stats["read_tokens"]
-                    * self.COST_PER_MODEL[self.model_name]["read_token"]
-                )
-                usage_stats["write_cost"] = (
-                    usage_stats["write_tokens"]
-                    * self.COST_PER_MODEL[self.model_name]["write_token"]
-                )
+                costs = self.get_model_costs()
+                usage_stats["read_cost"] = float(usage_stats["read_tokens"]) * float(costs["read_token"])
+                usage_stats["write_cost"] = float(usage_stats["write_tokens"]) * float(costs["write_token"])
                 usage_stats["image_cost"] = (
-                    usage_stats["images"]
-                    * self.COST_PER_MODEL[self.model_name]["image_cost"]
+                    float(usage_stats["images"]) * float(costs["image_cost"])
                     if usage_stats["images"] > 0
                     else 0
                 )
@@ -537,7 +1231,28 @@ class BedrockLLM(LLM):
                     + usage_stats["write_cost"]
                     + usage_stats["image_cost"]
                 )
-
+                
+                # Round costs to avoid floating-point precision issues
+                for cost_key in ["read_cost", "write_cost", "image_cost", "total_cost"]:
+                    if cost_key in usage_stats:
+                        usage_stats[cost_key] = round(usage_stats[cost_key], 6)
+            except Exception as e:
+                # Handle errors in usage data extraction with reasonable defaults
+                usage_stats = {
+                    "read_tokens": 0,
+                    "write_tokens": 0,
+                    "total_tokens": 0,
+                    "images": 0,
+                    "read_cost": 0,
+                    "write_cost": 0,
+                    "image_cost": 0,
+                    "total_cost": 0,
+                }
+                # Log this error but continue - usage stats are secondary to response
+                print(f"Warning: Error extracting usage stats: {str(e)}")
+            
+            # Extract message content from response
+            try:
                 # Extract message from response
                 output = response.get("output", {})
                 message = output.get("message", {})
@@ -546,15 +1261,15 @@ class BedrockLLM(LLM):
                 if isinstance(message.get("content"), list):
                     for content_block in message.get("content", []):
                         # Extract text content
-                        message = content_block.get("text", None)
+                        text_content = content_block.get("text", None)
                         # Extract reasoning content
                         reasoningContent = content_block.get("reasoningContent", None)
                         # Extract tool use information
                         tool_use = content_block.get("toolUse", None)
 
-                        if message:
+                        if text_content is not None:
                             # Add text to response
-                            response_text += message
+                            response_text += text_content
                         elif reasoningContent:
                             # Extract reasoning/thinking information
                             reasoning_text = reasoningContent.get("reasoningText", {})
@@ -573,27 +1288,43 @@ class BedrockLLM(LLM):
                                 "name": tool_use.get("name", ""),
                                 "input": tool_use.get("input", {}),
                             }
-
-                return response_text, usage_stats
-
-            except ClientError as e:
-                # Handle AWS-specific errors with retry logic
-                error_code = e.response["Error"]["Code"]
-                # Retry for throttling and quota errors
-                if error_code in [
-                    "ThrottlingException",
-                    "TooManyRequestsException",
-                    "ServiceQuotaExceededException",
-                ]:
-                    if attempt < max_retries - 1:  # Don't sleep on the last attempt
-                        delay = (2**attempt) * base_delay  # Exponential backoff
-                        time.sleep(delay)
-                        continue
-                raise Exception(
-                    f"Bedrock API error after {max_retries} retries: {str(e)}"
-                )
+                
+                # If no text response was found, this is an error
+                if not response_text and not usage_stats.get("thinking") and not usage_stats.get("tool_use"):
+                    raise ContentError(
+                        message="Bedrock API returned empty response with no text, thinking, or tool use",
+                        provider="BedrockLLM",
+                        details={"response_structure": str(response)}
+                    )
+            except ContentError:
+                # Re-raise content errors
+                raise
             except Exception as e:
-                raise Exception(f"Unexpected error in Bedrock API call: {str(e)}")
+                # Map errors in response processing
+                raise ContentError(
+                    message=f"Failed to extract content from Bedrock API response: {str(e)}",
+                    provider="BedrockLLM",
+                    details={"original_error": str(e), "response_structure": str(response)}
+                )
+
+            return response_text, usage_stats
+            
+        except (
+            AuthenticationError,
+            ConfigurationError,
+            RateLimitError,
+            ServiceUnavailableError,
+            ContentError,
+            FormatError,
+            ToolError,
+            LLMMistake
+        ):
+            # Re-raise already mapped exceptions
+            raise
+        except Exception as e:
+            # Last resort: catch any remaining unmapped exceptions
+            mapped_error = self._map_aws_error(e)
+            raise mapped_error
 
     def get_supported_models(self) -> list[str]:
         """

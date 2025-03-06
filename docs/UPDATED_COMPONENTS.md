@@ -9,6 +9,10 @@ This document details recent updates to key components in the LLM Handler librar
   - [Union and Optional Type Handling](#union-and-optional-type-handling)
   - [JSON Serialization Validation](#json-serialization-validation)
   - [Usage Examples](#usage-examples)
+- [Classification Components](#classification-components)
+  - [Core Components](#core-components)
+  - [Comprehensive Testing](#comprehensive-testing)
+  - [Usage Examples](#classification-usage-examples)
 - [CLI Components](#cli-components)
   - [Classification Management Commands](#classification-management-commands)
   - [Command Usage](#command-usage)
@@ -132,6 +136,147 @@ def process_query(
     """Process a search query with optional filters and configuration."""
     # Implementation
     pass
+```
+
+## Classification Components
+
+The classification system provides a flexible framework for categorizing messages using LLMs. The system consists of three main components that work together to provide comprehensive classification capabilities.
+
+### Core Components
+
+1. **ClassificationConfig** (`models/classification/config.py`)
+   - Manages classification configuration including categories, examples, and metadata
+   - Handles serialization/deserialization of configurations to/from JSON
+   - Provides validation for configuration integrity
+   - Supports configuration library management
+
+2. **Classifier** (`models/classification/classifier.py`)
+   - Implements the classification logic using LLM providers
+   - Loads system prompts from YAML files
+   - Processes classification responses
+   - Converts numeric selections to category names
+
+3. **Validators** (`models/classification/validators.py`)
+   - Validates LLM classification responses
+   - Ensures selections are within valid range
+   - Handles multi-category selection validation
+   - Provides informative error messages for invalid responses
+
+### Comprehensive Testing
+
+All classification components now have comprehensive test coverage (90%+):
+
+- **Config Tests** cover:
+  - Configuration initialization and validation
+  - Category and example validation
+  - Configuration serialization and deserialization
+  - File operations (loading/saving)
+  - Classification library management
+
+- **Validator Tests** cover:
+  - Response validation
+  - Error handling for invalid responses
+  - Multi-category selection validation
+  - Format validation
+
+- **Classifier Tests** cover:
+  - Basic classification functionality
+  - Classification with examples
+  - Multiple category selection
+  - Custom system prompt support
+  - Error handling
+  - Result processing
+  - Category name conversion
+
+All tests use the `@pytest.mark.classification` marker for better organization and selective test execution.
+
+### Classification Usage Examples
+
+#### Basic Classification
+
+```python
+from llmhandler.handler import LLMHandler
+from llmhandler.models.classification.config import ClassificationConfig
+
+# Create a classification configuration
+config = ClassificationConfig(
+    name="sentiment",
+    description="Sentiment analysis configuration",
+    categories={
+        "positive": "Content that expresses positive sentiment",
+        "neutral": "Content that is factual or neutral in tone",
+        "negative": "Content that expresses negative sentiment"
+    },
+    examples=[
+        {
+            "user_input": "I love this product!",
+            "doc_str": "This expresses clear positive sentiment",
+            "selection": "positive"
+        },
+        {
+            "user_input": "This product is terrible.",
+            "doc_str": "This expresses clear negative sentiment",
+            "selection": "negative"
+        }
+    ],
+    max_options=1
+)
+
+# Initialize handler
+handler = LLMHandler(provider="anthropic", model="claude-3-sonnet-20240229")
+
+# Messages to classify
+messages = [
+    {"role": "user", "content": "The weather today is quite nice."}
+]
+
+# Perform classification
+categories, usage = handler.llm.classify(
+    messages=messages,
+    categories=config.categories,
+    examples=config.examples,
+    max_options=config.max_options
+)
+
+print(f"Classification: {categories}")
+print(f"Token usage: {usage}")
+```
+
+#### Multi-Category Classification
+
+```python
+from llmhandler.handler import LLMHandler
+from llmhandler.models.classification.config import ClassificationConfig
+
+# Create a multi-category classification config
+topic_config = ClassificationConfig(
+    name="topics",
+    description="Message topic classification",
+    categories={
+        "technology": "Content about technology, computers, software",
+        "science": "Content about scientific discoveries, research",
+        "business": "Content about business, finance, economics",
+        "health": "Content about health, medicine, wellness",
+        "politics": "Content about politics, government, policy"
+    },
+    max_options=3  # Allow up to 3 topics to be selected
+)
+
+handler = LLMHandler(provider="anthropic", model="claude-3-sonnet-20240229")
+
+# Classify a message that might belong to multiple categories
+message = [
+    {"role": "user", "content": "The new AI startup announced a healthcare platform that uses machine learning to identify potential drug interactions, which could revolutionize personalized medicine and attract significant investment."}
+]
+
+topics, usage = handler.llm.classify(
+    messages=message,
+    categories=topic_config.categories,
+    max_options=topic_config.max_options
+)
+
+print(f"Topics identified: {topics}")
+print(f"Token usage: {usage}")
 ```
 
 ## CLI Components

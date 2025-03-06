@@ -70,9 +70,11 @@ Into OpenAI's format:
 """
 import base64
 import json
+import os
+import time
 from io import BytesIO
 from math import ceil
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import requests
 from openai import OpenAI
@@ -80,6 +82,18 @@ from PIL import Image
 
 from ..base import LLM
 from ...utils import get_secret
+from ...exceptions import (
+    AuthenticationError,
+    ConfigurationError,
+    ContentError,
+    FormatError,
+    LLMHandlerError,
+    LLMMistake, 
+    ProviderError,
+    RateLimitError,
+    ServiceUnavailableError,
+    ToolError
+)
 
 
 class OpenAILLM(LLM):
@@ -193,6 +207,20 @@ class OpenAILLM(LLM):
         "text-embedding-3-small": 0.00002,
         "text-embedding-3-large": 0.00013,
     }
+    
+    # Costs for image generation by model and size
+    IMAGE_GENERATION_COSTS = {
+        "dall-e-3": {
+            "1024x1024": 0.040,
+            "1024x1792": 0.080,
+            "1792x1024": 0.080
+        },
+        "dall-e-2": {
+            "1024x1024": 0.020,
+            "512x512": 0.018,
+            "256x256": 0.016
+        }
+    }
 
     def __init__(self, model_name: str, **kwargs):
         """
@@ -215,23 +243,80 @@ class OpenAILLM(LLM):
 
     def auth(self) -> None:
         """
-        Authenticate with OpenAI using API key from AWS Secrets Manager.
+        Authenticate with OpenAI using API key from AWS Secrets Manager or environment variables.
 
-        This method retrieves the OpenAI API key from the environment or AWS Secrets Manager,
-        then initializes the official OpenAI Python client.
+        This method retrieves the OpenAI API key from:
+        1. The API key passed during initialization (if provided)
+        2. AWS Secrets Manager (if available)
+        3. Environment variable OPENAI_API_KEY (as fallback)
+
+        It then initializes the official OpenAI Python client.
 
         Raises:
-            Exception: If authentication fails
+            AuthenticationError: If authentication fails and no valid API key is found
         """
         try:
-            # Get the API key from Secrets Manager
-            secret = get_secret("openai_api_key", required_keys=["api_key"])
-            self.config["api_key"] = secret["api_key"]
-            # Initialize the OpenAI client
-            self.client = OpenAI(api_key=self.config["api_key"])
+            # If API key was already provided during initialization, use it
+            if "api_key" in self.config and self.config["api_key"]:
+                api_key = self.config["api_key"]
+            else:
+                try:
+                    # Try to get the API key from Secrets Manager
+                    secret = get_secret("openai_api_key", required_keys=["api_key"])
+                    api_key = secret["api_key"]
+                except Exception as secret_error:
+                    # If Secrets Manager fails, check environment variables
+                    api_key = os.environ.get("OPENAI_API_KEY")
+                    if not api_key:
+                        # Re-raise using proper error type with context
+                        raise AuthenticationError(
+                            message="Failed to get API key for OpenAI",
+                            provider="openai",
+                            details={
+                                "secret_error": str(secret_error),
+                                "tried_sources": ["AWS Secrets Manager", "environment variables"]
+                            }
+                        )
+            
+            # Store the API key in config and initialize the client
+            self.config["api_key"] = api_key
+            
+            try:
+                self.client = OpenAI(api_key=api_key, base_url=self.api_base)
+                # Verify the credentials by making a minimal API call
+                self.client.models.list(limit=1)
+            except Exception as api_error:
+                # Handle specific OpenAI errors
+                if "invalid_api_key" in str(api_error).lower() or "authentication" in str(api_error).lower():
+                    raise AuthenticationError(
+                        message="Invalid OpenAI API key", 
+                        provider="openai",
+                        details={"error": str(api_error)}
+                    )
+                elif "access" in str(api_error).lower() or "permission" in str(api_error).lower():
+                    raise AuthenticationError(
+                        message="Insufficient permissions with OpenAI API key",
+                        provider="openai",
+                        details={"error": str(api_error)}
+                    )
+                else:
+                    # General initialization error
+                    raise ProviderError(
+                        message="Failed to initialize OpenAI client",
+                        provider="openai",
+                        details={"error": str(api_error)}
+                    )
 
+        except LLMHandlerError:
+            # Pass through our custom exceptions
+            raise
         except Exception as e:
-            raise Exception(f"OpenAI authentication failed: {str(e)}")
+            # Catch all other exceptions
+            raise ProviderError(
+                message=f"OpenAI authentication failed",
+                provider="openai",
+                details={"error": str(e)}
+            )
 
     def _encode_image(self, image_path: str) -> str:
         """
@@ -247,13 +332,44 @@ class OpenAILLM(LLM):
             str: Base64 encoded image string
 
         Raises:
-            Exception: If image processing fails
+            ProviderError: If image file doesn't exist or can't be read
+            FormatError: If image format is invalid or can't be processed
         """
         try:
+            # Check if the file exists
+            if not os.path.exists(image_path):
+                raise ProviderError(
+                    message=f"Image file not found: {image_path}",
+                    provider="openai",
+                    details={"image_path": image_path}
+                )
+                
+            # Try to read and encode the file
             with open(image_path, "rb") as image_file:
                 return base64.b64encode(image_file.read()).decode("utf-8")
+                
+        except ProviderError:
+            # Re-raise provider error
+            raise
+        except FileNotFoundError as e:
+            # For cases where path exists check was bypassed somehow
+            raise ProviderError(
+                message=f"Image file not found: {image_path}",
+                provider="openai",
+                details={"error": str(e), "image_path": image_path}
+            )
+        except PermissionError as e:
+            raise ProviderError(
+                message=f"Permission denied when reading image file: {image_path}",
+                provider="openai",
+                details={"error": str(e), "image_path": image_path}
+            )
         except Exception as e:
-            raise Exception(f"Failed to encode image {image_path}: {str(e)}")
+            raise FormatError(
+                message=f"Failed to encode image {image_path}",
+                provider="openai",
+                details={"error": str(e), "image_path": image_path}
+            )
 
     def _encode_image_url(self, image_url: str) -> str:
         """
@@ -272,29 +388,61 @@ class OpenAILLM(LLM):
             str: Base64 encoded image string
 
         Raises:
-            Exception: If download or encoding fails
+            ProviderError: If download fails or network error occurs
+            FormatError: If image format is invalid or can't be processed
         """
         try:
-            response = requests.get(image_url, timeout=10)
-            response.raise_for_status()
+            # Download the image with timeout
+            try:
+                response = requests.get(image_url, timeout=10)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                # Use a specific error type for network issues
+                raise ProviderError(
+                    message=f"Failed to download image from URL: {image_url}",
+                    provider="openai",
+                    details={
+                        "error": str(e),
+                        "url": image_url,
+                        "status_code": getattr(response, "status_code", None) if "response" in locals() else None
+                    }
+                )
 
-            # Convert to JPEG format
-            img = Image.open(BytesIO(response.content))
-            # Handle transparency (RGBA or LA modes) by adding white background
-            if img.mode in ("RGBA", "LA"):
-                background = Image.new("RGB", img.size, (255, 255, 255))
-                background.paste(img, mask=img.split()[-1])
-                img = background
-            elif img.mode != "RGB":
-                img = img.convert("RGB")
+            # Process the image
+            try:
+                # Convert to JPEG format
+                img = Image.open(BytesIO(response.content))
+                # Handle transparency (RGBA or LA modes) by adding white background
+                if img.mode in ("RGBA", "LA"):
+                    background = Image.new("RGB", img.size, (255, 255, 255))
+                    background.paste(img, mask=img.split()[-1])
+                    img = background
+                elif img.mode != "RGB":
+                    img = img.convert("RGB")
 
-            # Save as JPEG in memory
-            output = BytesIO()
-            img.save(output, format="JPEG", quality=95)
-            return base64.b64encode(output.getvalue()).decode("utf-8")
+                # Save as JPEG in memory
+                output = BytesIO()
+                img.save(output, format="JPEG", quality=95)
+                return base64.b64encode(output.getvalue()).decode("utf-8")
+                
+            except Exception as e:
+                # Image processing errors
+                raise FormatError(
+                    message=f"Failed to process image from URL: {image_url}",
+                    provider="openai",
+                    details={"error": str(e), "url": image_url}
+                )
 
+        except (ProviderError, FormatError):
+            # Let our custom exceptions propagate
+            raise
         except Exception as e:
-            raise Exception(f"Failed to process image from {image_url}: {str(e)}")
+            # Catch-all for unexpected errors
+            raise ProviderError(
+                message=f"Unexpected error processing image from URL: {image_url}",
+                provider="openai",
+                details={"error": str(e), "url": image_url}
+            )
 
     def _format_messages_for_model(
         self, messages: List[Dict[str, Any]]
@@ -637,11 +785,22 @@ class OpenAILLM(LLM):
             - Usage statistics (tokens, costs, tool use)
 
         Raises:
-            Exception: If the API call fails
+            LLMHandlerError: With appropriate error type based on the issue
         """
         try:
             # Format messages for OpenAI's API
-            formatted_messages = self._format_messages_for_model(messages)
+            try:
+                formatted_messages = self._format_messages_for_model(messages)
+            except LLMHandlerError:
+                # Let our custom exceptions propagate
+                raise
+            except Exception as e:
+                # Wrap other formatting errors
+                raise FormatError(
+                    message=f"Failed to format messages for OpenAI: {str(e)}",
+                    provider="openai",
+                    details={"error": str(e)}
+                )
 
             # Add system message at the start if provided
             if system_prompt:
@@ -653,79 +812,143 @@ class OpenAILLM(LLM):
                     },
                 )
 
-            # Make API call using the OpenAI client with different configuration
-            # based on whether it's a reasoning model and whether tools are provided
-            if self.model_name in self.REASONING_MODELS:
-                # Special handling for reasoning models (o1, o3-mini)
-                if tools:
-                    response = self.client.chat.completions.create(
-                        model=self.model_name,
-                        messages=formatted_messages,
-                        reasoning_effort="high",  # Enable enhanced reasoning
-                        tools=self._format_tools_for_model(tools),
-                    )
+            # Prepare API call parameters based on model type and tools
+            try:
+                # Make API call using the OpenAI client with different configuration
+                # based on whether it's a reasoning model and whether tools are provided
+                if self.model_name in self.REASONING_MODELS:
+                    # Special handling for reasoning models (o1, o3-mini)
+                    if tools:
+                        formatted_tools = self._format_tools_for_model(tools)
+                        create_params = {
+                            "model": self.model_name,
+                            "messages": formatted_messages,
+                            "reasoning_effort": "high",  # Enable enhanced reasoning
+                            "tools": formatted_tools,
+                        }
+                    else:
+                        create_params = {
+                            "model": self.model_name,
+                            "messages": formatted_messages,
+                            "reasoning_effort": "high",  # Enable enhanced reasoning
+                        }
                 else:
-                    response = self.client.chat.completions.create(
-                        model=self.model_name,
-                        messages=formatted_messages,
-                        reasoning_effort="high",  # Enable enhanced reasoning
+                    # Standard handling for non-reasoning models
+                    if tools:
+                        formatted_tools = self._format_tools_for_model(tools)
+                        create_params = {
+                            "model": self.model_name,
+                            "messages": formatted_messages,
+                            "max_completion_tokens": max_tokens,
+                            "tools": formatted_tools,
+                        }
+                    else:
+                        create_params = {
+                            "model": self.model_name,
+                            "messages": formatted_messages,
+                            "max_completion_tokens": max_tokens,
+                        }
+                        
+                # Set temperature if not using default
+                if temp != 0.0:
+                    create_params["temperature"] = temp
+                
+                # Make the API call with retry logic
+                response = self._call_with_retry(
+                    self.client.chat.completions.create,
+                    **create_params
+                )
+                
+            except LLMHandlerError:
+                # Let our custom exceptions propagate
+                raise
+            except Exception as e:
+                # Map other API errors
+                raise self._map_openai_error(e)
+
+            # Process the response
+            try:
+                # Extract response text
+                if not response.choices:
+                    raise ContentError(
+                        message="OpenAI returned empty choices array",
+                        provider="openai",
+                        details={"response": str(response)}
                     )
-            else:
-                # Standard handling for non-reasoning models
-                if tools:
-                    formatted_tools = self._format_tools_for_model(tools)
-                    response = self.client.chat.completions.create(
-                        model=self.model_name,
-                        messages=formatted_messages,
-                        max_completion_tokens=max_tokens,
-                        tools=formatted_tools,
-                    )
-                else:
-                    response = self.client.chat.completions.create(
-                        model=self.model_name,
-                        messages=formatted_messages,
-                        max_completion_tokens=max_tokens,
-                    )
+                    
+                response_text = response.choices[0].message.content
 
-            # Extract response text
-            response_text = response.choices[0].message.content
+                # Handle potential null response (happens with tool calls)
+                if response_text is None:
+                    # Check if there are tool calls
+                    tool_calls = response.choices[0].message.tool_calls
+                    if tool_calls:
+                        # Return empty string as the tool calls are handled separately
+                        response_text = ""
+                    else:
+                        # Empty response without tool calls is an error
+                        raise ContentError(
+                            message="OpenAI returned empty response with no tool calls",
+                            provider="openai",
+                            details={"response": str(response)}
+                        )
+            except LLMHandlerError:
+                # Let our custom exceptions propagate
+                raise
+            except Exception as e:
+                # Wrap other response parsing errors
+                raise FormatError(
+                    message=f"Failed to parse response from OpenAI: {str(e)}",
+                    provider="openai",
+                    details={"error": str(e), "response": str(response)}
+                )
 
-            # Handle potential null response
-            if not response_text:
-                response_text = ""
+            # Calculate usage statistics
+            try:
+                # Get usage information
+                usage = response.usage
+                input_tokens = usage.prompt_tokens
+                output_tokens = usage.completion_tokens
+                total_tokens = usage.total_tokens
 
-            # Get usage information
-            usage = response.usage
-            input_tokens = usage.prompt_tokens
-            output_tokens = usage.completion_tokens
-            total_tokens = usage.total_tokens
+                # Count images in input messages
+                num_images = sum(
+                    len(msg.get("image_paths", [])) + len(msg.get("image_urls", []))
+                    for msg in messages
+                )
 
-            # Count images in input messages
-            num_images = sum(
-                len(msg.get("image_paths", [])) + len(msg.get("image_urls", []))
-                for msg in messages
-            )
+                # Calculate costs based on token usage
+                costs = self.get_model_costs()
 
-            # Calculate costs based on token usage
-            costs = self.get_model_costs()
+                # Calculate individual costs
+                read_cost = input_tokens * costs["read_token"]
+                write_cost = output_tokens * costs["write_token"]
+                # Note: Real image cost is more complex and depends on size/detail
+                image_cost = num_images * (costs["image_cost"] or 0.0)
 
-            # Calculate individual costs
-            read_cost = input_tokens * costs["read_token"]
-            write_cost = output_tokens * costs["write_token"]
-            # Note: Real image cost is more complex and depends on size/detail
-            image_cost = num_images * (costs["image_cost"] or 0.0)
-
-            # Prepare comprehensive usage statistics
-            usage_stats = {
-                "read_tokens": input_tokens,
-                "write_tokens": output_tokens,
-                "images": num_images,
-                "total_tokens": total_tokens,
-                "read_cost": round(read_cost, 6),
-                "write_cost": round(write_cost, 6),
-                "image_cost": round(image_cost, 6),
-                "total_cost": round(read_cost + write_cost + image_cost, 6),
-            }
+                # Prepare comprehensive usage statistics
+                usage_stats = {
+                    "read_tokens": input_tokens,
+                    "write_tokens": output_tokens,
+                    "images": num_images,
+                    "total_tokens": total_tokens,
+                    "read_cost": round(read_cost, 6),
+                    "write_cost": round(write_cost, 6),
+                    "image_cost": round(image_cost, 6),
+                    "total_cost": round(read_cost + write_cost + image_cost, 6),
+                }
+            except Exception as e:
+                # Non-fatal: use defaults if usage calculation fails
+                usage_stats = {
+                    "read_tokens": len(str(formatted_messages)) // 4,  # Approximate
+                    "write_tokens": len(response_text) // 4,  # Approximate
+                    "total_tokens": (len(str(formatted_messages)) + len(response_text)) // 4,
+                    "images": 0,
+                    "read_cost": 0,
+                    "write_cost": 0,
+                    "image_cost": 0,
+                    "total_cost": 0
+                }
 
             # Extract function/tool calls from the response
             try:
@@ -734,7 +957,17 @@ class OpenAILLM(LLM):
                     # Try to parse arguments as JSON, fallback to raw string if needed
                     try:
                         tool_input = json.loads(tool_use[0].function.arguments)
-                    except:
+                    except json.JSONDecodeError as json_error:
+                        # Specific error for invalid JSON in tool arguments
+                        if "tool_use" in usage_stats:
+                            raise ToolError(
+                                message="Invalid JSON in tool arguments",
+                                provider="openai",
+                                details={
+                                    "error": str(json_error),
+                                    "arguments": tool_use[0].function.arguments
+                                }
+                            )
                         tool_input = tool_use[0].function.arguments
 
                     # Add tool use information to usage stats
@@ -743,15 +976,25 @@ class OpenAILLM(LLM):
                         "name": tool_use[0].function.name,
                         "input": tool_input,
                     }
-            except:
-                # Continue if no tool calls or extraction fails
+            except LLMHandlerError:
+                # Re-raise tool errors
+                raise
+            except Exception as e:
+                # Ignore other tool extraction errors (non-critical)
                 pass
 
             return response_text, usage_stats
 
+        except LLMHandlerError:
+            # Let our custom exceptions propagate
+            raise
         except Exception as e:
-            # Propagate all exceptions
-            raise Exception(str(e))
+            # Catch-all for unexpected errors
+            raise ProviderError(
+                message=f"Unexpected error in OpenAI generation",
+                provider="openai",
+                details={"error": str(e)}
+            )
 
     def get_supported_models(self) -> list[str]:
         """
@@ -847,6 +1090,126 @@ class OpenAILLM(LLM):
             bool: True if the model supports thinking capabilities, False otherwise
         """
         return model_name in self.THINKING_MODELS
+        
+    def _map_openai_error(self, error: Exception) -> LLMHandlerError:
+        """
+        Map OpenAI-specific errors to standardized LLMHandler error types.
+        
+        This method analyzes an exception from the OpenAI API and converts it
+        to the appropriate LLMHandler exception type with relevant context.
+        
+        Args:
+            error: The original OpenAI exception
+            
+        Returns:
+            LLMHandlerError: The mapped exception with detailed context
+        """
+        import openai
+        
+        error_str = str(error).lower()
+        
+        # Authentication errors
+        if isinstance(error, openai.AuthenticationError):
+            return AuthenticationError(
+                message="OpenAI authentication failed: Invalid API key",
+                provider="openai",
+                details={"error": str(error)}
+            )
+        
+        # Rate limiting errors
+        if isinstance(error, openai.RateLimitError):
+            # Try to extract retry-after header if available
+            retry_after = None
+            if hasattr(error, "headers") and error.headers:
+                retry_after = error.headers.get("retry-after")
+                if retry_after and retry_after.isdigit():
+                    retry_after = int(retry_after)
+            
+            return RateLimitError(
+                message="OpenAI rate limit exceeded",
+                provider="openai",
+                retry_after=retry_after,
+                details={"error": str(error)}
+            )
+        
+        # Validation errors
+        if isinstance(error, openai.BadRequestError):
+            if "context_length_exceeded" in error_str or "maximum context length" in error_str:
+                return ProviderError(
+                    message="OpenAI model context length exceeded",
+                    provider="openai",
+                    details={
+                        "error": str(error),
+                        "model": self.model_name,
+                        "context_window": self.get_context_window()
+                    }
+                )
+            elif "content_policy_violation" in error_str or "content policy" in error_str:
+                return ContentError(
+                    message="OpenAI content policy violation",
+                    provider="openai",
+                    details={"error": str(error)}
+                )
+            elif "invalid_api_param" in error_str:
+                return ConfigurationError(
+                    message="Invalid parameter for OpenAI API",
+                    provider="openai",
+                    details={"error": str(error)}
+                )
+            
+            # Default validation error
+            return ConfigurationError(
+                message="OpenAI API validation error",
+                provider="openai",
+                details={"error": str(error)}
+            )
+        
+        # Server errors (5xx)
+        if isinstance(error, openai.APIError):
+            if "server_error" in error_str or hasattr(error, "status_code") and str(getattr(error, "status_code", "")).startswith("5"):
+                return ServiceUnavailableError(
+                    message="OpenAI API server error",
+                    provider="openai",
+                    details={"error": str(error)}
+                )
+            
+            # General API error
+            return ProviderError(
+                message="OpenAI API error",
+                provider="openai",
+                details={"error": str(error)}
+            )
+        
+        # Connection errors
+        if isinstance(error, openai.APIConnectionError):
+            return ProviderError(
+                message="OpenAI API connection error",
+                provider="openai",
+                details={"error": str(error)}
+            )
+        
+        # Timeout errors
+        if isinstance(error, openai.APITimeoutError):
+            return ProviderError(
+                message="OpenAI API timeout",
+                provider="openai",
+                details={"error": str(error)}
+            )
+        
+        # Tool/function related errors
+        if "function" in error_str or "tool" in error_str or "parameter" in error_str:
+            return ToolError(
+                message="OpenAI tool/function error",
+                provider="openai",
+                details={"error": str(error)}
+            )
+        
+        # Default fallback
+        return ProviderError(
+            message=f"OpenAI API error: {str(error)}",
+            provider="openai",
+            details={"error": str(error)}
+        )
 
     def supports_embeddings(self) -> bool:
         """
@@ -856,6 +1219,97 @@ class OpenAILLM(LLM):
             bool: True, as OpenAI has embedding models
         """
         return True
+        
+    def _call_with_retry(
+        self, 
+        func: Callable, 
+        *args, 
+        max_retries: int = 3, 
+        initial_backoff: float = 1.0,
+        backoff_factor: float = 2.0,
+        retryable_errors: List[type] = None,
+        **kwargs
+    ) -> Any:
+        """
+        Call an OpenAI API function with exponential backoff retry logic.
+        
+        This method implements a retry mechanism for handling transient errors
+        such as rate limits and server errors. It uses exponential backoff
+        to avoid overwhelming the API during retries.
+        
+        Args:
+            func: The API function to call
+            *args: Positional arguments to pass to the function
+            max_retries: Maximum number of retry attempts
+            initial_backoff: Initial backoff time in seconds
+            backoff_factor: Multiplier for backoff on each retry
+            retryable_errors: List of exception types that should trigger a retry
+            **kwargs: Keyword arguments to pass to the function
+            
+        Returns:
+            The response from the API function
+            
+        Raises:
+            LLMHandlerError: Mapped exception based on the error type
+        """
+        import openai
+        
+        # Default retryable errors if not specified
+        if retryable_errors is None:
+            retryable_errors = [
+                openai.RateLimitError,
+                openai.APIError,
+                openai.APITimeoutError,
+                openai.APIConnectionError
+            ]
+            
+        retry_count = 0
+        backoff_time = initial_backoff
+        last_exception = None
+        
+        while retry_count <= max_retries:  # <= because first attempt is not a retry
+            try:
+                return func(*args, **kwargs)
+                
+            except tuple(retryable_errors) as e:
+                # Check if this is a retryable error
+                if retry_count >= max_retries:
+                    # We've exhausted retries, map and raise the error
+                    raise self._map_openai_error(e)
+                    
+                # It's a retryable error and we have retries left
+                retry_count += 1
+                
+                # Get retry-after time if available (for rate limits)
+                retry_after = None
+                if isinstance(e, openai.RateLimitError) and hasattr(e, "headers") and e.headers:
+                    retry_after_header = e.headers.get("retry-after")
+                    if retry_after_header and retry_after_header.isdigit():
+                        retry_after = float(retry_after_header)
+                
+                # Use retry-after if available, otherwise use exponential backoff
+                wait_time = retry_after if retry_after else backoff_time
+                
+                # Sleep before retry
+                time.sleep(wait_time)
+                
+                # Increase backoff for next retry
+                backoff_time *= backoff_factor
+                last_exception = e
+                
+            except Exception as e:
+                # Non-retryable error, map to appropriate exception type and raise
+                raise self._map_openai_error(e)
+        
+        # Should never get here, but just in case
+        if last_exception:
+            raise self._map_openai_error(last_exception)
+            
+        # Generic fallback error
+        raise ProviderError(
+            message=f"Failed after {max_retries} retries",
+            provider="openai"
+        )
 
     def stream_generate(
         self,
@@ -1206,3 +1660,85 @@ class OpenAILLM(LLM):
 
         except Exception as e:
             raise ValueError(f"Error reranking documents with OpenAI: {str(e)}")
+            
+    def generate_image(
+        self,
+        prompt: str,
+        model: str = "dall-e-3",
+        n: int = 1,
+        size: str = "1024x1024",
+        quality: str = "standard",
+        style: str = "vivid",
+        response_format: str = "url",
+        return_usage: bool = False,
+        **kwargs
+    ) -> List[Dict[str, str]]:
+        """
+        Generate images using OpenAI's DALL-E models.
+
+        Args:
+            prompt (str): Text description of the desired image
+            model (str): The DALL-E model to use (dall-e-3 or dall-e-2)
+            n (int): Number of images to generate
+            size (str): Image size (1024x1024, 1024x1792, 1792x1024, 512x512, 256x256)
+            quality (str): Image quality (standard or hd for dall-e-3)
+            style (str): Image style (vivid or natural for dall-e-3)
+            response_format (str): Format of response (url or b64_json)
+            return_usage (bool): Whether to return usage statistics
+            **kwargs: Additional parameters to pass to the API
+
+        Returns:
+            List[Dict[str, str]]: List of generated images with URLs or base64 data
+            Dict[str, Any]: Usage statistics (if return_usage=True)
+        """
+        # Import OpenAI here to avoid import errors if not installed
+        try:
+            from openai import OpenAI
+        except ImportError:
+            raise ImportError(
+                "OpenAI package not installed. Install with 'pip install openai'"
+            )
+
+        # Initialize client if needed
+        if not hasattr(self, "client"):
+            self.client = OpenAI(api_key=self.config["api_key"], base_url=self.api_base)
+
+        try:
+            # Call OpenAI's image generation API
+            response = self.client.images.generate(
+                model=model,
+                prompt=prompt,
+                n=n,
+                size=size,
+                quality=quality,
+                style=style,
+                response_format=response_format,
+                **kwargs
+            )
+
+            # Process the response
+            images = []
+            for data in response.data:
+                if hasattr(data, "url") and data.url:
+                    images.append({"url": data.url})
+                elif hasattr(data, "b64_json") and data.b64_json:
+                    images.append({"data": data.b64_json})
+
+            # Calculate usage statistics if requested
+            if return_usage:
+                # Get cost per image based on model and size
+                cost_per_image = self.IMAGE_GENERATION_COSTS.get(model, {}).get(size, 0.04)
+                total_cost = cost_per_image * n
+
+                usage_stats = {
+                    "model": model,
+                    "count": n,
+                    "size": size,
+                    "cost": total_cost,
+                }
+                return images, usage_stats
+
+            return images
+
+        except Exception as e:
+            raise Exception(f"Error generating image with OpenAI: {str(e)}")
