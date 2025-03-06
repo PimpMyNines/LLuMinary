@@ -81,21 +81,21 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">..exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLMMistake</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.classification.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassificationConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLMMistake</span>
 
 
 <div class="viewcode-block" id="LLM">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LLM</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="n">CONTEXT_WINDOW</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">COST_PER_MODEL</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">SUPPORTED_MODELS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">THINKING_MODELS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">EMBEDDING_MODELS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Models that support embeddings</span>
-    <span class="n">RERANKING_MODELS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Models that support reranking</span>
+    <span class="n">CONTEXT_WINDOW</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">COST_PER_MODEL</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">SUPPORTED_MODELS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">THINKING_MODELS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">EMBEDDING_MODELS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Models that support embeddings</span>
+    <span class="n">RERANKING_MODELS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Models that support reranking</span>
 
 <div class="viewcode-block" id="LLM.__init__">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.__init__">[docs]</a>
@@ -129,6 +129,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">auth</span><span class="p">()</span></div>
 
 
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_provider_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Validate provider-specific configuration.</span>
@@ -162,20 +163,20 @@
 
         <span class="c1"># Initialize capability attributes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_text_generation</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">Capability</span><span class="o">.</span><span class="n">TEXT_GENERATION</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
+                <span class="n">Capability</span><span class="o">.</span><span class="n">TEXT_GENERATION</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_text_embeddings</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">Capability</span><span class="o">.</span><span class="n">TEXT_EMBEDDINGS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
+                <span class="n">Capability</span><span class="o">.</span><span class="n">TEXT_EMBEDDINGS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_image_input</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">IMAGE_INPUT</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_image_generation</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">Capability</span><span class="o">.</span><span class="n">IMAGE_GENERATION</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
+                <span class="n">Capability</span><span class="o">.</span><span class="n">IMAGE_GENERATION</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_streaming</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">STREAMING</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_functions</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">FUNCTIONS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_reranking</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">RERANKING</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_thinking_budget</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">Capability</span><span class="o">.</span><span class="n">THINKING_BUDGET</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
+                <span class="n">Capability</span><span class="o">.</span><span class="n">THINKING_BUDGET</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_json_mode</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">JSON_MODE</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_tool_calling</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">TOOL_CALLING</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_capabilities</span>
@@ -183,7 +184,7 @@
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_messages_for_model</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert standard message format into model-specific format.</span>
@@ -226,15 +227,15 @@
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_raw_generate</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
-        <span class="n">tools</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">thinking_budget</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+            <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+            <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">thinking_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a response from the LLM without error correction.</span>
@@ -267,7 +268,8 @@
 <div class="viewcode-block" id="LLM.embed">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.embed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">embed</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get embeddings for a list of texts.</span>
@@ -313,7 +315,8 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">texts</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
                 <span class="s2">&quot;Texts list cannot be empty&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one text is required for embedding&quot;</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one text is required for embedding&quot;</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">texts</span><span class="p">):</span>
@@ -338,7 +341,10 @@
         <span class="c1"># This method must be implemented by the provider</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Embedding is not implemented for provider </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+        
+        <span class="c1"># Unreachable code, but needed for type checking</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="p">{</span><span class="s2">&quot;tokens&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;cost&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="LLM.supports_embeddings">
@@ -368,12 +374,12 @@
 <div class="viewcode-block" id="LLM.rerank">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.rerank">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rerank</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">return_scores</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+            <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">return_scores</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rerank a list of documents based on their relevance to a query.</span>
@@ -421,7 +427,8 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">query</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
                 <span class="s2">&quot;Query cannot be empty&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;Empty query would result in meaningless rankings&quot;</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;Empty query would result in meaningless rankings&quot;</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">documents</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -433,7 +440,8 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">documents</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
                 <span class="s2">&quot;Documents list cannot be empty&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one document is required for reranking&quot;</span><span class="p">},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one document is required for reranking&quot;</span><span class="p">},</span>
             <span class="p">)</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">doc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">documents</span><span class="p">):</span>
@@ -463,21 +471,30 @@
                 <span class="p">)</span>
 
         <span class="c1"># This method must be implemented by the provider</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This method must be implemented by the provider&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;This method must be implemented by the provider&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Unreachable code, but needed for type checking</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;ranked_documents&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="p">{}</span>
+        <span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="LLM.stream_generate">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.stream_generate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">stream_generate</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">functions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+            <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">functions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stream a response from the LLM, yielding chunks as they become available.</span>
 
@@ -501,7 +518,7 @@
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_function_to_tool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_function_to_tool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a function to a tool&quot;&quot;&quot;</span>
         <span class="c1"># Get function name</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span>
@@ -565,7 +582,7 @@
             <span class="n">properties</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">param_type</span><span class="p">,</span>
                 <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">param_desc</span>
-                <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> for function </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                               <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;Parameter </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> for function </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="p">}</span>
 
         <span class="c1"># Build the tool dictionary</span>
@@ -582,25 +599,26 @@
         <span class="k">return</span> <span class="n">tool</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_functions_to_tools</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">functions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">functions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a list of functions to a list of tools&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_function_to_tool</span><span class="p">(</span><span class="n">function</span><span class="p">)</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_function_to_tool</span><span class="p">(</span><span class="n">function</span><span class="p">)</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span>
+                <span class="n">functions</span><span class="p">]</span>
 
 <div class="viewcode-block" id="LLM.generate">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.generate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">result_processing_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">retry_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="n">functions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">thinking_budget</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+            <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="n">temp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">result_processing_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">retry_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="n">functions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">thinking_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a response with automatic error correction.</span>
 
@@ -738,7 +756,8 @@
                 <span class="c1"># Track special usage fields</span>
                 <span class="k">if</span> <span class="s2">&quot;thinking&quot;</span> <span class="ow">in</span> <span class="n">usage</span><span class="p">:</span>
                     <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;thinking&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;thinking&quot;</span><span class="p">]</span>
-                    <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;thinking_signature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;thinking_signature&quot;</span><span class="p">]</span>
+                    <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;thinking_signature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">usage</span><span class="p">[</span>
+                        <span class="s2">&quot;thinking_signature&quot;</span><span class="p">]</span>
 
                 <span class="k">if</span> <span class="s2">&quot;tool_use&quot;</span> <span class="ow">in</span> <span class="n">usage</span><span class="p">:</span>
                     <span class="n">cumulative_usage</span><span class="p">[</span><span class="s2">&quot;tool_use&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;tool_use&quot;</span><span class="p">]</span>
@@ -885,7 +904,7 @@
 <div class="viewcode-block" id="LLM.check_context_fit">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.check_context_fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">check_context_fit</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_response_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_response_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if a prompt will fit in the model&#39;s context window.</span>
@@ -900,7 +919,7 @@
         <span class="n">context_window</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_context_window</span><span class="p">()</span>
         <span class="n">estimated_prompt_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_tokens</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
         <span class="n">max_response</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">max_response_tokens</span> <span class="ow">or</span> <span class="n">context_window</span> <span class="o">//</span> <span class="mi">4</span>
+                <span class="n">max_response_tokens</span> <span class="ow">or</span> <span class="n">context_window</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="p">)</span>  <span class="c1"># Default to 1/4 of context window</span>
 
         <span class="n">total_tokens</span> <span class="o">=</span> <span class="n">estimated_prompt_tokens</span> <span class="o">+</span> <span class="n">max_response</span>
@@ -918,11 +937,11 @@
 <div class="viewcode-block" id="LLM.estimate_cost">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.estimate_cost">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">estimate_cost</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">expected_response_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">images</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">num_images</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">expected_response_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">images</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">num_images</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimate the cost for a generation based on input and expected output.</span>
@@ -942,7 +961,7 @@
         <span class="n">costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_costs</span><span class="p">()</span>
         <span class="n">prompt_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_tokens</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
         <span class="n">response_tokens</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">expected_response_tokens</span> <span class="ow">or</span> <span class="n">prompt_tokens</span>
+                <span class="n">expected_response_tokens</span> <span class="ow">or</span> <span class="n">prompt_tokens</span>
         <span class="p">)</span>  <span class="c1"># Default to same length as prompt</span>
 
         <span class="c1"># Calculate costs</span>
@@ -1006,12 +1025,12 @@
 <div class="viewcode-block" id="LLM.classify">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.classify">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">classify</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-        <span class="n">categories</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-        <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+            <span class="n">categories</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+            <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Classify input into predefined categories using the LLM.</span>
@@ -1051,7 +1070,8 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">example</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;Example at index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> must be a dictionary, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">example</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">example</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                                 <span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">example</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
                     <span class="p">)</span>
 
                 <span class="n">missing_keys</span> <span class="o">=</span> <span class="n">required_keys</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">example</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
@@ -1093,7 +1113,8 @@
         <span class="k">if</span> <span class="n">max_options</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;max_options (</span><span class="si">{</span><span class="n">max_options</span><span class="si">}</span><span class="s2">) exceeds the number of categories (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;max_options&quot;</span><span class="p">:</span> <span class="n">max_options</span><span class="p">,</span> <span class="s2">&quot;category_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">)},</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;max_options&quot;</span><span class="p">:</span> <span class="n">max_options</span><span class="p">,</span>
+                         <span class="s2">&quot;category_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">)},</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">system_prompt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">system_prompt</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -1118,7 +1139,8 @@
         <span class="c1"># Create a processing function that will validate and parse the response</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">process_classification_response</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_classification_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">max_options</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_classification_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span>
+                                                           <span class="n">max_options</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">LLMMistake</span><span class="p">(</span>
                     <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
@@ -1142,15 +1164,15 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_classification_prompt</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">categories</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-        <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">categories</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+            <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Format the classification prompt with categories and examples.&quot;&quot;&quot;</span>
         <span class="c1"># Build category list</span>
         <span class="n">category_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">desc</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">desc</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">desc</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">categories</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="p">)</span>
 
@@ -1189,7 +1211,7 @@
         <span class="k">return</span> <span class="n">prompt</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_classification_response</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the model&#39;s response into a list of category names.&quot;&quot;&quot;</span>
         <span class="c1"># Try both patterns, ignoring everything outside the tags</span>
@@ -1220,7 +1242,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">category_names</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">numbers</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_combine_system_prompts</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">classification_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">classification_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine classification prompt with user&#39;s system prompt.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">user_prompt</span><span class="p">:</span>
@@ -1230,10 +1252,10 @@
 <div class="viewcode-block" id="LLM.classify_from_file">
 <a class="viewcode-back" href="../../../api.html#lluminary.models.base.LLM.classify_from_file">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">classify_from_file</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">config_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-        <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">config_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+            <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Classify messages using configuration from a file.</span>
