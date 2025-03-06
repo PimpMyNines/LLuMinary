@@ -1,0 +1,286 @@
+Metadata-Version: 2.1
+Name: llmhandler
+Version: 0.1.1
+Summary: A package for handling LLM operations across multiple providers
+Home-page: https://gitlab.kb4.it/library/packages/python/llm-handler
+Author: Chase Brown
+Author-email: chaseb@knowbe4.com
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Provides-Extra: dev
+Provides-Extra: aws
+
+# LLM Handler
+
+A versatile Python library for interacting with multiple LLM providers through a unified interface.
+
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+## Overview
+
+LLM Handler provides a clean, extensible interface for working with various LLM providers including OpenAI, Anthropic, Google, and Cohere. It handles all the complexity of provider-specific implementations, message formatting, and error handling, allowing you to focus on building applications.
+
+## Features
+
+- 🤝 **Unified API** across multiple providers (OpenAI, Anthropic, Google, Cohere)
+- 🔄 **Provider Registry Pattern** for easy extension with custom providers
+- 📝 **Text Generation** with consistent interface and error handling
+- 🌊 **Streaming Responses** from all major providers
+- 🔍 **Embeddings** generation for semantic search and similarity matching
+- 📚 **Document Reranking** for improved search relevance
+- 🔧 **Function Calling** for tool use and external API integration
+- 📊 **Token Counting & Cost Tracking** for budget management
+- 🖼️ **Image Input Support** for multimodal models
+
+## Documentation
+
+- [API Reference](./docs/API_REFERENCE.md) - Detailed documentation of all classes and methods
+- [Architecture](./docs/ARCHITECTURE.md) - Overview of the library's design and component relationships
+- [Tutorials](./docs/TUTORIALS.md) - Step-by-step guides for common use cases
+- [Examples](./examples/) - Working code examples for all features
+
+## Installation
+
+```bash
+pip install llm-handler
+```
+
+## Quick Start
+
+```python
+from llmhandler import get_llm_from_model
+
+# Initialize an LLM (automatically selects the right provider)
+llm = get_llm_from_model("gpt-4o", api_key="your-api-key")
+
+# Generate a simple response
+response, usage, _ = llm.generate(
+    event_id="quick-start",
+    system_prompt="You are a helpful assistant.",
+    messages=[
+        {"message_type": "human", "message": "What is machine learning?"}
+    ]
+)
+
+print(response)
+print(f"Tokens used: {usage['total_tokens']}")
+print(f"Cost: ${usage['total_cost']}")
+```
+
+## Supported Providers and Models
+
+### OpenAI
+
+- GPT-4o, GPT-4, GPT-3.5-Turbo
+- Text embedding models
+- Image input support
+
+```python
+llm = get_llm_from_model("gpt-4o", api_key="your-openai-api-key")
+```
+
+### Anthropic
+
+- Claude 3 (Opus, Sonnet, Haiku)
+- Claude 2
+- Streaming support
+
+```python
+llm = get_llm_from_model("claude-haiku-3.5", api_key="your-anthropic-api-key")
+```
+
+### Google
+
+- Gemini models (Pro, Flash)
+- Streaming support
+- Image input support
+
+```python
+llm = get_llm_from_model("gemini-2.0-flash", api_key="your-google-api-key")
+```
+
+### Cohere
+
+- Command models
+- Embedding models
+- Reranking models
+
+```python
+llm = get_llm_from_model("cohere-command", api_key="your-cohere-api-key")
+```
+
+## Basic Features
+
+### Text Generation
+
+Generate text responses from LLMs:
+
+```python
+response, usage, _ = llm.generate(
+    event_id="text-generation",
+    system_prompt="You are a helpful assistant.",
+    messages=[
+        {"message_type": "human", "message": "Explain the concept of machine learning."}
+    ],
+    max_tokens=500,
+    temp=0.7
+)
+
+print(response)
+```
+
+### Embeddings
+
+Generate embeddings for text with supported models:
+
+```python
+from llmhandler import get_llm_from_model
+
+# Initialize an LLM that supports embeddings
+llm = get_llm_from_model("text-embedding-3-small")
+
+# Check if the model supports embeddings
+if llm.supports_embeddings():
+    # Generate embeddings
+    texts = ["This is a sample text", "Another example"]
+    embeddings, usage = llm.embed(texts=texts)
+    
+    print(f"Generated {len(embeddings)} embeddings")
+    print(f"First embedding dimensions: {len(embeddings[0])}")
+    print(f"Tokens used: {usage['total_tokens']}")
+    print(f"Cost: ${usage['total_cost']}")
+```
+
+### Document Reranking
+
+Rerank documents based on their relevance to a query:
+
+```python
+from llmhandler import get_llm_from_model
+
+# Initialize an LLM that supports reranking
+llm = get_llm_from_model("text-embedding-3-small")  # OpenAI
+# or
+llm = get_llm_from_model("rerank-english-v3.0")  # Cohere
+
+# Check if the model supports reranking
+if llm.supports_reranking():
+    # Sample documents
+    documents = [
+        "Python is a popular programming language.",
+        "The Eiffel Tower is in Paris, France.",
+        "Machine learning is a subset of AI.",
+        "Cats are common pets worldwide."
+    ]
+    
+    # Rerank documents based on a query
+    query = "Which programming language is popular?"
+    results = llm.rerank(
+        query=query,
+        documents=documents,
+        top_n=2,  # Optional: limit to top N results
+        return_scores=True  # Optional: include relevance scores
+    )
+    
+    # Display ranked results
+    for i, (doc, score) in enumerate(zip(
+        results["ranked_documents"], 
+        results["scores"]
+    )):
+        print(f"{i+1}. [{score:.4f}] {doc}")
+    
+    # Usage information
+    print(f"Tokens used: {results['usage']['total_tokens']}")
+    print(f"Cost: ${results['usage']['total_cost']}")
+```
+
+### Streaming Responses
+
+Stream responses from LLMs for real-time output:
+
+```python
+from llmhandler import get_llm_from_model
+
+# Initialize an LLM that supports streaming (OpenAI, Anthropic, or Google)
+llm = get_llm_from_model("gpt-4o")  # OpenAI
+# or
+llm = get_llm_from_model("claude-haiku-3.5")  # Anthropic 
+# or
+llm = get_llm_from_model("gemini-2.0-flash")  # Google
+
+# Define a callback function to process chunks
+def process_chunk(chunk, usage_data):
+    if chunk:  # Empty chunk signals completion
+        print(chunk, end="", flush=True)
+    else:
+        print("\nStream completed")
+        print(f"Total tokens: {usage_data['total_tokens']}")
+        print(f"Cost: ${usage_data.get('total_cost', 0)}")
+
+# Stream a response
+for chunk, usage in llm.stream_generate(
+    event_id="my_stream",
+    system_prompt="You are a helpful assistant.",
+    messages=[
+        {"message_type": "human", "message": "Explain quantum computing briefly."}
+    ],
+    max_tokens=300,
+    temp=0.7,
+    callback=process_chunk  # Optional: Process chunks as they arrive
+):
+    # You can also process chunks here if you prefer
+    # This loop will yield each chunk as it's received
+    pass  # The callback handles the chunks, so nothing to do here
+```
+
+## Advanced Features
+
+### Function Calling
+
+```python
+def get_weather(location: str, unit: str = "celsius"):
+    """Get the current weather for a location."""
+    # Implementation details...
+    return {"location": location, "temperature": 22, "condition": "sunny"}
+
+response, usage, _ = llm.generate(
+    event_id="function-calling",
+    system_prompt="You are a helpful assistant.",
+    messages=[
+        {"message_type": "human", "message": "What's the weather in San Francisco?"}
+    ],
+    functions=[get_weather]
+)
+```
+
+### Custom Provider Registration
+
+```python
+from llmhandler.models.base import LLM
+from llmhandler.models.router import register_provider
+
+class CustomLLM(LLM):
+    """Custom LLM provider implementation."""
+    # Implementation details...
+
+# Register the custom provider
+register_provider("custom", CustomLLM)
+
+# Now you can use your custom provider
+llm = get_llm_from_model("custom-model", api_key="your-custom-api-key")
+```
+
+## Contributing
+
+Contributions are welcome! Please check out our [contributing guidelines](CONTRIBUTING.md) for details.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
