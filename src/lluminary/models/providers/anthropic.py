@@ -79,7 +79,7 @@ import json
 import os
 import time
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, cast
 
 import requests
 from PIL import Image
@@ -147,7 +147,7 @@ class AnthropicLLM(LLM):
         },
     }
 
-    def __init__(self, model_name: str, **kwargs):
+    def __init__(self, model_name: str, **kwargs) -> None:
         """
         Initialize an Anthropic LLM instance.
 
@@ -1147,9 +1147,9 @@ class AnthropicLLM(LLM):
         messages: List[Dict[str, Any]],
         max_tokens: int = 1000,
         temp: float = 0.0,
-        functions: List[Callable] = None,
-        callback: Callable[[str, Dict[str, Any]], None] = None,
-    ):
+        functions: Optional[List[Callable[..., Any]]] = None,
+        callback: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+    ) -> Iterator[Tuple[str, Dict[str, Any]]]:
         """
         Stream a response from the Anthropic API, yielding chunks as they become available.
 
@@ -1226,16 +1226,36 @@ class AnthropicLLM(LLM):
                     image_count += len(message.get("image_urls", []))
 
             try:
-                # Create a streaming request
-                response = self.client.messages.create(
-                    model=self.model_name,
-                    system=system_prompt,
-                    messages=formatted_messages,
-                    max_tokens=max_tokens,
-                    temperature=temp,
-                    tools=tools,
-                    stream=True,  # Enable streaming
-                )
+                # Import Anthropic types for proper casting
+                import anthropic
+                from anthropic.types import MessageParam
+
+                # Cast types to satisfy Anthropic's API typing requirements
+                # First ensure we have the correct object structure
+                api_messages = []
+                for msg in formatted_messages:
+                    if isinstance(msg, dict) and "role" in msg and "content" in msg:
+                        api_messages.append(msg)
+
+                # Create API parameters dict
+                api_params = {
+                    "model": self.model_name,
+                    "messages": cast(List[MessageParam], api_messages),
+                    "max_tokens": max_tokens,
+                    "temperature": temp,
+                    "stream": True,  # Enable streaming
+                }
+
+                # Only add system if it exists and is not empty
+                if system_prompt:
+                    api_params["system"] = system_prompt
+
+                # Only add tools if they exist and are properly formatted
+                if tools and isinstance(tools, list):
+                    api_params["tools"] = tools
+
+                # Create a streaming request with properly cast parameters
+                response = self.client.messages.create(**api_params)
             except anthropic.APIError as api_error:
                 # Map Anthropic API errors to our custom types
                 status_code = getattr(api_error, "status_code", None)
@@ -1256,7 +1276,7 @@ class AnthropicLLM(LLM):
             # Initialize variables to accumulate data
             accumulated_text = ""
             accumulated_tokens = 0
-            tool_call_data = {}
+            tool_call_data: Dict[str, Dict[str, Any]] = {}
 
             # Estimate input tokens (a more accurate count would require using Anthropic's tokenizer)
             # This is a simplified estimation
@@ -1288,7 +1308,7 @@ class AnthropicLLM(LLM):
                             accumulated_tokens += token_estimate
 
                             # Call the callback if provided
-                            if callback:
+                            if callback is not None:
                                 # Create partial usage data
                                 partial_usage = {
                                     "event_id": event_id,
@@ -1342,8 +1362,15 @@ class AnthropicLLM(LLM):
             except anthropic.APIError as api_error:
                 # Handle streaming errors differently - map but preserve what we've got so far
                 mapped_error = self._map_anthropic_error(api_error)
-                mapped_error.details["partial_text"] = accumulated_text
-                mapped_error.details["tool_calls"] = tool_call_data
+                # Only add details if the error type supports it
+                if hasattr(mapped_error, "details"):
+                    if (
+                        not hasattr(mapped_error, "details")
+                        or mapped_error.details is None
+                    ):
+                        mapped_error.details = {}
+                    mapped_error.details["partial_text"] = accumulated_text
+                    mapped_error.details["tool_calls"] = tool_call_data
                 raise mapped_error
             except Exception as stream_error:
                 # Map other streaming errors
@@ -1351,17 +1378,21 @@ class AnthropicLLM(LLM):
 
             # Calculate costs
             model_costs = self.get_model_costs()
-            read_cost = input_tokens * model_costs["read_token"]
-            write_cost = accumulated_tokens * model_costs["write_token"]
+
+            # Get cost values with safe defaults
+            read_token_cost = float(model_costs.get("read_token", 0.0) or 0.0)
+            write_token_cost = float(model_costs.get("write_token", 0.0) or 0.0)
+
+            # Calculate costs with explicit type conversions
+            read_cost = float(input_tokens) * read_token_cost
+            write_cost = float(accumulated_tokens) * write_token_cost
 
             # Calculate image cost if applicable
-            image_cost = 0
-            if (
-                image_count > 0
-                and "image_cost" in model_costs
-                and model_costs["image_cost"]
-            ):
-                image_cost = image_count * model_costs["image_cost"]
+            image_cost = 0.0
+            if image_count > 0 and "image_cost" in model_costs:
+                # Get image cost with safe default and ensure it's a float
+                image_token_cost = float(model_costs.get("image_cost", 0.0) or 0.0)
+                image_cost = float(image_count) * image_token_cost
 
             total_cost = read_cost + write_cost + image_cost
 
@@ -1382,7 +1413,7 @@ class AnthropicLLM(LLM):
             }
 
             # Call the callback with an empty string to signal completion
-            if callback:
+            if callback is not None:
                 callback("", final_usage)
 
             # Yield an empty string with the final usage data to signal completion

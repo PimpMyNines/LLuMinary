@@ -75,17 +75,7 @@ import os
 import time
 from io import BytesIO
 from math import ceil
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Type, Union
 
 import requests
 from openai import OpenAI
@@ -936,13 +926,15 @@ class OpenAILLM(LLM):
                 # Cast the message type to satisfy OpenAI's API type requirements
                 if "messages" in create_params:
                     create_params["messages"] = cast(
-                        list[ChatCompletionMessageParam], create_params["messages"]
+                        List[ChatCompletionMessageParam], create_params["messages"]
                     )
 
-                # Cast the tools type if present
-                if create_params.get("tools"):
+                # Cast the tools type if present and it's a list
+                if create_params.get("tools") and isinstance(
+                    create_params["tools"], list
+                ):
                     create_params["tools"] = cast(
-                        list[ChatCompletionToolParam], create_params["tools"]
+                        List[ChatCompletionToolParam], create_params["tools"]
                     )
 
                 response = self._call_with_retry(
@@ -1010,11 +1002,16 @@ class OpenAILLM(LLM):
                 # Calculate costs based on token usage
                 costs = self.get_model_costs()
 
-                # Calculate individual costs
-                read_cost = input_tokens * costs["read_token"]
-                write_cost = output_tokens * costs["write_token"]
+                # Calculate individual costs with proper null checking
+                read_token_cost = float(costs.get("read_token", 0.0) or 0.0)
+                write_token_cost = float(costs.get("write_token", 0.0) or 0.0)
+                image_token_cost = float(costs.get("image_cost", 0.0) or 0.0)
+
+                # Calculate costs safely
+                read_cost = float(input_tokens) * read_token_cost
+                write_cost = float(output_tokens) * write_token_cost
                 # Note: Real image cost is more complex and depends on size/detail
-                image_cost = num_images * (costs["image_cost"] or 0.0)
+                image_cost = float(num_images) * image_token_cost
 
                 # Prepare comprehensive usage statistics
                 usage_stats = {
@@ -1505,17 +1502,31 @@ class OpenAILLM(LLM):
 
             # Only add tools if they exist
             if tools:
-                api_params["tools"] = cast(Iterable[ChatCompletionToolParam], tools)
+                # Ensure tools is iterable before casting
+                if isinstance(tools, list):
+                    api_params["tools"] = cast(Iterable[ChatCompletionToolParam], tools)
 
             # Call the API directly with individual parameters to satisfy typing
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=api_messages,
-                max_tokens=max_tokens,
-                temperature=temp,
-                tools=cast(Iterable[ChatCompletionToolParam], tools) if tools else [],
-                stream=True,
-            )
+            # Create a properly cast tools parameter if tools exist
+            if tools and isinstance(tools, list):
+                typed_tools = cast(List[ChatCompletionToolParam], tools)
+                response = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=api_messages,
+                    max_tokens=max_tokens,
+                    temperature=temp,
+                    tools=typed_tools,
+                    stream=True,
+                )
+            else:
+                # Call without tools parameter
+                response = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=api_messages,
+                    max_tokens=max_tokens,
+                    temperature=temp,
+                    stream=True,
+                )
 
             # Initialize variables to accumulate data
             accumulated_text = ""
@@ -1578,6 +1589,10 @@ class OpenAILLM(LLM):
                 # Extract tool calls if available
                 if hasattr(delta, "tool_calls") and delta.tool_calls:
                     for tool_call in delta.tool_calls:
+                        # Skip if tool_call doesn't have id attribute or id is None
+                        if not hasattr(tool_call, "id") or tool_call.id is None:
+                            continue
+
                         tool_id = tool_call.id
 
                         # Initialize tool call data if not seen before
@@ -1601,18 +1616,20 @@ class OpenAILLM(LLM):
                                 "type": "function",
                             }
 
-                        # Append arguments
+                        # Safely get arguments with defensive checks
+                        function_args = ""
                         if (
-                            tool_id
-                            and tool_id in tool_call_data
-                            and hasattr(tool_call, "function")
+                            hasattr(tool_call, "function")
                             and tool_call.function is not None
                             and hasattr(tool_call.function, "arguments")
-                            and tool_call.function.arguments is not None
                         ):
-                            tool_call_data[tool_id][
-                                "arguments"
-                            ] += tool_call.function.arguments
+                            # Handle potential None arguments
+                            if tool_call.function.arguments is not None:
+                                function_args = str(tool_call.function.arguments)
+
+                        # Append arguments if we have a valid ID in our data structure
+                        if tool_id in tool_call_data:
+                            tool_call_data[tool_id]["arguments"] += function_args
 
             # Calculate costs
             model_costs = self.get_model_costs()
