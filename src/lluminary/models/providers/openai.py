@@ -75,7 +75,17 @@ import os
 import time
 from io import BytesIO
 from math import ceil
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import requests
 from openai import OpenAI
@@ -214,7 +224,7 @@ class OpenAILLM(LLM):
         "dall-e-2": {"1024x1024": 0.020, "512x512": 0.018, "256x256": 0.016},
     }
 
-    def __init__(self, model_name: str, **kwargs):
+    def __init__(self, model_name: str, **kwargs) -> None:
         """
         Initialize an OpenAI LLM instance.
 
@@ -279,7 +289,7 @@ class OpenAILLM(LLM):
             try:
                 self.client = OpenAI(api_key=api_key, base_url=self.api_base)
                 # Verify the credentials by making a minimal API call
-                self.client.models.list(limit=1)
+                self.client.models.list()
             except Exception as api_error:
                 # Handle specific OpenAI errors
                 if (
@@ -416,18 +426,20 @@ class OpenAILLM(LLM):
             # Process the image
             try:
                 # Convert to JPEG format
-                img = Image.open(BytesIO(response.content))
+                img_original = Image.open(BytesIO(response.content))
                 # Handle transparency (RGBA or LA modes) by adding white background
-                if img.mode in ("RGBA", "LA"):
-                    background = Image.new("RGB", img.size, (255, 255, 255))
-                    background.paste(img, mask=img.split()[-1])
-                    img = background
-                elif img.mode != "RGB":
-                    img = img.convert("RGB")
+                if img_original.mode in ("RGBA", "LA"):
+                    background = Image.new("RGB", img_original.size, (255, 255, 255))
+                    background.paste(img_original, mask=img_original.split()[-1])
+                    img_processed = background
+                elif img_original.mode != "RGB":
+                    img_processed = img_original.convert("RGB")
+                else:
+                    img_processed = img_original
 
                 # Save as JPEG in memory
                 output = BytesIO()
-                img.save(output, format="JPEG", quality=95)
+                img_processed.save(output, format="JPEG", quality=95)
                 return base64.b64encode(output.getvalue()).decode("utf-8")
 
             except Exception as e:
@@ -473,15 +485,19 @@ class OpenAILLM(LLM):
         """
         formatted_messages = []
         for message in messages:
-            content = []
+            # To handle the dual type nature, we'll maintain a flag for type
+            is_content_string = False
+            content_parts: List[Dict[str, Any]] = []
+            content_text = ""
             tool_calls = []
+            content: Union[str, List[Dict[str, Any]]]
 
             # Process local image files
             for image_path in message.get("image_paths", []):
                 try:
                     # Convert image to base64 and format as image_url
                     image_base64 = self._encode_image(image_path)
-                    content.append(
+                    content_parts.append(
                         {
                             "type": "image_url",
                             "image_url": {
@@ -497,7 +513,7 @@ class OpenAILLM(LLM):
                 try:
                     # Download, convert to base64, and format as image_url
                     image_base64 = self._encode_image_url(image_url)
-                    content.append(
+                    content_parts.append(
                         {
                             "type": "image_url",
                             "image_url": {
@@ -509,18 +525,29 @@ class OpenAILLM(LLM):
                     raise Exception(f"Failed to process image URL {image_url}: {e!s}")
 
             # Add text content, handling different content formats
-            if content:
+            if len(content_parts) > 0:
                 # If we already have image content parts, add text as another part
                 if message.get("message"):
-                    content.append({"type": "text", "text": message["message"]})
+                    content_parts.append({"type": "text", "text": message["message"]})
+                # Use the content parts format
+                content_to_use = content_parts
             else:
                 # Simple case: just text, no need for content parts array
                 if message.get("message"):
-                    content = message["message"]
+                    content_text = message["message"]
+                    is_content_string = True
+                else:
+                    # Empty message, default to empty string
+                    content_text = ""
+                    is_content_string = True
+                # Don't assign to content_to_use since we're using the if/else below
 
-            # If no content was set, explicitly set to None
-            if not content:
-                content = None
+            # Final content to use in message
+            # Cast depending on what type of content we have
+            if is_content_string:
+                content = content_text  # Use string type
+            else:
+                content = content_parts  # Use content parts list
 
             # Map message types to OpenAI roles
             # Four primary roles: user, assistant, system, tool
@@ -562,9 +589,22 @@ class OpenAILLM(LLM):
             if role != "tool":
                 # Standard message format for user, assistant, system
                 if content:
+                    # Handle different content types properly
+                    if (
+                        isinstance(content, list)
+                        and len(content) == 1
+                        and isinstance(content[0], dict)
+                        and "text" in content[0]
+                    ):
+                        # For a single content item, extract text value
+                        message_content = content[0]["text"]
+                    else:
+                        # Use as is for other cases
+                        message_content = content
+
                     formatted_message = {
                         "role": role,
-                        "content": content[0] if len(content) == 1 else content,
+                        "content": message_content,
                     }
                 else:
                     formatted_message = {"role": role, "content": None}
@@ -624,7 +664,37 @@ class OpenAILLM(LLM):
                 }
 
             # Disable additional properties (enforce schema)
-            formatted_tool["function"]["parameters"]["additionalProperties"] = False
+            # First make sure we have a dict with parameters
+            function_dict = formatted_tool.get("function", {})
+            if isinstance(function_dict, dict):
+                parameters_dict = function_dict.get("parameters", {})
+                if isinstance(parameters_dict, dict):
+                    # Create a new dictionary with the additional property
+                    updated_params = dict(parameters_dict)
+                    updated_params["additionalProperties"] = False
+
+                    # Create a new tool dictionary from scratch
+                    mutable_formatted_tool = {}
+                    for k, v in formatted_tool.items():
+                        mutable_formatted_tool[k] = v
+
+                    # Check if function already exists
+                    if "function" in mutable_formatted_tool:
+                        # Create a new function dictionary
+                        function_part = {}
+                        # Convert to dict if not already
+                        function_dict = mutable_formatted_tool["function"]
+                        if isinstance(function_dict, dict):
+                            for k, v in function_dict.items():
+                                function_part[k] = v
+                        else:
+                            # If it's not a dict, just create a minimal dict with parameters
+                            function_part = {"parameters": updated_params}
+
+                        # Replace parameters with our updated ones
+                        function_part["parameters"] = updated_params
+                        mutable_formatted_tool["function"] = function_part
+                        formatted_tool = mutable_formatted_tool
             formatted_tools.append(formatted_tool)
 
         return formatted_tools
@@ -715,8 +785,17 @@ class OpenAILLM(LLM):
         response_tokens = expected_response_tokens or prompt_tokens
 
         # Calculate text costs
-        prompt_cost = prompt_tokens * costs["read_token"]
-        response_cost = response_tokens * costs["write_token"]
+        read_cost = costs.get("read_token", 0)
+        write_cost = costs.get("write_token", 0)
+
+        # Handle potential None values
+        if read_cost is None:
+            read_cost = 0
+        if write_cost is None:
+            write_cost = 0
+
+        prompt_cost = prompt_tokens * read_cost
+        response_cost = response_tokens * write_cost
 
         # Calculate image costs
         image_tokens = 0
@@ -732,8 +811,13 @@ class OpenAILLM(LLM):
                     1024, 1024, "high"
                 )  # Default to high quality 1024x1024
 
+        # Get read token cost, defaulting to 0 if None
+        image_token_cost = costs.get("read_token", 0)
+        if image_token_cost is None:
+            image_token_cost = 0
+
         image_cost = (
-            image_tokens * costs["read_token"]
+            image_tokens * image_token_cost
         )  # Images are charged at input token rate
 
         cost_breakdown = {
@@ -757,8 +841,8 @@ class OpenAILLM(LLM):
         max_tokens: int = 1000,
         temp: float = 0.0,
         top_k: int = 200,
-        tools: List[Dict[str, Any]] = None,
-        thinking_budget: int = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        thinking_budget: Optional[int] = None,
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Generate a response using OpenAI's API.
@@ -815,48 +899,52 @@ class OpenAILLM(LLM):
 
             # Prepare API call parameters based on model type and tools
             try:
-                # Make API call using the OpenAI client with different configuration
-                # based on whether it's a reasoning model and whether tools are provided
+                # Create API parameters with common values first
+                # Explicitly type annotate for mypy
+                create_params: Dict[str, Any] = {
+                    "model": self.model_name,
+                    "messages": formatted_messages,
+                }
+
+                # Add parameters based on model type
                 if self.model_name in self.REASONING_MODELS:
                     # Special handling for reasoning models (o1, o3-mini)
-                    if tools:
-                        formatted_tools = self._format_tools_for_model(tools)
-                        create_params = {
-                            "model": self.model_name,
-                            "messages": formatted_messages,
-                            "reasoning_effort": "high",
-                            # Enable enhanced reasoning
-                            "tools": formatted_tools,
-                        }
-                    else:
-                        create_params = {
-                            "model": self.model_name,
-                            "messages": formatted_messages,
-                            "reasoning_effort": "high",
-                            # Enable enhanced reasoning
-                        }
+                    create_params["reasoning_effort"] = (
+                        "high"  # Enable enhanced reasoning
+                    )
                 else:
                     # Standard handling for non-reasoning models
-                    if tools:
-                        formatted_tools = self._format_tools_for_model(tools)
-                        create_params = {
-                            "model": self.model_name,
-                            "messages": formatted_messages,
-                            "max_completion_tokens": max_tokens,
-                            "tools": formatted_tools,
-                        }
-                    else:
-                        create_params = {
-                            "model": self.model_name,
-                            "messages": formatted_messages,
-                            "max_completion_tokens": max_tokens,
-                        }
+                    create_params["max_completion_tokens"] = max_tokens
+
+                # Add tools if provided
+                if tools:
+                    formatted_tools = self._format_tools_for_model(tools)
+                    create_params["tools"] = formatted_tools
 
                 # Set temperature if not using default
                 if temp != 0.0:
                     create_params["temperature"] = temp
 
                 # Make the API call with retry logic
+                from typing import cast
+
+                from openai.types.chat import ChatCompletionMessageParam
+                from openai.types.chat.chat_completion_tool_param import (
+                    ChatCompletionToolParam,
+                )
+
+                # Cast the message type to satisfy OpenAI's API type requirements
+                if "messages" in create_params:
+                    create_params["messages"] = cast(
+                        list[ChatCompletionMessageParam], create_params["messages"]
+                    )
+
+                # Cast the tools type if present
+                if create_params.get("tools"):
+                    create_params["tools"] = cast(
+                        list[ChatCompletionToolParam], create_params["tools"]
+                    )
+
                 response = self._call_with_retry(
                     self.client.chat.completions.create, **create_params
                 )
@@ -1240,7 +1328,7 @@ class OpenAILLM(LLM):
         max_retries: int = 3,
         initial_backoff: float = 1.0,
         backoff_factor: float = 2.0,
-        retryable_errors: List[type] = None,
+        retryable_errors: Optional[List[Type[Exception]]] = None,
         **kwargs,
     ) -> Any:
         """
@@ -1284,14 +1372,22 @@ class OpenAILLM(LLM):
             try:
                 return func(*args, **kwargs)
 
-            except tuple(retryable_errors) as e:
-                # Check if this is a retryable error
-                if retry_count >= max_retries:
+            except Exception as e:
+                # Check if this is a retryable error type
+                if not any(isinstance(e, err_type) for err_type in retryable_errors):
+                    # Non-retryable error, map to appropriate exception type and raise
+                    raise self._map_openai_error(e)
+
+                # It's a retryable error type
+                retry_count += 1
+                last_exception = e
+
+                # Check if we've exhausted retries
+                if retry_count > max_retries:
                     # We've exhausted retries, map and raise the error
                     raise self._map_openai_error(e)
 
-                # It's a retryable error and we have retries left
-                retry_count += 1
+                # We have retries left, continue with backoff logic
 
                 # Get retry-after time if available (for rate limits)
                 retry_after = None
@@ -1334,9 +1430,9 @@ class OpenAILLM(LLM):
         messages: List[Dict[str, Any]],
         max_tokens: int = 1000,
         temp: float = 0.0,
-        functions: List[Callable] = None,
-        callback: Callable[[str, Dict[str, Any]], None] = None,
-    ):
+        functions: Optional[List[Callable[..., Any]]] = None,
+        callback: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+    ) -> Iterator[Tuple[str, Dict[str, Any]]]:
         """
         Stream a response from the OpenAI API, yielding chunks as they become available.
 
@@ -1364,8 +1460,8 @@ class OpenAILLM(LLM):
             )
 
         # Initialize client if needed
-        if not hasattr(self, "client"):
-            self.client = OpenAI(api_key=self.api_key, base_url=self.api_base)
+        if not hasattr(self, "client") or self.client is None:
+            self.auth()
 
         # Convert messages to OpenAI format
         formatted_messages = self._format_messages_for_model(messages)
@@ -1388,35 +1484,68 @@ class OpenAILLM(LLM):
 
         try:
             # Create a streaming request
+            from typing import Iterable, cast
+
+            from openai.types.chat import ChatCompletionMessageParam
+            from openai.types.chat.chat_completion_tool_param import (
+                ChatCompletionToolParam,
+            )
+
+            # Cast types to satisfy OpenAI's API typing requirements
+            api_messages = cast(list[ChatCompletionMessageParam], formatted_messages)
+
+            # Create API parameters dict to handle tools properly
+            api_params = {
+                "model": self.model_name,
+                "messages": api_messages,
+                "max_tokens": max_tokens,
+                "temperature": temp,
+                "stream": True,  # Enable streaming
+            }
+
+            # Only add tools if they exist
+            if tools:
+                api_params["tools"] = cast(Iterable[ChatCompletionToolParam], tools)
+
+            # Call the API directly with individual parameters to satisfy typing
             response = self.client.chat.completions.create(
                 model=self.model_name,
-                messages=formatted_messages,
+                messages=api_messages,
                 max_tokens=max_tokens,
                 temperature=temp,
-                tools=tools,
-                stream=True,  # Enable streaming
+                tools=cast(Iterable[ChatCompletionToolParam], tools) if tools else [],
+                stream=True,
             )
 
             # Initialize variables to accumulate data
             accumulated_text = ""
             accumulated_tokens = 0
-            tool_call_data = {}
+            tool_call_data: Dict[str, Any] = {}
 
             # Track tokens
             input_tokens = self._count_tokens_from_messages(formatted_messages)
 
             # Process each chunk as it arrives
             for chunk in response:
-                # Extract the content delta if available
-                if not chunk.choices:
+                # Handle typing issues with the chunk
+                from openai.types.chat import ChatCompletionChunk
+
+                # Skip if not a proper ChatCompletionChunk with choices
+                if (
+                    not isinstance(chunk, ChatCompletionChunk)
+                    or not hasattr(chunk, "choices")
+                    or not chunk.choices
+                ):
                     continue
 
+                # Now we're sure chunk is a ChatCompletionChunk with choices attribute
                 delta = chunk.choices[0].delta
 
                 # Extract content if available
                 if hasattr(delta, "content") and delta.content is not None:
-                    content = delta.content
-                    accumulated_text += content
+                    # Explicitly cast content to string
+                    content_str = str(delta.content)
+                    accumulated_text += content_str
                     accumulated_tokens += 1  # Approximate token count
 
                     # Call the callback if provided
@@ -1432,10 +1561,10 @@ class OpenAILLM(LLM):
                             "is_complete": False,
                             "tool_use": tool_call_data,
                         }
-                        callback(content, partial_usage)
+                        callback(content_str, partial_usage)
 
                     # Yield the content chunk and partial usage data
-                    yield content, {
+                    yield content_str, {
                         "event_id": event_id,
                         "model": self.model_name,
                         "read_tokens": input_tokens,
@@ -1452,21 +1581,34 @@ class OpenAILLM(LLM):
                         tool_id = tool_call.id
 
                         # Initialize tool call data if not seen before
-                        if tool_id not in tool_call_data:
+                        if tool_id and tool_id not in tool_call_data:
+                            function_name = ""
+                            if (
+                                hasattr(tool_call, "function")
+                                and tool_call.function is not None
+                                and hasattr(tool_call.function, "name")
+                            ):
+                                # Use explicit string cast to handle potential None
+                                name_attr = tool_call.function.name
+                                function_name = (
+                                    str(name_attr) if name_attr is not None else ""
+                                )
+
                             tool_call_data[tool_id] = {
                                 "id": tool_id,
-                                "name": (
-                                    tool_call.function.name
-                                    if hasattr(tool_call, "function")
-                                    else ""
-                                ),
+                                "name": function_name,
                                 "arguments": "",
                                 "type": "function",
                             }
 
                         # Append arguments
-                        if hasattr(tool_call, "function") and hasattr(
-                            tool_call.function, "arguments"
+                        if (
+                            tool_id
+                            and tool_id in tool_call_data
+                            and hasattr(tool_call, "function")
+                            and tool_call.function is not None
+                            and hasattr(tool_call.function, "arguments")
+                            and tool_call.function.arguments is not None
                         ):
                             tool_call_data[tool_id][
                                 "arguments"
@@ -1474,11 +1616,19 @@ class OpenAILLM(LLM):
 
             # Calculate costs
             model_costs = self.get_model_costs()
-            read_cost = input_tokens * model_costs["read_token"]
-            write_cost = accumulated_tokens * model_costs["write_token"]
-            image_cost = 0
+
+            # Handle possible None values with explicit defaults
+            read_token_cost = float(model_costs.get("read_token", 0.0) or 0.0)
+            write_token_cost = float(model_costs.get("write_token", 0.0) or 0.0)
+            image_token_cost = float(model_costs.get("image_token", 0.0) or 0.0)
+
+            # Calculate costs with proper type handling
+            read_cost = float(input_tokens) * read_token_cost
+            write_cost = float(accumulated_tokens) * write_token_cost
+            image_cost = 0.0
+
             if image_count > 0 and "image_token" in model_costs:
-                image_cost = image_count * model_costs["image_token"]
+                image_cost = float(image_count) * image_token_cost
 
             total_cost = read_cost + write_cost + image_cost
 
@@ -1522,12 +1672,15 @@ class OpenAILLM(LLM):
         # Simple estimation based on characters
         text = ""
         for message in messages:
-            if isinstance(message["content"], str):
-                text += message["content"]
-            elif isinstance(message["content"], list):
-                for item in message["content"]:
+            content = message.get("content", "")
+            if isinstance(content, str):
+                text += content
+            elif isinstance(content, list):
+                for item in content:
                     if isinstance(item, dict) and "text" in item:
-                        text += item["text"]
+                        item_text = item.get("text")
+                        if item_text is not None:
+                            text += str(item_text)
 
         # Rough approximation: 4 characters per token
         return len(text) // 4
@@ -1548,7 +1701,7 @@ class OpenAILLM(LLM):
         self,
         query: str,
         documents: List[str],
-        top_n: int = None,
+        top_n: Optional[int] = None,
         return_scores: bool = True,
         **kwargs,
     ) -> Dict[str, Any]:
@@ -1691,7 +1844,7 @@ class OpenAILLM(LLM):
         response_format: str = "url",
         return_usage: bool = False,
         **kwargs,
-    ) -> List[Dict[str, str]]:
+    ) -> Union[List[Dict[str, str]], Tuple[List[Dict[str, str]], Dict[str, Any]]]:
         """
         Generate images using OpenAI's DALL-E models.
 
@@ -1723,15 +1876,27 @@ class OpenAILLM(LLM):
             self.client = OpenAI(api_key=self.config["api_key"], base_url=self.api_base)
 
         try:
+            # Import the required Literal type and cast parameters
+            from typing import Literal, cast
+
+            # Cast string parameters to their expected Literal types
+            size_param = cast(
+                Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"],
+                size,
+            )
+            quality_param = cast(Literal["standard", "hd"], quality)
+            style_param = cast(Literal["vivid", "natural"], style)
+            response_format_param = cast(Literal["url", "b64_json"], response_format)
+
             # Call OpenAI's image generation API
             response = self.client.images.generate(
                 model=model,
                 prompt=prompt,
                 n=n,
-                size=size,
-                quality=quality,
-                style=style,
-                response_format=response_format,
+                size=size_param,
+                quality=quality_param,
+                style=style_param,
+                response_format=response_format_param,
                 **kwargs,
             )
 
