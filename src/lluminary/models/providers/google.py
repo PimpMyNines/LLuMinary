@@ -61,7 +61,7 @@ from google import genai
 from google.genai import types
 
 from ..base import LLM
-from ...utils import get_secret
+from ...utils.aws import get_secret
 
 # Filter out specific warnings
 # Suppress the automatic_function_calling warning

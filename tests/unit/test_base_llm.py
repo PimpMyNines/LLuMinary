@@ -2,7 +2,7 @@
 Unit tests for the base LLM class.
 """
 
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Iterator
 from unittest.mock import patch
 
 import pytest
@@ -28,6 +28,10 @@ class MockLLM(LLM):
         """Initialize the MockLLM with default test model."""
         super().__init__(model_name, **kwargs)
 
+    def _validate_provider_config(self, config: Dict[str, Any]) -> None:
+        """Mock implementation of provider config validation."""
+        pass
+
     def _format_messages_for_model(
         self, messages: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
@@ -46,8 +50,8 @@ class MockLLM(LLM):
         max_tokens: int = 1000,
         temp: float = 0.0,
         top_k: int = 200,
-        tools: List[Dict[str, Any]] = None,
-        thinking_budget: int = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        thinking_budget: Optional[int] = None,
     ) -> Tuple[str, Dict[str, Any]]:
         """Mock implementation of raw generation."""
         usage = {
@@ -61,6 +65,24 @@ class MockLLM(LLM):
             "total_cost": 0.02,
         }
         return "test response", usage
+
+    def supports_embeddings(self) -> bool:
+        """Check if the model supports embeddings."""
+        return self.model_name in self.EMBEDDING_MODELS
+
+    def supports_reranking(self) -> bool:
+        """Check if the model supports reranking."""
+        return self.model_name in self.RERANKING_MODELS
+
+    def embed(
+        self, 
+        texts: List[str], 
+        model: Optional[str] = None, 
+        batch_size: int = 100,
+        **kwargs: Any
+    ) -> Tuple[List[List[float]], Dict[str, Any]]:
+        """Mock implementation of embed that raises NotImplementedError."""
+        raise NotImplementedError("Embedding not supported for this model")
 
 
 @pytest.fixture
@@ -274,14 +296,23 @@ class MockLLMWithEmbeddings(MockLLM):
 
     EMBEDDING_MODELS = ["test-model"]
 
+    def supports_embeddings(self) -> bool:
+        """Check if the model supports embeddings."""
+        return True
+
     def embed(
-        self, texts: List[str], model: Optional[str] = None, batch_size: int = 100
+        self, 
+        texts: List[str], 
+        model: Optional[str] = None, 
+        batch_size: int = 100,
+        **kwargs: Any
     ) -> Tuple[List[List[float]], Dict[str, Any]]:
         """Mock implementation of embed."""
         embeddings = [[0.1, 0.2, 0.3] for _ in texts]
         usage = {
-            "tokens": len(" ".join(texts)) // 4,
-            "cost": 0.0001 * len(" ".join(texts)) // 4,
+            "total_tokens": len(" ".join(texts)) // 4,
+            "total_cost": 0.0001 * len(" ".join(texts)) // 4,
+            "model": model or self.model_name
         }
         return embeddings, usage
 
@@ -297,8 +328,9 @@ def test_mock_with_embeddings():
     embeddings, usage = llm.embed(texts=["test1", "test2"])
     assert len(embeddings) == 2
     assert len(embeddings[0]) == 3
-    assert "tokens" in usage
-    assert "cost" in usage
+    assert "total_tokens" in usage
+    assert "total_cost" in usage
+    assert "model" in usage
 
 
 class MockLLMWithStreaming(MockLLM):
@@ -311,9 +343,9 @@ class MockLLMWithStreaming(MockLLM):
         messages: List[Dict[str, Any]],
         max_tokens: int = 1000,
         temp: float = 0.0,
-        functions: List[Callable] = None,
-        callback: Callable[[str, Dict[str, Any]], None] = None,
-    ):
+        functions: Optional[List[Callable[..., Any]]] = None,
+        callback: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+    ) -> Iterator[Tuple[str, Dict[str, Any]]]:
         """Mock implementation of stream_generate."""
         chunks = ["This ", "is ", "a ", "test ", "response."]
 

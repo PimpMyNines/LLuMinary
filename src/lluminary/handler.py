@@ -10,7 +10,7 @@ fallback mechanisms and cost estimation.
 
 import logging
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from .exceptions import (
     LLMAuthenticationError,
@@ -20,6 +20,9 @@ from .exceptions import (
     LLMRateLimitError,
     LLMServiceUnavailableError,
     LLMValidationError,
+    LLMContentError,
+    LLMFormatError,
+    LLMToolError,
 )
 from .models import LLM
 from .models.router import get_llm_from_model
@@ -47,7 +50,7 @@ class LLMHandler:
         logger: Optional logger for recording errors and operations
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the LLM handler with configuration.
 
@@ -65,6 +68,8 @@ class LLMHandler:
         self.default_provider = self.config.get("default_provider", "openai")
         self.fallback_providers = self.config.get("fallback_providers", [])
         self.llm_instances: Dict[str, LLM] = {}
+        self._providers: Dict[str, LLM] = {}
+        self._active_providers: Set[str] = set()
 
         # Initialize logger if specified in config
         self.logger = None
@@ -676,41 +681,11 @@ class LLMHandler:
         llm = self.get_provider(provider)
         return llm.supports_image_input()
 
-    def supports_embeddings(self, provider: Optional[str] = None) -> bool:
-        """
-        Check if the provider supports embeddings.
-
-        Args:
-            provider: Optional provider name to check
-
-        Returns:
-            bool: True if the provider supports embeddings, False otherwise
-
-        Raises:
-            LLMProviderError: If the provider cannot be initialized
-        """
-        try:
-            llm = self.get_provider(provider)
-            return llm.supports_embeddings()
-        except LLMError as e:
-            if self.logger:
-                self.logger.error(
-                    f"Error checking embedding support for provider {provider or self.default_provider}: {e}"
-                )
-            # Re-raise provider errors
-            raise
-        except Exception as e:
-            # Map unexpected errors
-            error = LLMProviderError(
-                f"Error checking embedding support: {e}",
-                provider=provider or self.default_provider,
-                details={"original_error": str(e), "error_type": type(e).__name__},
-            )
-            if self.logger:
-                self.logger.error(
-                    f"Unexpected error checking embedding support: {e}", exc_info=True
-                )
-            raise error
+    def supports_embeddings(self, provider: str) -> bool:
+        """Check if provider supports embeddings."""
+        if provider not in self._providers:
+            return False
+        return getattr(self._providers[provider], "supports_embeddings", False)
 
     def get_embeddings(
         self,
@@ -1265,3 +1240,29 @@ class LLMHandler:
         return llm.check_context_fit(
             prompt=combined_text, max_response_tokens=max_response_tokens
         )
+
+    def _handle_provider_error(self, error: Exception, provider: str) -> None:
+        """Handle provider-specific errors."""
+        if isinstance(error, LLMError):
+            # Re-raise LLM errors directly
+            raise error
+        
+        # For other errors, wrap them in LLMProviderError
+        details = {"original_error": str(error)}
+        raise LLMProviderError(str(error), provider, details)
+
+    def add_provider(self, provider: str, instance: LLM) -> None:
+        """Add a provider to the handler."""
+        self._providers[provider] = instance
+        self._active_providers.add(provider)
+
+    def remove_provider(self, provider: str) -> None:
+        """Remove a provider from the handler."""
+        if provider in self._providers:
+            del self._providers[provider]
+        self._active_providers.discard(provider)
+
+    def _register_active_provider(self, provider_name: str) -> None:
+        """Register a provider as active."""
+        self._active_providers.add(provider_name)
+        return None

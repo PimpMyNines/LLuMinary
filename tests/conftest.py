@@ -140,9 +140,8 @@ def mock_env_vars():
     os.environ.update(original_env)
 
 
-@pytest.fixture
-def mock_model_clients():
-    """Patch model clients and auth to avoid actual API calls during unit tests."""
-    # This is a more focused mock implementation
-    with patch("src.lluminary.models.base.LLM.auth", return_value=None):
-        yield {"mock_fixture": True}
+@pytest.fixture(scope="session")
+def skip_auth():
+    """Skip authentication for all LLM instances."""
+    with patch("lluminary.models.base.LLM.auth", return_value=None):
+        yield

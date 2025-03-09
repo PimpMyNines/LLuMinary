@@ -204,7 +204,7 @@ def test_auth_failures():
             )
 
     # Test with client initialization failure
-    with patch("src.lluminary.utils.get_secret", return_value={"api_key": "test_key"}):
+    with patch("lluminary.utils.get_secret", return_value={"api_key": "test_key"}):
         with patch(
             "google.genai.Client", side_effect=Exception("Client initialization failed")
         ):

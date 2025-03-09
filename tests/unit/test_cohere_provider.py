@@ -92,7 +92,7 @@ def cohere_llm(mock_cohere_env):
 class TestCohereInitialization:
     """Test initialization of the CohereLLM class."""
 
-    @patch("src.lluminary.models.base.LLM.__init__")
+    @patch("lluminary.models.base.LLM.__init__")
     def test_init(self, mock_base_init):
         """Test initialization of CohereLLM."""
         # Skip calling the parent class init which would call auth()
@@ -157,7 +157,7 @@ class TestCohereInitialization:
 class TestCohereAuthentication:
     """Test authentication for the Cohere provider."""
 
-    @patch("src.lluminary.models.base.LLM.__init__")
+    @patch("lluminary.models.base.LLM.__init__")
     @patch("requests.Session")
     def test_auth(self, mock_session, mock_base_init, mock_cohere_env):
         """Test authentication with API key."""
@@ -180,7 +180,7 @@ class TestCohereAuthentication:
             {"Authorization": "Bearer test-api-key", "Content-Type": "application/json"}
         )
 
-    @patch("src.lluminary.models.base.LLM.__init__")
+    @patch("lluminary.models.base.LLM.__init__")
     @patch("requests.Session")
     def test_auth_no_api_key(self, mock_session, mock_base_init):
         """Test authentication fails when no API key is available."""
@@ -200,7 +200,7 @@ class TestCohereAuthentication:
 
             assert "API key not found" in str(exc_info.value)
 
-    @patch("src.lluminary.models.base.LLM.__init__")
+    @patch("lluminary.models.base.LLM.__init__")
     @patch("requests.Session")
     def test_auth_with_aws_secrets(self, mock_session, mock_base_init):
         """Test authentication using AWS Secrets Manager."""
@@ -278,7 +278,7 @@ class TestCohereMessageFormatting:
         assert "Tool Result" in formatted[2]["message"]
         assert "42" in formatted[2]["message"]
 
-    @patch("src.lluminary.models.providers.cohere.CohereLLM._process_image_file")
+    @patch("lluminary.models.providers.cohere.CohereLLM._process_image_file")
     def test_format_messages_with_images(self, mock_process_image, cohere_llm):
         """Test formatting messages with image attachments."""
         # Make this model support images
@@ -319,7 +319,7 @@ class TestCohereMessageFormatting:
             == "https://example.com/image.jpg"
         )
 
-    @patch("src.lluminary.models.providers.cohere.CohereLLM._process_image_file")
+    @patch("lluminary.models.providers.cohere.CohereLLM._process_image_file")
     def test_format_messages_image_error_handling(self, mock_process_image, cohere_llm):
         """Test error handling when processing images."""
         # Make this model support images
@@ -555,7 +555,7 @@ class TestCohereGeneration:
 class TestCohereFeatureSupport:
     """Test feature support detection for Cohere provider."""
 
-    @patch("src.lluminary.models.base.LLM.__init__")
+    @patch("lluminary.models.base.LLM.__init__")
     def test_supports_image_input(self, mock_base_init):
         """Test detection of image input support."""
         # Skip calling the parent class init
@@ -584,7 +584,7 @@ class TestCohereFeatureSupport:
         """Test detection of reranking support."""
         assert cohere_llm.supports_reranking() is True
 
-    @patch("src.lluminary.models.base.LLM.__init__")
+    @patch("lluminary.models.base.LLM.__init__")
     def test_get_context_window(self, mock_base_init):
         """Test getting context window size for different models."""
         # Skip calling the parent class init
@@ -643,7 +643,7 @@ class TestCohereImageProcessing:
         mock_image_open.return_value.__enter__.return_value = mock_img
 
         # Mock BytesIO and image saving
-        with patch("src.lluminary.models.providers.cohere.BytesIO") as mock_bytesio:
+        with patch("lluminary.models.providers.cohere.BytesIO") as mock_bytesio:
             mock_buffer = MagicMock()
             mock_bytesio.return_value = mock_buffer
             mock_buffer.read.return_value = b"converted-jpeg-data"
@@ -673,7 +673,7 @@ class TestCohereImageProcessing:
         mock_image_open.return_value.__enter__.return_value = mock_img
 
         # Mock BytesIO and image saving
-        with patch("src.lluminary.models.providers.cohere.BytesIO") as mock_bytesio:
+        with patch("lluminary.models.providers.cohere.BytesIO") as mock_bytesio:
             mock_buffer = MagicMock()
             mock_bytesio.return_value = mock_buffer
             mock_buffer.read.return_value = b"converted-jpeg-data"

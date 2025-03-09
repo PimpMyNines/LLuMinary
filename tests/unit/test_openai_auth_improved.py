@@ -36,7 +36,7 @@ def clean_env_vars():
 def test_auth_with_direct_api_key():
     """Test authentication with a direct API key."""
     # Mock the OpenAI client class
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Create a mock client instance
         mock_client = MagicMock()
         mock_openai.return_value = mock_client
@@ -66,7 +66,7 @@ def test_auth_with_aws_secrets():
     # Mock get_secret and OpenAI client
     with patch(
         "src.lluminary.models.providers.openai.get_secret", return_value=mock_secret
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
 
         # Create a mock client
         mock_client = MagicMock()
@@ -98,7 +98,7 @@ def test_auth_with_environment_variables():
     with patch(
         "src.lluminary.models.providers.openai.get_secret",
         side_effect=Exception("AWS Secrets Manager error"),
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
 
         # Create a mock client
         mock_client = MagicMock()
@@ -127,7 +127,7 @@ def test_auth_failure_no_credentials():
     with patch(
         "src.lluminary.models.providers.openai.get_secret",
         side_effect=Exception("AWS Secrets Manager error"),
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
 
         # Create LLM without direct API key and no env vars
         llm = OpenAILLM("gpt-4o")
@@ -146,7 +146,7 @@ def test_auth_failure_no_credentials():
 def test_auth_with_organization_id():
     """Test authentication with organization ID."""
     # Mock OpenAI client
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Create a mock client
         mock_client = MagicMock()
         mock_openai.return_value = mock_client

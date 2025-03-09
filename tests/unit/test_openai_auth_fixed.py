@@ -29,7 +29,7 @@ class TestOpenAIAuth:
         self.mock_get_secret = self.get_secret_patcher.start()
 
         # Create mock for OpenAI client
-        self.openai_patcher = patch("src.lluminary.models.providers.openai.OpenAI")
+        self.openai_patcher = patch("lluminary.models.providers.openai.OpenAI")
         self.mock_openai = self.openai_patcher.start()
 
         # Set up mock client with models attribute

@@ -29,7 +29,7 @@ def test_debug_openai_auth():
             mock_get_secret.return_value = mock_secret
 
             # Create mock for OpenAI client
-            with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+            with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
                 # Set up mock client with models attribute
                 mock_client = MagicMock()
                 mock_models = MagicMock()

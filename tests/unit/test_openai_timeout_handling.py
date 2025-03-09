@@ -90,7 +90,7 @@ class TestOpenAITimeoutHandling:
 
     def test_timeout_default_value(self):
         """Test that timeout has a reasonable default when not specified."""
-        with patch("src.lluminary.models.providers.openai.OpenAI"), patch.object(
+        with patch("lluminary.models.providers.openai.OpenAI"), patch.object(
             OpenAILLM, "auth"
         ):
             llm = OpenAILLM("gpt-4o", api_key="test-key")

@@ -35,7 +35,7 @@ def test_google_constructor():
         assert llm.client is None  # Client not initialized yet
 
 
-@patch("src.lluminary.models.providers.google.get_secret")
+@patch("lluminary.models.providers.google.get_secret")
 @patch("google.genai.Client")
 def test_google_auth(mock_client, mock_get_secret):
     """Test authentication with Google."""
@@ -56,7 +56,7 @@ def test_google_auth(mock_client, mock_get_secret):
     assert llm.client is not None
 
 
-@patch("src.lluminary.models.providers.google.get_secret")
+@patch("lluminary.models.providers.google.get_secret")
 @patch("google.genai.Client")
 def test_google_auth_thinking_model(mock_client, mock_get_secret):
     """Test authentication with a thinking model."""
@@ -75,7 +75,7 @@ def test_google_auth_thinking_model(mock_client, mock_get_secret):
     )
 
 
-@patch("src.lluminary.models.providers.google.get_secret")
+@patch("lluminary.models.providers.google.get_secret")
 def test_google_auth_error(mock_get_secret):
     """Test authentication error handling."""
     # Make get_secret raise an exception

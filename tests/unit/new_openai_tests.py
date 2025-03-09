@@ -57,7 +57,7 @@ def test_openai_initialization(openai_llm):
     assert openai_llm.validate_model("invalid-model") is False
 
 
-@patch("src.lluminary.utils.get_secret")
+@patch("lluminary.utils.get_secret")
 def test_auth_with_aws_secrets(mock_get_secret):
     """Test authentication using AWS Secrets Manager."""
     # Mock the get_secret function to return a test API key

@@ -6,12 +6,21 @@ mechanisms of the OpenAI provider in isolation.
 """
 
 import os
+from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lluminary.exceptions import AuthenticationError
+from lluminary.exceptions import LLMAuthenticationError
 from lluminary.models.providers.openai import OpenAILLM
+
+
+class MockOpenAILLM(OpenAILLM):
+    """Mock implementation of OpenAILLM for testing."""
+
+    def _validate_provider_config(self, config: Dict[str, Any]) -> None:
+        """Mock implementation of abstract method."""
+        pass
 
 
 def test_auth_with_aws_secrets():
@@ -20,13 +29,13 @@ def test_auth_with_aws_secrets():
     mock_secret = {"api_key": "test-secret-key"}
 
     with patch(
-        "src.lluminary.models.providers.openai.get_secret", return_value=mock_secret
+        "lluminary.models.providers.openai.get_secret", return_value=mock_secret
     ) as mock_get_secret, patch(
-        "src.lluminary.models.providers.openai.OpenAI"
+        "lluminary.models.providers.openai.OpenAI"
     ) as mock_openai_client:
 
         # Create instance and call auth
-        openai_llm = OpenAILLM("gpt-4o")
+        openai_llm = MockOpenAILLM("gpt-4o")
         openai_llm.auth()
 
         # Verify get_secret was called with correct parameters
@@ -47,12 +56,12 @@ def test_auth_with_environment_variables():
     """Test authentication using environment variables instead of AWS Secrets Manager."""
     # Mock environment variable and make get_secret raise an exception
     with patch.dict(os.environ, {"OPENAI_API_KEY": "env-api-key"}), patch(
-        "src.lluminary.models.providers.openai.get_secret",
+        "lluminary.models.providers.openai.get_secret",
         side_effect=Exception("Secret not found"),
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai_client:
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai_client:
 
         # Create instance and call auth - should fall back to env var
-        openai_llm = OpenAILLM("gpt-4o")
+        openai_llm = MockOpenAILLM("gpt-4o")
         openai_llm.auth()
 
         # Verify API key was properly stored from environment variable
@@ -65,13 +74,13 @@ def test_auth_with_environment_variables():
 def test_auth_with_config_api_key():
     """Test authentication using API key provided in config."""
     with patch(
-        "src.lluminary.models.providers.openai.get_secret"
+        "lluminary.models.providers.openai.get_secret"
     ) as mock_get_secret, patch(
-        "src.lluminary.models.providers.openai.OpenAI"
+        "lluminary.models.providers.openai.OpenAI"
     ) as mock_openai_client:
 
         # Create instance with API key in config
-        openai_llm = OpenAILLM("gpt-4o", config={"api_key": "config-api-key"})
+        openai_llm = MockOpenAILLM("gpt-4o", config={"api_key": "config-api-key"})
         openai_llm.auth()
 
         # Verify get_secret was not called - should use config directly
@@ -90,10 +99,10 @@ def test_auth_precedence_order():
 
     # Test 1: All methods available - should use config
     with patch.dict(os.environ, {"OPENAI_API_KEY": "env-api-key"}), patch(
-        "src.lluminary.models.providers.openai.get_secret", return_value=mock_secret
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai_client:
+        "lluminary.models.providers.openai.get_secret", return_value=mock_secret
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai_client:
 
-        openai_llm = OpenAILLM("gpt-4o", config={"api_key": "config-api-key"})
+        openai_llm = MockOpenAILLM("gpt-4o", config={"api_key": "config-api-key"})
         openai_llm.auth()
 
         # Should use config API key
@@ -104,10 +113,10 @@ def test_auth_precedence_order():
 
     # Test 2: No config, should use AWS secrets over env var
     with patch.dict(os.environ, {"OPENAI_API_KEY": "env-api-key"}), patch(
-        "src.lluminary.models.providers.openai.get_secret", return_value=mock_secret
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai_client:
+        "lluminary.models.providers.openai.get_secret", return_value=mock_secret
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai_client:
 
-        openai_llm = OpenAILLM("gpt-4o")  # No config API key
+        openai_llm = MockOpenAILLM("gpt-4o")  # No config API key
         openai_llm.auth()
 
         # Should use AWS secrets API key
@@ -118,11 +127,11 @@ def test_auth_precedence_order():
 
     # Test 3: No config, AWS fails, should use env var
     with patch.dict(os.environ, {"OPENAI_API_KEY": "env-api-key"}), patch(
-        "src.lluminary.models.providers.openai.get_secret",
+        "lluminary.models.providers.openai.get_secret",
         side_effect=Exception("Secret not found"),
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai_client:
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai_client:
 
-        openai_llm = OpenAILLM("gpt-4o")  # No config API key
+        openai_llm = MockOpenAILLM("gpt-4o")  # No config API key
         openai_llm.auth()
 
         # Should use environment API key
@@ -135,10 +144,10 @@ def test_auth_with_organization():
 
     # Test with organization in config
     with patch(
-        "src.lluminary.models.providers.openai.get_secret", return_value=mock_secret
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai_client:
+        "lluminary.models.providers.openai.get_secret", return_value=mock_secret
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai_client:
 
-        openai_llm = OpenAILLM("gpt-4o", config={"organization": "test-org"})
+        openai_llm = MockOpenAILLM("gpt-4o", config={"organization": "test-org"})
         openai_llm.auth()
 
         # Verify OpenAI client was initialized with organization
@@ -153,10 +162,10 @@ def test_auth_with_base_url():
 
     # Test with base_url in config
     with patch(
-        "src.lluminary.models.providers.openai.get_secret", return_value=mock_secret
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai_client:
+        "lluminary.models.providers.openai.get_secret", return_value=mock_secret
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai_client:
 
-        openai_llm = OpenAILLM(
+        openai_llm = MockOpenAILLM(
             "gpt-4o", config={"base_url": "https://custom-openai-api.example.com"}
         )
         openai_llm.auth()
@@ -180,14 +189,14 @@ def test_auth_failure_handling():
     for error_msg in error_messages:
         # Mock get_secret to raise exception and ensure no env var fallback
         with patch(
-            "src.lluminary.models.providers.openai.get_secret",
+            "lluminary.models.providers.openai.get_secret",
             side_effect=Exception(error_msg),
         ), patch.dict(os.environ, {}, clear=True), patch(
-            "src.lluminary.models.providers.openai.OpenAI"
+            "lluminary.models.providers.openai.OpenAI"
         ):
 
             # Create instance
-            openai_llm = OpenAILLM("gpt-4o")
+            openai_llm = MockOpenAILLM("gpt-4o")
 
             # Call auth and expect exception
             with pytest.raises(Exception) as excinfo:
@@ -202,9 +211,9 @@ def test_auth_failure_handling():
 def test_auth_credential_verification():
     """Test that credentials are verified with a test API call."""
     with patch(
-        "src.lluminary.models.providers.openai.get_secret",
+        "lluminary.models.providers.openai.get_secret",
         return_value={"api_key": "test-secret-key"},
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai_client:
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai_client:
 
         # Set up mock client to return models list
         mock_client = MagicMock()
@@ -214,7 +223,7 @@ def test_auth_credential_verification():
         mock_openai_client.return_value = mock_client
 
         # Create instance and call auth
-        openai_llm = OpenAILLM("gpt-4o")
+        openai_llm = MockOpenAILLM("gpt-4o")
         openai_llm.auth()
 
         # Verify models.list was called to test credentials
@@ -224,9 +233,9 @@ def test_auth_credential_verification():
 def test_auth_credential_verification_failure():
     """Test handling of credential verification failures."""
     with patch(
-        "src.lluminary.models.providers.openai.get_secret",
+        "lluminary.models.providers.openai.get_secret",
         return_value={"api_key": "invalid-api-key"},
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai_client:
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai_client:
 
         # Set up mock client to raise an exception during verification
         mock_client = MagicMock()
@@ -236,10 +245,10 @@ def test_auth_credential_verification_failure():
         mock_openai_client.return_value = mock_client
 
         # Create instance
-        openai_llm = OpenAILLM("gpt-4o")
+        openai_llm = MockOpenAILLM("gpt-4o")
 
         # Call auth and expect exception
-        with pytest.raises(AuthenticationError) as excinfo:
+        with pytest.raises(LLMAuthenticationError) as excinfo:
             openai_llm.auth()
 
         # Verify error message

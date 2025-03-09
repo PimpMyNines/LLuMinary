@@ -38,7 +38,7 @@ def test_basic_initialization():
     # Skip test for now
     pytest.skip("Skip Google minimal tests")
 
-    with patch("src.lluminary.models.utils.get_secret") as mock_get_secret:
+    with patch("lluminary.models.utils.get_secret") as mock_get_secret:
         mock_get_secret.return_value = {"api_key": "test-key"}
 
         llm = GoogleLLM("gemini-2.0-flash")
@@ -77,7 +77,7 @@ def test_auth_with_mock(mock_genai):
     # Skip test for now
     pytest.skip("Skip Google minimal tests")
 
-    with patch("src.lluminary.models.utils.get_secret") as mock_get_secret:
+    with patch("lluminary.models.utils.get_secret") as mock_get_secret:
         mock_get_secret.return_value = {"api_key": "test-key"}
 
         llm = GoogleLLM("gemini-2.0-flash")
@@ -93,7 +93,7 @@ def test_generate_basic(mock_genai):
     # Skip test for now
     pytest.skip("Skip Google minimal tests")
 
-    with patch("src.lluminary.models.utils.get_secret") as mock_get_secret:
+    with patch("lluminary.models.utils.get_secret") as mock_get_secret:
         mock_get_secret.return_value = {"api_key": "test-key"}
 
         llm = GoogleLLM("gemini-2.0-flash")

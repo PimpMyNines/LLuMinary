@@ -12,7 +12,7 @@ from lluminary.cli.classify import create, list_configs, test, validate
 @pytest.fixture
 def mock_classification_library():
     """Fixture for mocking ClassificationLibrary."""
-    with patch("src.lluminary.cli.classify.ClassificationLibrary") as mock:
+    with patch("lluminary.cli.classify.ClassificationLibrary") as mock:
         instance = mock.return_value
         instance.list_configs.return_value = [
             {
@@ -28,7 +28,7 @@ def mock_classification_library():
 @pytest.fixture
 def mock_classification_config():
     """Fixture for mocking ClassificationConfig."""
-    with patch("src.lluminary.cli.classify.ClassificationConfig") as mock:
+    with patch("lluminary.cli.classify.ClassificationConfig") as mock:
         instance = mock.return_value
         instance.name = "test_config"
         instance.categories = {
@@ -53,7 +53,7 @@ def mock_classification_config():
 @pytest.fixture
 def mock_llm():
     """Fixture for mocking LLM."""
-    with patch("src.lluminary.cli.classify.get_llm_from_model") as mock:
+    with patch("lluminary.cli.classify.get_llm_from_model") as mock:
         instance = mock.return_value
         instance.classify_from_file.return_value = (
             ["category1"],

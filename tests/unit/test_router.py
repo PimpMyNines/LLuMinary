@@ -2,7 +2,7 @@
 Unit tests for the router module.
 """
 
-from typing import ClassVar, Dict, List
+from typing import ClassVar, Dict, List, Any, Optional, Tuple
 from unittest.mock import patch
 
 import pytest
@@ -36,7 +36,7 @@ class MockLLM(LLM):
         "test-model-2": 4096,
     }
 
-    COST_PER_MODEL: ClassVar[Dict[str, Dict[str, float]]] = {
+    COST_PER_MODEL: ClassVar[Dict[str, Dict[str, Optional[float]]]] = {
         "test-model": {"read_token": 0.001, "write_token": 0.002, "image_cost": 0.01},
         "test-model-1": {"read_token": 0.001, "write_token": 0.002, "image_cost": 0.01},
         "test-model-2": {"read_token": 0.001, "write_token": 0.002, "image_cost": 0.01},
@@ -44,6 +44,10 @@ class MockLLM(LLM):
 
     def __init__(self, model_name):
         super().__init__(model_name)
+
+    def _validate_provider_config(self, config: Dict[str, Any]) -> None:
+        """Mock implementation of provider config validation."""
+        pass
 
     def _format_messages_for_model(self, messages):
         """Mock implementation of message formatting."""
@@ -55,15 +59,15 @@ class MockLLM(LLM):
 
     def _raw_generate(
         self,
-        event_id,
-        system_prompt,
-        messages,
-        max_tokens=1000,
-        temp=0.0,
-        top_k=200,
-        tools=None,
-        thinking_budget=None,
-    ):
+        event_id: str,
+        system_prompt: str,
+        messages: List[Dict[str, Any]],
+        max_tokens: int = 1000,
+        temp: float = 0.0,
+        top_k: int = 200,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        thinking_budget: Optional[int] = None,
+    ) -> Tuple[str, Dict[str, Any]]:
         """Mock implementation of generation."""
         return "test response", {
             "read_tokens": 10,
@@ -73,6 +77,14 @@ class MockLLM(LLM):
             "write_cost": 0.01,
             "total_cost": 0.02,
         }
+        
+    def supports_embeddings(self) -> bool:
+        """Check if the model supports embeddings."""
+        return self.model_name in self.EMBEDDING_MODELS
+        
+    def supports_reranking(self) -> bool:
+        """Check if the model supports reranking."""
+        return self.model_name in self.RERANKING_MODELS
 
 
 def test_register_provider():
@@ -96,9 +108,13 @@ def test_register_provider():
 
 def test_register_provider_invalid():
     """Test registering an invalid provider."""
-    # Try to register a non-LLM class
+    # Should raise TypeError for non-LLM class
+    class NotAnLLM:
+        pass
+        
     with pytest.raises(TypeError):
-        register_provider("invalid", dict)
+        # Type: ignore to suppress mypy error since we're intentionally testing with an invalid type
+        register_provider("invalid", NotAnLLM)  # type: ignore
 
 
 def test_register_model():
@@ -129,8 +145,14 @@ def test_register_model():
 
 def test_register_model_invalid_provider():
     """Test registering a model with an invalid provider."""
-    with pytest.raises(ValueError):
-        register_model("custom-model", "nonexistent_provider", "test-model")
+    try:
+        with pytest.raises(ValueError):
+            print("Calling register_model with nonexistent_provider")
+            register_model("custom-model", "nonexistent_provider", "test-model")
+            print("This line should not be reached")
+    except Exception as e:
+        print(f"Exception: {e}")
+        raise
 
 
 def test_get_llm_from_registered_model():
@@ -147,7 +169,7 @@ def test_get_llm_from_registered_model():
         register_model("custom-model", "mock_provider", "test-model")
 
         # Get LLM from the registered model
-        with patch("src.lluminary.models.router._load_default_providers"):
+        with patch("lluminary.models.router._load_default_providers"):
             llm = get_llm_from_model("custom-model")
 
             # Check if correct LLM was returned

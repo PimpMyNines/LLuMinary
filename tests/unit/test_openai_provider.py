@@ -117,7 +117,7 @@ def test_openai_initialization(openai_llm):
     assert "not supported" in str(excinfo.value)
 
 
-@patch("src.lluminary.utils.get_secret")
+@patch("lluminary.utils.get_secret")
 def test_auth_with_aws_secrets(mock_get_secret):
     """Test authentication using AWS Secrets Manager."""
     # Mock the get_secret function to return a test API key
@@ -149,7 +149,7 @@ def test_auth_with_aws_secrets(mock_get_secret):
         assert llm.client == mock_client
 
 
-@patch("src.lluminary.utils.get_secret")
+@patch("lluminary.utils.get_secret")
 def test_auth_with_direct_api_key(mock_get_secret):
     """Test authentication using directly provided API key."""
     # Create a new LLM instance with a direct API key and mocked OpenAI client
@@ -173,7 +173,7 @@ def test_auth_with_direct_api_key(mock_get_secret):
         mock_openai.assert_called_once_with(api_key="direct-api-key")
 
 
-@patch("src.lluminary.utils.get_secret")
+@patch("lluminary.utils.get_secret")
 def test_auth_error_handling(mock_get_secret):
     """Test error handling during authentication."""
     # Test case 1: AWS Secrets Manager error

@@ -91,6 +91,7 @@ from ...exceptions import (
     LLMRateLimitError,
     LLMServiceUnavailableError,
     LLMToolError,
+    LLMValidationError,
 )
 from ...utils.aws import get_secret
 from ..base import LLM
@@ -222,16 +223,24 @@ class OpenAILLM(LLM):
             model_name: Name of the OpenAI model to use
             **kwargs: Additional arguments passed to the base LLM class
         """
-        super().__init__(model_name, **kwargs)
+        # Set these attributes before calling super().__init__ which calls auth()
         self.api_base = kwargs.get("api_base", None)
         self.timeout = kwargs.get("timeout", 60)
-
+        
         # Store embedding costs for different models
         self.embedding_costs = {
             "text-embedding-ada-002": 0.0001,  # $0.10 per million tokens
             "text-embedding-3-small": 0.00002,  # $0.02 per million tokens
             "text-embedding-3-large": 0.00013,  # $0.13 per million tokens
         }
+        
+        # Call super().__init__ after setting required attributes
+        super().__init__(model_name, **kwargs)
+
+    @property
+    def provider_name(self) -> str:
+        """Get the provider name."""
+        return "openai"
 
     def auth(self) -> None:
         """
@@ -1945,3 +1954,37 @@ class OpenAILLM(LLM):
 
         except Exception as e:
             raise Exception(f"Error generating image with OpenAI: {e!s}")
+
+    def _validate_provider_config(self, config: Dict[str, Any]) -> None:
+        """
+        Validate OpenAI-specific configuration.
+
+        Args:
+            config: Provider configuration dictionary
+
+        Raises:
+            LLMValidationError: If configuration is invalid
+        """
+        # Check for required API key
+        if "api_key" not in config and "use_aws_secrets" not in config:
+            raise LLMValidationError(
+                "Either 'api_key' or 'use_aws_secrets' must be provided for OpenAI provider",
+                details={"missing_fields": ["api_key or use_aws_secrets"]}
+            )
+            
+        # Validate model
+        if self.model_name not in self.SUPPORTED_MODELS:
+            raise LLMValidationError(
+                f"Unsupported model: {self.model_name}",
+                details={
+                    "model": self.model_name,
+                    "supported_models": self.SUPPORTED_MODELS
+                }
+            )
+            
+        # If timeout is specified, ensure it's a number
+        if "timeout" in config and not isinstance(config["timeout"], (int, float)):
+            raise LLMValidationError(
+                f"Invalid timeout: {config['timeout']}",
+                details={"timeout": config["timeout"]}
+            )
