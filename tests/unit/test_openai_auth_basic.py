@@ -18,7 +18,7 @@ from lluminary.models.providers.openai import OpenAILLM
 def test_auth_with_direct_api_key():
     """Test authentication with directly provided API key."""
     # Mock the OpenAI client
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Mock the client instance and its methods
         client_instance = MagicMock()
         mock_openai.return_value = client_instance
@@ -114,7 +114,7 @@ def test_auth_failure_no_key():
 def test_auth_with_custom_base_url():
     """Test authentication with custom API base URL."""
     # Mock OpenAI client
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Mock client instance
         client_instance = MagicMock()
         mock_openai.return_value = client_instance

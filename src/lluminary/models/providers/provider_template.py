@@ -10,10 +10,52 @@ their capabilities, supported models, and implement the required methods.
 import base64
 import json
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union, Iterator
 
-from ..base import LLM
 from ...exceptions import LLMMistake, LLMValidationError
+from ..base import LLM
+
+
+def validate_messages(messages: List[Dict[str, Any]]) -> None:
+    """
+    Validate messages format.
+
+    Args:
+        messages: List of message dictionaries to validate
+
+    Raises:
+        LLMValidationError: If messages are not properly formatted
+    """
+    if not isinstance(messages, list):
+        raise LLMValidationError(
+            "Messages must be a list",
+            details={"provided_type": type(messages).__name__},
+        )
+
+    if not messages:
+        raise LLMValidationError(
+            "Messages list cannot be empty",
+            details={"reason": "At least one message is required"},
+        )
+
+    for i, msg in enumerate(messages):
+        if not isinstance(msg, dict):
+            raise LLMValidationError(
+                f"Message at index {i} must be a dictionary",
+                details={"index": i, "provided_type": type(msg).__name__},
+            )
+
+        if "message_type" not in msg:
+            raise LLMValidationError(
+                f"Message at index {i} missing required 'message_type' field",
+                details={"index": i, "fields_present": list(msg.keys())},
+            )
+
+        if "message" not in msg:
+            raise LLMValidationError(
+                f"Message at index {i} missing required 'message' field",
+                details={"index": i, "fields_present": list(msg.keys())},
+            )
 
 
 class ProviderNameLLM(LLM):
@@ -43,13 +85,13 @@ class ProviderNameLLM(LLM):
     """
 
     # Define context window sizes for this provider's models
-    CONTEXT_WINDOW = {
+    CONTEXT_WINDOW: ClassVar[Dict[str, int]] = {
         "provider-model-1": 16000,  # Example model's context window
         "provider-model-2": 32000,  # Example model's context window
     }
 
     # Define token costs for this provider's models
-    COST_PER_MODEL = {
+    COST_PER_MODEL: ClassVar[Dict[str, Dict[str, Union[float, None]]]] = {
         "provider-model-1": {
             "read_token": 0.00001,  # Example cost per input token
             "write_token": 0.00003,  # Example cost per output token
@@ -63,24 +105,24 @@ class ProviderNameLLM(LLM):
     }
 
     # List of supported models (used for validation)
-    SUPPORTED_MODELS = [
+    SUPPORTED_MODELS: ClassVar[List[str]] = [
         "provider-model-1",
         "provider-model-2",
     ]
 
     # List of models supporting "thinking" capability
-    THINKING_MODELS = [
+    THINKING_MODELS: ClassVar[List[str]] = [
         "provider-model-2",  # Only if this model supports thinking
     ]
 
     # Define embedding dimensions for models
-    EMBEDDING_DIMENSIONS = {
+    EMBEDDING_DIMENSIONS: ClassVar[Dict[str, int]] = {
         "provider-model-1": 1536,
         "provider-model-2": 3072,
     }
 
     # Define models that support reranking
-    RERANKING_MODELS = [
+    RERANKING_MODELS: ClassVar[List[str]] = [
         "provider-model-2",
     ]
 
@@ -89,7 +131,7 @@ class ProviderNameLLM(LLM):
         super().__init__(model_name, **kwargs)
 
         # Get other configuration options
-        self.api_base = kwargs.get("api_base", None)
+        self.api_base = kwargs.get("api_base")
         self.timeout = kwargs.get("timeout", 30)
 
     def auth(self) -> None:
@@ -116,7 +158,13 @@ class ProviderNameLLM(LLM):
             try:
                 from ...utils.aws import get_secret
 
-                self.api_key = get_secret("provider_api_key")
+                secret_value = get_secret("provider_api_key")
+                if isinstance(secret_value, dict) and "api_key" in secret_value:
+                    self.api_key = str(secret_value["api_key"])
+                else:
+                    self.api_key = (
+                        str(secret_value) if secret_value is not None else None
+                    )
             except Exception as e:
                 # Log error but don't raise yet
                 print(f"Error accessing AWS Secrets Manager: {e!s}")
@@ -155,7 +203,7 @@ class ProviderNameLLM(LLM):
         # Example: self.client = provider_sdk.Client(api_key=self.api_key)
 
     def _format_messages_for_model(
-            self, messages: List[Dict[str, Any]]
+        self, messages: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """
         Convert standard message format to provider-specific format.
@@ -204,15 +252,15 @@ class ProviderNameLLM(LLM):
         return formatted_messages
 
     def _raw_generate(
-            self,
-            event_id: str,
-            system_prompt: str,
-            messages: List[Dict[str, Any]],
-            max_tokens: int = 1000,
-            temp: float = 0.0,
-            top_k: int = 200,
-            tools: List[Dict[str, Any]] = None,
-            thinking_budget: int = None,
+        self,
+        event_id: str,
+        system_prompt: str,
+        messages: List[Dict[str, Any]],
+        max_tokens: int = 1000,
+        temp: float = 0.0,
+        top_k: int = 200,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        thinking_budget: Optional[int] = None,
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Generate a response from the provider's LLM.
@@ -257,7 +305,7 @@ class ProviderNameLLM(LLM):
             )
 
         # Format messages for the provider API
-        formatted_messages = self._format_messages_for_model(messages)
+        _ = self._format_messages_for_model(messages)
 
         # Handle system prompt (provider specific)
         # Some providers have a system message type, others prepend to the messages
@@ -299,7 +347,7 @@ class ProviderNameLLM(LLM):
             # )
 
             # For template purposes, we'll simulate a response
-            response = {
+            response: Dict[str, Any] = {
                 "choices": [
                     {"message": {"content": "This is a placeholder response."}}
                 ],
@@ -320,10 +368,14 @@ class ProviderNameLLM(LLM):
 
             # Calculate costs
             model_costs = self.get_model_costs()
-            read_cost = read_tokens * model_costs["read_token"]
-            write_cost = write_tokens * model_costs["write_token"]
-            image_cost = 0
-            if image_count > 0 and "image_token" in model_costs:
+            read_cost = read_tokens * (model_costs["read_token"] or 0.0)
+            write_cost = write_tokens * (model_costs["write_token"] or 0.0)
+            image_cost = 0.0
+            if (
+                image_count > 0
+                and "image_token" in model_costs
+                and model_costs["image_token"] is not None
+            ):
                 image_cost = image_count * model_costs["image_token"]
 
             total_cost = read_cost + write_cost + image_cost
@@ -406,59 +458,82 @@ class ProviderNameLLM(LLM):
         Get the context window size for the current model.
 
         Args:
-            default: Default context window size if the model is not found
+            default: Default context window size if not defined
 
         Returns:
             Context window size in tokens
         """
         return self.CONTEXT_WINDOW.get(self.model_name, default)
 
-    def count_tokens_from_messages(self, messages):
+    def get_model_costs(self) -> Dict[str, Union[float, None]]:
+        """
+        Get the token costs for the current model.
+
+        Returns:
+            Dictionary with cost per token type
+        """
+        default_costs: Dict[str, Union[float, None]] = {
+            "read_token": 0.00001,
+            "write_token": 0.00002,
+            "image_token": 0.00004,
+        }
+
+        try:
+            return self.COST_PER_MODEL[self.model_name]
+        except KeyError:
+            return default_costs
+
+    def count_tokens_from_messages(self, messages: List[Dict[str, Any]]) -> int:
         """
         Count tokens in a list of messages.
 
         Args:
-            messages: List of message dictionaries
+            messages: List of messages to count tokens for
 
         Returns:
-            Total token count
+            int: Total token count
         """
-        # In a real implementation, this would use a tokenizer
+        # This is a placeholder - in a real implementation, use a tokenizer
+        # Example:
+        # from transformers import AutoTokenizer
+        # tokenizer = AutoTokenizer.from_pretrained("gpt2")
+        # token_count = 0
+        # for message in messages:
+        #     token_count += len(tokenizer.encode(message["message"]))
+        # return token_count
+
+        # For template purposes, use a simple approximation
         token_count = 0
         for message in messages:
-            # Count based on message content length as a simple approximation
-            content = message.get("message", "")
-            token_count += len(content.split())
-
-            # Add token count for images if present
-            token_count += len(message.get("image_paths", [])) * 100
-            token_count += len(message.get("image_urls", [])) * 100
-
+            # Count ~4 chars per token as a rough estimate
+            token_count += len(str(message.get("message", ""))) // 4
         return token_count
 
-    def estimate_tokens(self, messages):
+    def estimate_tokens(self, text: str) -> int:
         """
         Estimate token count before API call.
 
         Args:
-            messages: List of message dictionaries
+            text: Text to estimate tokens for
 
         Returns:
-            Estimated token count
+            int: Estimated token count
         """
-        # Simple implementation - in practice, this would use a more accurate method
-        return self.count_tokens_from_messages(messages)
+        # Rough estimate: ~4 characters per token
+        return len(text) // 4 + 1
 
-    def get_actual_tokens(self, messages, api_response):
+    def get_actual_tokens(
+        self, messages: List[Dict[str, Any]], api_response: Dict[str, Any]
+    ) -> Dict[str, int]:
         """
         Get actual token count from API response.
 
         Args:
-            messages: Original messages
+            messages: List of messages sent to the API
             api_response: Response from the API
 
         Returns:
-            Token usage dictionary
+            Dict[str, int]: Dictionary with token usage information
         """
         usage = api_response.get("usage", {})
         return {
@@ -467,32 +542,54 @@ class ProviderNameLLM(LLM):
             "total_tokens": usage.get("total_tokens", 0),
         }
 
-    def embed(self, texts, **kwargs):
+    def embed(
+        self,
+        texts: List[str],
+        model: Optional[str] = None,
+        batch_size: int = 100,
+        **kwargs: Any,
+    ) -> Tuple[List[List[float]], Dict[str, Any]]:
         """
         Generate embeddings for the provided texts.
 
         Args:
-            texts: List of texts to embed
-            **kwargs: Additional parameters
+            texts (List[str]): List of texts to embed
+            model (Optional[str]): Specific embedding model to use
+            batch_size (int): Number of texts to process in each batch
+            **kwargs (Any): Additional provider-specific parameters
 
         Returns:
-            Tuple of (embeddings, usage statistics)
+            Tuple[List[List[float]], Dict[str, Any]]: Tuple containing:
+                - List of embedding vectors (one per input text)
+                - Usage statistics including tokens, cost, and dimensions
         """
         try:
             if not texts or not all(isinstance(t, str) for t in texts):
                 raise ValueError("Texts must be a non-empty list of strings")
 
-            # This is a placeholder - in a real implementation, call the API
-            # Example:
-            # response = self.client.embeddings.create(
-            #     model=self.model_name,
-            #     input=texts
-            # )
+            # If no texts to embed, return empty results
+            if not texts:
+                return [], {"total_tokens": 0, "total_cost": 0.0, "dimensions": 0}
+
+            # Use the specified model or default
+            embedding_model = model or self.model_name
+
+            # Validate that we have a valid embedding model
+            if not hasattr(self, "EMBEDDING_DIMENSIONS"):
+                raise ValueError(
+                    f"Embedding dimensions not defined for {self.__class__.__name__}"
+                )
+
+            dimension = self.EMBEDDING_DIMENSIONS.get(embedding_model, 1536)
+            if dimension is None:
+                raise ValueError(f"Model {embedding_model} does not support embeddings")
+
+            # Create batches to avoid rate limits and large requests
+            _ = [texts[i : i + batch_size] for i in range(0, len(texts), batch_size)]
 
             # For template purposes, simulate embeddings
-            dimension = self.EMBEDDING_DIMENSIONS.get(self.model_name, 1536)
             embeddings = []
-            for text in texts:
+            for _ in texts:
                 # Generate a simple deterministic embedding
                 embedding = [0.1 * (i % 10) for i in range(dimension)]
                 embeddings.append(embedding)
@@ -505,6 +602,7 @@ class ProviderNameLLM(LLM):
                 "total_tokens": total_tokens,
                 "total_cost": total_cost,
                 "dimensions": dimension,
+                "model": embedding_model,
             }
 
         except Exception as e:
@@ -518,84 +616,60 @@ class ProviderNameLLM(LLM):
                 },
             )
 
-    def rerank(self, query, documents, **kwargs):
+    def rerank(
+        self,
+        query: str,
+        documents: List[str],
+        top_n: Optional[int] = None,
+        return_scores: bool = False,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
         """
-        Rerank documents based on relevance to the query.
+        Rerank documents based on relevance to query.
 
         Args:
             query: The query string
             documents: List of documents to rerank
+            top_n: Optional number of top results to return
+            return_scores: Whether to return relevance scores
             **kwargs: Additional parameters (e.g., top_n)
 
         Returns:
-            Tuple of (ranked results, usage statistics)
+            Dict[str, Any]: Dictionary containing:
+                - results: List of reranked documents or document/score pairs
+                - usage: Usage statistics
         """
         try:
-            # Check if model supports reranking
-            if self.model_name not in self.RERANKING_MODELS:
-                raise ValueError(
-                    f"Model {self.model_name} does not support reranking")
-
             # Validate inputs
-            if not isinstance(query, str) or not query:
-                raise ValueError("Query must be a non-empty string")
-
-            if not documents or not all(
-                    isinstance(doc, str) for doc in documents):
-                raise ValueError(
-                    "Documents must be a non-empty list of strings")
+            if not query:
+                raise LLMValidationError("Query cannot be empty")
+            if not documents:
+                raise LLMValidationError("Documents list cannot be empty")
 
             # Get optional top_n parameter
-            top_n = kwargs.get("top_n", len(documents))
+            top_n = top_n or len(documents)
 
             # This is a placeholder - in a real implementation, call the API
-            # Example:
-            # response = self.client.rerank(
-            #     model=self.model_name,
-            #     query=query,
-            #     documents=documents,
-            #     top_n=top_n
-            # )
-
-            # For template purposes, simulate reranking
-            # Mock relevance scores (in a real implementation, this would be from the API)
-            scores = []
-            for i, doc in enumerate(documents):
-                # Simple score based on word overlap
-                query_words = set(query.lower().split())
-                doc_words = set(doc.lower().split())
-                overlap = len(query_words.intersection(doc_words))
-
-                # Calculate a score between 0 and 1
-                score = overlap / max(len(query_words), 1)
-                scores.append((i, score))
-
-            # Sort by score descending
-            scores.sort(key=lambda x: x[1], reverse=True)
-
-            # Return top results
+            # For now, just return the documents in the same order with dummy scores
             results = []
-            for i, (doc_idx, score) in enumerate(scores[:top_n]):
-                results.append(
-                    {
-                        "document": documents[doc_idx],
-                        "index": doc_idx,
-                        "relevance_score": score,
-                        "rank": i + 1,
-                    }
-                )
+            for i, doc in enumerate(documents[:top_n]):
+                if return_scores:
+                    results.append({"document": doc, "score": 1.0 - (i * 0.1)})
+                else:
+                    results.append({"document": doc})
 
-            # Calculate token usage
+            # Calculate token usage (placeholder)
             total_tokens = len(query.split()) + sum(
                 len(doc.split()) for doc in documents
             )
 
             # Return results and usage stats
-            return results, {
-                "total_tokens": total_tokens,
-                "total_cost": 0.00002 * total_tokens,
-                "documents_processed": len(documents),
-                "documents_returned": len(results),
+            return {
+                "results": results,
+                "usage": {
+                    "total_tokens": total_tokens,
+                    "total_cost": 0.00002 * total_tokens,
+                },
             }
 
         except Exception as e:
@@ -607,8 +681,7 @@ class ProviderNameLLM(LLM):
                     provider=self.__class__.__name__,
                     details={
                         "original_error": str(e),
-                        "query_length": len(query) if isinstance(query,
-                                                                 str) else 0,
+                        "query_length": len(query) if isinstance(query, str) else 0,
                         "documents_count": len(documents) if documents else 0,
                     },
                 )
@@ -633,8 +706,7 @@ class ProviderNameLLM(LLM):
             }
         return tool
 
-    def _parse_tool_response(self, provider_response: Dict[str, Any]) -> Dict[
-        str, Any]:
+    def _parse_tool_response(self, provider_response: Dict[str, Any]) -> Dict[str, Any]:
         """
         Parse provider-specific tool response to standard format.
 
@@ -696,24 +768,24 @@ class ProviderNameLLM(LLM):
         return (width * height) // 1024
 
     def _stream_generate(
-            self,
-            event_id: str,
-            system_prompt: str,
-            messages: List[Dict[str, Any]],
-            max_tokens: int = 1000,
-            temp: float = 0.0,
-            top_k: int = 200,
-            tools: List[Dict[str, Any]] = None,
-            thinking_budget: int = None,
-    ):
+        self,
+        event_id: str,
+        system_prompt: str,
+        messages: List[Dict[str, Any]],
+        max_tokens: int = 1000,
+        temp: float = 0.0,
+        top_k: int = 200,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        thinking_budget: Optional[int] = None,
+    ) -> Iterator[Tuple[str, Dict[str, Any]]]:
         """
-        Generate a streaming response from the provider's LLM.
+        Stream generate responses from the provider's LLM.
 
         Yields:
             Tuples of (chunk, usage_stats)
         """
         # Format messages for the provider API
-        formatted_messages = self._format_messages_for_model(messages)
+        _ = self._format_messages_for_model(messages)
 
         # This is a placeholder - in a real implementation, call the streaming API
         # Example:
@@ -753,6 +825,7 @@ class ProviderNameLLM(LLM):
         final_usage["write_tokens"] = 5
         final_usage["is_complete"] = True
         yield "!", final_usage
+
 
 # Uncomment to register this provider
 # Register your provider for automatic discovery

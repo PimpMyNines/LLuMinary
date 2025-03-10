@@ -103,7 +103,7 @@ def test_validate_command_invalid():
         assert "✗ Configuration is invalid" in result.output
 
 
-@patch("src.lluminary.cli.classify.get_llm_from_model")
+@patch("lluminary.cli.classify.get_llm_from_model")
 def test_test_command(mock_get_llm, temp_config_dir):
     """Test the test command."""
     # Setup mock LLM
@@ -142,7 +142,7 @@ def test_test_command(mock_get_llm, temp_config_dir):
     assert args[1][0]["message"] == "Test message"
 
 
-@patch("src.lluminary.cli.classify.get_llm_from_model")
+@patch("lluminary.cli.classify.get_llm_from_model")
 def test_test_command_error(mock_get_llm):
     """Test the test command error handling."""
     # Setup mock LLM with error

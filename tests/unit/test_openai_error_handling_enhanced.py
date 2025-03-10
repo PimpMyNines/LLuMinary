@@ -123,7 +123,7 @@ def test_generic_error_mapping(openai_llm):
     assert "openai" in str(mapped_error).lower()
 
 
-@patch("src.lluminary.models.providers.openai.time.sleep")
+@patch("lluminary.models.providers.openai.time.sleep")
 def test_call_with_retry_rate_limit(mock_sleep, openai_llm):
     """Test retry logic for rate limit errors."""
     # Create mock function that raises rate limit error on first call
@@ -152,7 +152,7 @@ def test_call_with_retry_rate_limit(mock_sleep, openai_llm):
         assert mock_sleep.call_count == 1
 
 
-@patch("src.lluminary.models.providers.openai.time.sleep")
+@patch("lluminary.models.providers.openai.time.sleep")
 def test_call_with_retry_max_retries(mock_sleep, openai_llm):
     """Test retry logic when max retries is exceeded."""
     # Create mock function that always raises an error
@@ -182,7 +182,7 @@ def test_call_with_retry_max_retries(mock_sleep, openai_llm):
         assert mock_sleep.call_count == 2  # Sleep after first two failures
 
 
-@patch("src.lluminary.models.providers.openai.time.sleep")
+@patch("lluminary.models.providers.openai.time.sleep")
 def test_call_with_retry_non_retryable_error(mock_sleep, openai_llm):
     """Test retry logic with non-retryable errors."""
     # Create mock function that raises a non-retryable error

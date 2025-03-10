@@ -90,7 +90,7 @@ class TestProviderTemplateDiscovery:
     """Test the discovery and initialization of ProviderNameLLM through the router."""
 
     @pytest.mark.xfail(reason="Need to fix import for router components")
-    @patch("src.lluminary.models.providers.provider_template.ProviderNameLLM.auth")
+    @patch("lluminary.models.providers.provider_template.ProviderNameLLM.auth")
     def test_provider_discovery(self, mock_auth):
         """Test that the provider can be discovered by the router."""
         from lluminary.models.router import (
@@ -124,7 +124,7 @@ class TestProviderTemplateDiscovery:
             MODEL_TO_PROVIDER_MAP.update(old_model_map)
 
     @pytest.mark.xfail(reason="Need to fix import for router components")
-    @patch("src.lluminary.models.providers.provider_template.ProviderNameLLM.auth")
+    @patch("lluminary.models.providers.provider_template.ProviderNameLLM.auth")
     def test_provider_discovery_with_model_mapping(self, mock_auth):
         """Test provider discovery using model mapping."""
         from lluminary.models.router import (

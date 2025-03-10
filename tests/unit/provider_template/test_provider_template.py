@@ -163,7 +163,7 @@ class TestProviderTemplateLLMAuthentication:
         )
 
         # The actual test would look like this
-        # with patch("src.lluminary.models.base.LLM._get_api_key_from_aws") as mock_get_api_key:
+        # with patch("lluminary.models.base.LLM._get_api_key_from_aws") as mock_get_api_key:
         #     # Remove environment variable to force AWS Secrets Manager path
         #     del os.environ["PROVIDER_API_KEY"]
         #

@@ -6,12 +6,21 @@ including API key retrieval from different sources and error handling.
 """
 
 import os
+from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lluminary.exceptions import AuthenticationError
+from lluminary.exceptions import LLMAuthenticationError
 from lluminary.models.providers.anthropic import AnthropicLLM
+
+
+class MockAnthropicLLM(AnthropicLLM):
+    """Mock implementation of AnthropicLLM for testing."""
+
+    def _validate_provider_config(self, config: Dict[str, Any]) -> None:
+        """Mock implementation of abstract method."""
+        pass
 
 
 def test_auth_with_direct_api_key():
@@ -23,7 +32,7 @@ def test_auth_with_direct_api_key():
         mock_head.return_value = mock_response
 
         # Create LLM with api_key parameter
-        llm = AnthropicLLM("claude-3-5-sonnet-20241022", api_key="test-api-key")
+        llm = MockAnthropicLLM("claude-3-5-sonnet-20241022", api_key="test-api-key")
 
         # Call auth method
         llm.auth()
@@ -42,7 +51,7 @@ def test_auth_with_environment_variable():
     """Test authentication with API key from environment variable."""
     with patch("requests.head") as mock_head, patch.dict(
         os.environ, {"ANTHROPIC_API_KEY": "env-api-key"}, clear=True
-    ), patch("src.lluminary.utils.get_secret") as mock_get_secret:
+    ), patch("lluminary.utils.get_secret") as mock_get_secret:
 
         # Configure mock to simulate successful API key validation
         mock_response = MagicMock()
@@ -53,7 +62,7 @@ def test_auth_with_environment_variable():
         mock_get_secret.side_effect = Exception("Secret not found")
 
         # Create LLM without api_key parameter
-        llm = AnthropicLLM("claude-3-5-sonnet-20241022")
+        llm = MockAnthropicLLM("claude-3-5-sonnet-20241022")
 
         # Call auth method
         llm.auth()
@@ -69,7 +78,7 @@ def test_auth_with_environment_variable():
 def test_auth_with_secrets_manager():
     """Test authentication with API key from AWS Secrets Manager."""
     with patch("requests.head") as mock_head, patch(
-        "src.lluminary.utils.get_secret"
+        "lluminary.utils.get_secret"
     ) as mock_get_secret:
 
         # Configure mock to simulate successful API key validation
@@ -81,7 +90,7 @@ def test_auth_with_secrets_manager():
         mock_get_secret.return_value = {"api_key": "secret-api-key"}
 
         # Create LLM without api_key parameter
-        llm = AnthropicLLM("claude-3-5-sonnet-20241022")
+        llm = MockAnthropicLLM("claude-3-5-sonnet-20241022")
 
         # Call auth method
         llm.auth()
@@ -108,10 +117,10 @@ def test_auth_failure_invalid_api_key():
         mock_head.return_value = mock_response
 
         # Create LLM with invalid API key
-        llm = AnthropicLLM("claude-3-5-sonnet-20241022", api_key="invalid-key")
+        llm = MockAnthropicLLM("claude-3-5-sonnet-20241022", api_key="invalid-key")
 
         # Call auth method and expect exception
-        with pytest.raises(AuthenticationError) as excinfo:
+        with pytest.raises(LLMAuthenticationError) as excinfo:
             llm.auth()
 
         # Verify error message mentions invalid API key
@@ -124,17 +133,17 @@ def test_auth_failure_invalid_api_key():
 def test_auth_failure_no_api_key():
     """Test authentication failure when no API key is available."""
     with patch.dict(os.environ, {}, clear=True), patch(
-        "src.lluminary.utils.get_secret"
+        "lluminary.utils.get_secret"
     ) as mock_get_secret:
 
         # Configure get_secret to fail
         mock_get_secret.side_effect = Exception("Secret not found")
 
         # Create LLM without api_key
-        llm = AnthropicLLM("claude-3-5-sonnet-20241022")
+        llm = MockAnthropicLLM("claude-3-5-sonnet-20241022")
 
         # Call auth method and expect exception
-        with pytest.raises(AuthenticationError) as excinfo:
+        with pytest.raises(LLMAuthenticationError) as excinfo:
             llm.auth()
 
         # Verify error message mentions API key
@@ -155,7 +164,7 @@ def test_auth_failure_service_unavailable():
         mock_head.return_value = mock_response
 
         # Create LLM with API key
-        llm = AnthropicLLM("claude-3-5-sonnet-20241022", api_key="test-api-key")
+        llm = MockAnthropicLLM("claude-3-5-sonnet-20241022", api_key="test-api-key")
 
         # Call auth method and expect exception
         with pytest.raises(Exception) as excinfo:
@@ -172,7 +181,7 @@ def test_auth_failure_network_error():
         mock_head.side_effect = Exception("Network connection error")
 
         # Create LLM with API key
-        llm = AnthropicLLM("claude-3-5-sonnet-20241022", api_key="test-api-key")
+        llm = MockAnthropicLLM("claude-3-5-sonnet-20241022", api_key="test-api-key")
 
         # Call auth method and expect exception
         with pytest.raises(Exception) as excinfo:
@@ -186,7 +195,7 @@ def test_auth_cached_credentials():
     """Test that auth() doesn't re-authenticate if key is already set."""
     with patch("requests.head") as mock_head:
         # Create LLM with API key
-        llm = AnthropicLLM("claude-3-5-sonnet-20241022", api_key="test-api-key")
+        llm = MockAnthropicLLM("claude-3-5-sonnet-20241022", api_key="test-api-key")
 
         # Set up the config manually
         llm.config["api_key"] = "pre-existing-key"

@@ -6,9 +6,15 @@ from typing import Any, Dict, Optional
 
 
 class LLMError(Exception):
-    """Base exception class for all LLuMinary errors."""
+    """Base exception class for LLM-related errors."""
 
-    pass
+    def __init__(
+        self, message: str, provider: str | None = None, details: dict | None = None
+    ):
+        self.message = message
+        self.provider = provider
+        self.details = details or {}
+        super().__init__(message)
 
 
 class LLMProviderError(LLMError):
@@ -18,10 +24,10 @@ class LLMProviderError(LLMError):
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize a LLMProviderError exception.
@@ -49,33 +55,33 @@ class LLMProviderError(LLMError):
         }
 
 
-class LLMAuthenticationError(LLMProviderError):
+class LLMAuthenticationError(LLMError):
     """
     Exception raised when authentication with a provider fails.
     This could be due to invalid, expired, or missing credentials.
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(message, provider, details)
 
 
-class LLMRateLimitError(LLMProviderError):
+class LLMRateLimitError(LLMError):
     """
     Exception raised when a provider's rate limit is exceeded.
     Includes information about retry delays when available.
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            retry_after: Optional[int] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        retry_after: Optional[int] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
         if details is None:
             details = {}
@@ -92,47 +98,47 @@ class LLMRateLimitError(LLMProviderError):
         return int(retry_val) if retry_val is not None else None
 
 
-class LLMConfigurationError(LLMProviderError):
+class LLMConfigurationError(LLMError):
     """
     Exception raised when there's an issue with provider configuration.
     This could include invalid model names, incompatible parameters, etc.
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(message, provider, details)
 
 
-class LLMServiceUnavailableError(LLMProviderError):
+class LLMServiceUnavailableError(LLMError):
     """
     Exception raised when a provider service is temporarily unavailable.
     This typically indicates a temporary outage or maintenance.
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(message, provider, details)
 
 
-class LLMTimeoutError(LLMProviderError):
+class LLMTimeoutError(LLMError):
     """
     Exception raised when a request to a provider times out.
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            timeout: Optional[float] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        timeout: Optional[float] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
         if details is None:
             details = {}
@@ -143,17 +149,17 @@ class LLMTimeoutError(LLMProviderError):
         super().__init__(message, provider, details)
 
 
-class LLMConnectionError(LLMProviderError):
+class LLMConnectionError(LLMError):
     """
     Exception raised when there's a connection error with a provider.
     This could be due to network issues or provider API endpoint problems.
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(message, provider, details)
 
@@ -165,12 +171,12 @@ class LLMValidationError(LLMError):
     """
 
     def __init__(
-            self,
-            message: str,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
-        self.details = details or {}
-        super().__init__(message)
+        super().__init__(message, provider, details)
 
 
 class LLMMistake(LLMError):
@@ -180,11 +186,11 @@ class LLMMistake(LLMError):
     """
 
     def __init__(
-            self,
-            message: str,
-            error_type: str = "general",
-            provider: Optional[str] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        error_type: str = "general",
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize an LLMMistake exception.
@@ -245,68 +251,61 @@ class LLMMistake(LLMError):
         )
 
 
-class LLMFormatError(LLMMistake):
+class LLMFormatError(LLMError):
     """
     Exception raised when an LLM's response has formatting issues.
     This could include invalid JSON, XML, or other expected formats.
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(
-            message, error_type="format", provider=provider, details=details
-        )
+        super().__init__(message, provider, details)
 
 
-class LLMContentError(LLMMistake):
+class LLMContentError(LLMError):
     """
     Exception raised when an LLM's response content is problematic.
     This could include empty responses, incorrect reasoning, or hallucinations.
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(
-            message, error_type="content", provider=provider, details=details
-        )
+        super().__init__(message, provider, details)
 
 
-class LLMToolError(LLMMistake):
+class LLMToolError(LLMError):
     """
     Exception raised when there's an issue with tool/function usage in an LLM response.
     This could include invalid parameters, incorrect tool selection, etc.
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(message, error_type="tool", provider=provider,
-                         details=details)
+        super().__init__(message, provider, details)
 
 
-class LLMThinkingError(LLMMistake):
+class LLMThinkingError(LLMError):
     """
     Exception raised when there's an issue with the LLM's thinking process.
     This applies to models with explicit thinking/reasoning steps.
     """
 
     def __init__(
-            self,
-            message: str,
-            provider: Optional[str] = None,
-            details: Optional[Dict[str, Any]] = None,
+        self,
+        message: str,
+        provider: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(
-            message, error_type="thinking", provider=provider, details=details
-        )
+        super().__init__(message, provider, details)

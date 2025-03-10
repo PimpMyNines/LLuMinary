@@ -18,7 +18,7 @@ from lluminary.models.providers.openai import OpenAILLM
 def test_auth_with_direct_api_key():
     """Test authentication with directly provided API key."""
     # Mock the OpenAI client
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Mock the models.list method to verify auth
         client_instance = MagicMock()
         mock_openai.return_value = client_instance
@@ -49,7 +49,7 @@ def test_auth_with_aws_secrets():
     # Mock the OpenAI client and get_secret
     with patch(
         "src.lluminary.models.providers.openai.get_secret", return_value=mock_secret
-    ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
 
         # Mock the client instance
         client_instance = MagicMock()
@@ -86,7 +86,7 @@ def test_auth_with_environment_variable():
         with patch(
             "src.lluminary.models.providers.openai.get_secret",
             side_effect=Exception("AWS Secrets error"),
-        ), patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+        ), patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
 
             # Mock client instance
             client_instance = MagicMock()
@@ -112,7 +112,7 @@ def test_auth_with_environment_variable():
 def test_auth_with_org_id():
     """Test authentication with organization ID."""
     # Mock OpenAI client
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Mock client instance
         client_instance = MagicMock()
         mock_openai.return_value = client_instance
@@ -163,7 +163,7 @@ def test_auth_error_no_key():
 def test_auth_error_validation_fail():
     """Test error when API key validation fails."""
     # Mock OpenAI client initialization to fail during models.list
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Create client that will fail validation
         client_instance = MagicMock()
         mock_openai.return_value = client_instance
@@ -186,7 +186,7 @@ def test_auth_error_validation_fail():
 def test_auth_with_custom_base_url():
     """Test authentication with custom API base URL."""
     # Mock OpenAI client
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Mock client instance
         client_instance = MagicMock()
         mock_openai.return_value = client_instance
@@ -211,7 +211,7 @@ def test_auth_with_custom_base_url():
 def test_auth_reuse_existing_client():
     """Test that auth doesn't recreate client if it already exists."""
     # Mock OpenAI client for first auth
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Mock client instance
         first_client = MagicMock()
         mock_openai.return_value = first_client
@@ -240,7 +240,7 @@ def test_auth_reuse_existing_client():
 def test_auth_multiple_attempts_with_different_keys():
     """Test authentication with multiple auth attempts using different keys."""
     # Mock OpenAI client for first auth
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Mock client instance
         first_client = MagicMock()
         first_client.models = MagicMock()

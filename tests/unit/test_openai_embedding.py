@@ -250,7 +250,7 @@ def test_embedding_large_batch_handling(openai_llm):
 def test_embedding_with_realistic_response(openai_llm):
     """Test embedding with a more realistic response structure."""
     # Create a realistic embedding response with the correct structure
-    with patch("src.lluminary.models.providers.openai.OpenAI") as mock_openai:
+    with patch("lluminary.models.providers.openai.OpenAI") as mock_openai:
         # Reset client for this test
         openai_llm.client = mock_openai.return_value
 
@@ -347,7 +347,7 @@ def test_embedding_rate_limit_handling(openai_llm):
     # Mock time.sleep to avoid waiting in tests
     with patch("time.sleep") as mock_sleep:
         # Add a retry loop to the embed method to continue test when encountering this specific error
-        with patch("src.lluminary.models.providers.openai.OpenAILLM.embed", side_effect=lambda texts, model=None, batch_size=100:
+        with patch("lluminary.models.providers.openai.OpenAILLM.embed", side_effect=lambda texts, model=None, batch_size=100:
             # This is a hack that replaces the original method with one that uses the same
             # embeddings.create mock but retries after simulated sleep
             (lambda: (

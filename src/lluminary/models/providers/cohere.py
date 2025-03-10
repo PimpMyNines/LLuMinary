@@ -6,7 +6,7 @@ import base64
 import json
 import os
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Type, cast
 
 import requests
 from PIL import Image
@@ -14,6 +14,7 @@ from PIL import Image
 from ..base import LLM
 from ..router import register_provider
 from ...exceptions import LLMMistake
+from ...utils.aws import get_secret
 
 
 class CohereLLM(LLM):
@@ -112,9 +113,8 @@ class CohereLLM(LLM):
 
         # Fallback to AWS Secrets Manager if available
         if not self.api_key and "aws_secret_name" in self.config:
-            self.api_key = self._get_api_key_from_aws(
-                self.config.get("aws_secret_name", "cohere_api_key")
-            )
+            secret_name = self.config.get("aws_secret_name", "cohere_api_key")
+            self.api_key = self._get_api_key_from_aws(secret_name)
 
         if not self.api_key:
             raise ValueError(
@@ -129,6 +129,25 @@ class CohereLLM(LLM):
                 "Content-Type": "application/json",
             }
         )
+
+    def _get_api_key_from_aws(self, secret_name: str) -> Optional[str]:
+        """
+        Get the API key from AWS Secrets Manager.
+        
+        Args:
+            secret_name (str): Name of the secret in AWS Secrets Manager
+            
+        Returns:
+            Optional[str]: API key if found, None otherwise
+        """
+        try:
+            secret_data = get_secret(secret_name)
+            if isinstance(secret_data, dict) and "api_key" in secret_data:
+                return str(secret_data["api_key"])
+            return None
+        except Exception:
+            # If any error occurs, return None and let the caller handle it
+            return None
 
     def _format_messages_for_model(
             self, messages: List[Dict[str, Any]]
@@ -207,11 +226,24 @@ class CohereLLM(LLM):
             max_tokens: int = 1000,
             temp: float = 0.0,
             top_k: int = 200,
-            tools: List[Dict[str, Any]] = None,
-            thinking_budget: int = None,
+            tools: Optional[List[Dict[str, Any]]] = None,
+            thinking_budget: Optional[int] = None,
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Generate a response using the Cohere chat API.
+        
+        Args:
+            event_id (str): Unique identifier for this generation event
+            system_prompt (str): System-level instructions for the model
+            messages (List[Dict[str, Any]]): List of messages in the standard format
+            max_tokens (int, optional): Maximum number of tokens to generate. Defaults to 1000.
+            temp (float, optional): Temperature for generation. Defaults to 0.0.
+            top_k (int, optional): Top-k sampling parameter. Defaults to 200.
+            tools (Optional[List[Dict[str, Any]]], optional): Function/tool definitions. Defaults to None.
+            thinking_budget (Optional[int], optional): Budget for thinking steps. Defaults to None.
+            
+        Returns:
+            Tuple[str, Dict[str, Any]]: Generated text and usage statistics
         """
         # Convert messages to Cohere format
         formatted_messages = self._format_messages_for_model(messages)
@@ -289,11 +321,20 @@ class CohereLLM(LLM):
 
             # Calculate costs
             model_costs = self.get_model_costs()
-            read_cost = read_tokens * model_costs["read_token"]
-            write_cost = write_tokens * model_costs["write_token"]
-            image_cost = 0
+            
+            # Use safe access with default values to handle possible None values
+            read_token_cost = float(model_costs.get("read_token", 0.0) or 0.0)
+            write_token_cost = float(model_costs.get("write_token", 0.0) or 0.0)
+            
+            # Calculate costs with proper type conversion
+            read_cost = float(read_tokens) * read_token_cost
+            write_cost = float(write_tokens) * write_token_cost
+            
+            # Calculate image cost
+            image_cost = 0.0
             if image_count > 0 and "image_token" in model_costs:
-                image_cost = image_count * model_costs["image_token"]
+                image_token_cost = float(model_costs.get("image_token", 0.0) or 0.0)
+                image_cost = float(image_count) * image_token_cost
 
             total_cost = read_cost + write_cost + image_cost
 
@@ -344,8 +385,7 @@ class CohereLLM(LLM):
                 provider="cohere",
                 details={
                     "status_code": (
-                        e.response.status_code if hasattr(e,
-                                                          "response") else None
+                        e.response.status_code if hasattr(e, "response") and e.response is not None else None
                     )
                 },
             )
@@ -394,7 +434,8 @@ class CohereLLM(LLM):
                 return base64.b64encode(image_data).decode("utf-8")
         except Exception as e:
             print(f"Error processing image file {image_path}: {e!s}")
-            return None
+            # Return an empty string instead of None
+            return ""
 
     def _process_image_url(self, image_url: str) -> str:
         """
@@ -404,11 +445,11 @@ class CohereLLM(LLM):
             image_url: URL of the image
 
         Returns:
-            Base64 encoded image string or None if using direct URL
+            Base64 encoded image string or empty string if using direct URL
         """
         # For Cohere, we can use the URL directly in the attachments
         # We don't need to download and encode the image
-        return None
+        return ""
 
     def supports_embeddings(self) -> bool:
         """
@@ -529,7 +570,7 @@ class CohereLLM(LLM):
             self,
             query: str,
             documents: List[str],
-            top_n: int = None,
+            top_n: Optional[int] = None,
             return_scores: bool = True,
             **kwargs,
     ) -> Dict[str, Any]:
@@ -539,13 +580,12 @@ class CohereLLM(LLM):
         Args:
             query (str): The search query to rank documents against
             documents (List[str]): List of document texts to rerank
-            top_n (int, optional): Number of top documents to return
-            return_scores (bool): Whether to include relevance scores
+            top_n (Optional[int]): Number of top documents to return, None for all
+            return_scores (bool): Whether to include relevance scores in the output
             **kwargs: Additional provider-specific parameters
-                - model (str, optional): Specific reranking model to use
 
         Returns:
-            Dict[str, Any]: Dictionary with ranked documents, indices, scores, and usage info
+            Dict[str, Any]: Dictionary containing ranked documents and metadata
         """
         if not documents:
             return {
@@ -635,5 +675,5 @@ class CohereLLM(LLM):
             raise ValueError(f"Error reranking documents with Cohere: {e!s}")
 
 
-# Register the provider
-register_provider("cohere", CohereLLM)
+# Register the provider with explicit type casting to avoid mypy error
+register_provider("cohere", cast(Type[LLM], CohereLLM))
