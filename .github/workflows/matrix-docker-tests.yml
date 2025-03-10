@@ -93,7 +93,11 @@ jobs:
         EOF
 
     - name: Build Docker image for Python ${{ matrix.python-version }}
-      run: make docker-build-matrix-cached DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" CACHE_FROM=/tmp/.buildx-cache CACHE_TO=/tmp/.buildx-cache-new
+      run: |
+        # Use direct docker build command to ensure we use the dynamically created Dockerfile.matrix
+        docker buildx build --load -t "lluminary-test:py${{ matrix.python-version }}" -f Dockerfile.matrix \
+          --cache-from=type=local,src=/tmp/.buildx-cache \
+          --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max .
 
     - name: Run unit tests with Python ${{ matrix.python-version }}
       run: make test-docker-unit DOCKER="docker run --rm" DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" PYTEST="tests/unit -v -n auto"
@@ -128,7 +132,10 @@ jobs:
   provider-tests:
     name: ${{ matrix.provider }} Provider Tests
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run-provider-tests || contains(github.event.pull_request.files.*.filename, matrix.file_pattern) }}
+    # Improved condition to ensure proper execution
+    if: |
+      github.event_name == 'workflow_dispatch' && inputs.run-provider-tests ||
+      github.event_name == 'pull_request' && contains(join(github.event.pull_request.files.*.filename, ' '), matrix.file_pattern)
     strategy:
       fail-fast: false
       matrix:
@@ -166,9 +173,14 @@ jobs:
           ${{ runner.os }}-buildx-
 
     - name: Build Docker image
-      run: make docker-build-cached DOCKER_TAG="lluminary-test:${{ matrix.provider }}" CACHE_FROM=/tmp/.buildx-cache-provider CACHE_TO=/tmp/.buildx-cache-provider-new
+      run: |
+        # Use direct Docker build command for consistency with matrix-docker-test job
+        docker buildx build --load -t "lluminary-test:${{ matrix.provider }}" -f Dockerfile.test \
+          --cache-from=type=local,src=/tmp/.buildx-cache-provider \
+          --cache-to=type=local,dest=/tmp/.buildx-cache-provider-new,mode=max .
 
     - name: Run ${{ matrix.provider }} provider tests
+      # Explicitly pass FILE parameter to ensure proper handling
       run: make test-docker-file DOCKER="docker run --rm" DOCKER_TAG="lluminary-test:${{ matrix.provider }}" FILE="${{ matrix.test_path }} -v -n auto"
 
     - name: Generate ${{ matrix.provider }} coverage report
@@ -221,18 +233,30 @@ jobs:
         echo "" >> test_summary.md
         echo "## Provider Tests" >> test_summary.md
 
-        # Check provider-tests job status
+        # Check provider-tests job status with improved handling
         provider_status="${{ needs.provider-tests.result }}"
+
+        # Handle each possible status
         if [[ "$provider_status" == "success" ]]; then
           echo "✅ All provider tests passed" >> test_summary.md
         elif [[ "$provider_status" == "skipped" ]]; then
-          echo "⏩ Provider tests were skipped" >> test_summary.md
+          echo "⏩ Provider tests were skipped (no relevant provider file changes)" >> test_summary.md
+        elif [[ "$provider_status" == "cancelled" ]]; then
+          echo "⚠️ Provider tests were cancelled" >> test_summary.md
+        elif [[ "$provider_status" == "" ]]; then
+          echo "ℹ️ No provider tests were triggered" >> test_summary.md
         else
           echo "❌ Provider tests had failures" >> test_summary.md
         fi
 
         echo "" >> test_summary.md
         echo "Tests run in containerized environments for consistency across Python versions and provider-specific testing." >> test_summary.md
+
+        # Additional context about test requirements
+        echo "" >> test_summary.md
+        echo "### Environment Requirements" >> test_summary.md
+        echo "- Python versions: 3.8, 3.9, 3.10, 3.11" >> test_summary.md
+        echo "- Docker required for complete testing" >> test_summary.md
 
     - name: Comment PR
       uses: actions/github-script@v7
