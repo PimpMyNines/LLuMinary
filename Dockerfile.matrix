@@ -1,0 +1,30 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install development dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+RUN pip install pytest-xdist pytest-asyncio pytest-cov
+
+# Copy source code and tests
+COPY src/ /app/src/
+COPY tests/ /app/tests/
+COPY pyproject.toml pytest.ini mypy.ini ./
+
+# Install the package in development mode
+RUN pip install -e .
+
+# Set environment variables for consistent test behavior
+ENV PYTHONPATH=/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Run tests by default
+ENTRYPOINT ["python", "-m", "pytest"]
+CMD ["tests/"]
