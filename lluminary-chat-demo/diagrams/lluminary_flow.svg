@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .box {
+      fill: #eef2ff;
+      stroke: #4f46e5;
+      stroke-width: 2;
+      rx: 8;
+      ry: 8;
+    }
+    .provider-box {
+      fill: #f5f5f4;
+      stroke: #78716c;
+      stroke-width: 2;
+      rx: 8;
+      ry: 8;
+    }
+    .api-box {
+      fill: #fef3c7;
+      stroke: #d97706;
+      stroke-width: 2;
+      rx: 8;
+      ry: 8;
+    }
+    .label {
+      font-family: 'Arial', sans-serif;
+      font-size: 14px;
+      fill: #1f2937;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+    .small-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 12px;
+      fill: #4b5563;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+    .arrow {
+      stroke: #6b7280;
+      stroke-width: 2;
+      marker-end: url(#arrowhead);
+      fill: none;
+    }
+    .dashed-arrow {
+      stroke: #6b7280;
+      stroke-width: 2;
+      stroke-dasharray: 5,5;
+      marker-end: url(#arrowhead);
+      fill: none;
+    }
+    .title {
+      font-family: 'Arial', sans-serif;
+      font-size: 24px;
+      font-weight: bold;
+      fill: #1f2937;
+      text-anchor: middle;
+    }
+    .subtitle {
+      font-family: 'Arial', sans-serif;
+      font-size: 14px;
+      fill: #4b5563;
+      text-anchor: middle;
+    }
+  </style>
+
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker
+      id="arrowhead"
+      markerWidth="10"
+      markerHeight="7"
+      refX="9"
+      refY="3.5"
+      orient="auto"
+    >
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="400" y="40" class="title">LLuMinary Request Flow</text>
+  <text x="400" y="65" class="subtitle">Unified API for Multiple LLM Providers</text>
+
+  <!-- Chat Application -->
+  <rect x="100" y="100" width="200" height="80" class="box" />
+  <text x="200" y="140" class="label">Chat Application</text>
+  <text x="200" y="160" class="small-label">Frontend UI</text>
+
+  <!-- LLuMinary Handler -->
+  <rect x="100" y="240" width="200" height="80" class="box" />
+  <text x="200" y="270" class="label">LLuMinary Handler</text>
+  <text x="200" y="290" class="small-label">Unified API Interface</text>
+
+  <!-- Model Router -->
+  <rect x="100" y="380" width="200" height="80" class="box" />
+  <text x="200" y="410" class="label">Model Router</text>
+  <text x="200" y="430" class="small-label">Provider Selection</text>
+
+  <!-- OpenAI Provider -->
+  <rect x="400" y="220" width="160" height="60" class="provider-box" />
+  <text x="480" y="250" class="label">OpenAI Provider</text>
+
+  <!-- Anthropic Provider -->
+  <rect x="400" y="300" width="160" height="60" class="provider-box" />
+  <text x="480" y="330" class="label">Anthropic Provider</text>
+
+  <!-- Google Provider -->
+  <rect x="400" y="380" width="160" height="60" class="provider-box" />
+  <text x="480" y="410" class="label">Google Provider</text>
+
+  <!-- Other Providers -->
+  <rect x="400" y="460" width="160" height="60" class="provider-box" />
+  <text x="480" y="490" class="label">Other Providers</text>
+
+  <!-- LLM APIs -->
+  <rect x="620" y="220" width="160" height="60" class="api-box" />
+  <text x="700" y="250" class="label">OpenAI API</text>
+
+  <rect x="620" y="300" width="160" height="60" class="api-box" />
+  <text x="700" y="330" class="label">Anthropic API</text>
+
+  <rect x="620" y="380" width="160" height="60" class="api-box" />
+  <text x="700" y="410" class="label">Google API</text>
+
+  <rect x="620" y="460" width="160" height="60" class="api-box" />
+  <text x="700" y="490" class="label">Other APIs</text>
+
+  <!-- Arrows -->
+  <!-- User to Handler -->
+  <path d="M200 180 L200 240" class="arrow" />
+
+  <!-- Handler to Router -->
+  <path d="M200 320 L200 380" class="arrow" />
+
+  <!-- Router to Providers -->
+  <path d="M300 390 L380 250" class="arrow" />
+  <path d="M300 410 L380 330" class="arrow" />
+  <path d="M300 420 L380 410" class="arrow" />
+  <path d="M300 430 L380 490" class="arrow" />
+
+  <!-- Providers to APIs -->
+  <path d="M560 250 L620 250" class="arrow" />
+  <path d="M560 330 L620 330" class="arrow" />
+  <path d="M560 410 L620 410" class="arrow" />
+  <path d="M560 490 L620 490" class="arrow" />
+
+  <!-- Response flow -->
+  <path d="M620 270 L560 270" class="dashed-arrow" />
+  <path d="M620 350 L560 350" class="dashed-arrow" />
+  <path d="M620 430 L560 430" class="dashed-arrow" />
+  <path d="M620 510 L560 510" class="dashed-arrow" />
+
+  <!-- Return to App -->
+  <path d="M380 270 L320 270 L320 140 L300 140" class="dashed-arrow" />
+
+  <!-- Key benefits -->
+  <rect x="480" y="100" width="300" height="80" rx="8" ry="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1" />
+  <text x="630" y="125" class="label" style="font-weight: bold">LLuMinary Benefits</text>
+  <text x="515" y="150" class="small-label" text-anchor="start">• Unified API for multiple LLM providers</text>
+  <text x="515" y="170" class="small-label" text-anchor="start">• Built-in streaming, error handling, and fallbacks</text>
+</svg>

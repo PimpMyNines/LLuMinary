@@ -1,0 +1,38 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include CONTRIBUTING.md
+include requirements.txt
+include pytest.ini
+include pyproject.toml
+include setup.py
+
+# Package data
+recursive-include src *.yaml
+recursive-include src *.json
+recursive-include src py.typed
+
+# Test data
+recursive-include tests *.yaml
+recursive-include tests *.json
+recursive-include tests *.py
+
+# Documentation
+recursive-include docs *.md
+recursive-include docs *.rst
+recursive-include docs *.py
+recursive-include docs Makefile
+
+# Exclude debug directory
+recursive-exclude debug *
+
+# Exclude cache directories and non-source files
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.so
+global-exclude .DS_Store
+global-exclude .gitignore
+global-exclude .coverage
+global-exclude .pytest_cache
+global-exclude *.egg-info
+global-exclude *.egg

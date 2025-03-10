@@ -1,0 +1,21 @@
+# This file defines the code owners for this repository
+# Code owners are automatically requested for review when someone opens a pull request
+# that modifies code they own.
+# See: https://docs.github.com/en/repositories/managing-your-code/about-code-owners
+
+# These owners will be the default owners for everything in the repo
+# They will be requested for review when someone opens a pull request
+* @PimpMyNines @chaseabrown
+
+# Specific file patterns can have different owners
+# Examples:
+# /docs/ @documentation-team
+# *.js @javascript-team
+# /src/specific-module/ @module-owner
+
+# Require approval from tuxtek for any changes to main branch protection rules
+.github/CODEOWNERS @tuxtek
+
+# Original core components
+/src/llmhandler/models/ @chaseabrown @PimpMyNines
+/src/llmhandler/handler.py @chaseabrown @PimpMyNines

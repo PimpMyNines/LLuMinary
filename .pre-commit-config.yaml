@@ -1,0 +1,54 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+    -   id: trailing-whitespace
+        exclude: ^(debug/|docs/development/.*_EXAMPLE\.py|examples/)
+    -   id: end-of-file-fixer
+        exclude: ^(debug/|docs/development/.*_EXAMPLE\.py|examples/)
+    -   id: check-yaml
+    -   id: check-added-large-files
+    -   id: check-toml
+    -   id: debug-statements
+        exclude: ^(debug/|docs/development/.*_EXAMPLE\.py|examples/)
+    -   id: mixed-line-ending
+        args: ['--fix=lf']
+        exclude: ^(debug/|docs/development/.*_EXAMPLE\.py|examples/)
+
+-   repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+    -   id: black
+        language_version: python3
+        exclude: ^(debug/|docs/development/.*_EXAMPLE\.py|examples/)
+
+-   repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+    -   id: isort
+        args: ["--profile", "black"]
+        exclude: ^(debug/|docs/development/.*_EXAMPLE\.py|examples/)
+
+-   repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.3.1'
+    hooks:
+    -   id: ruff
+        args: ["--fix", "--exit-non-zero-on-fix"]
+        exclude: ^(debug/|docs/development/.*_EXAMPLE\.py|examples/)
+
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+    -   id: mypy
+        additional_dependencies: [types-requests, types-PyYAML, pydantic>=2.0.0, types-Pillow]
+        exclude: ^(tests/|docs/development/.*_EXAMPLE\.py|examples/|src/llmhandler/models/providers/provider_template\.py)
+        args: [
+            --config-file=mypy.ini,
+            --disallow-untyped-defs,
+            --disallow-incomplete-defs,
+            --check-untyped-defs,
+            --no-implicit-optional,
+            --ignore-missing-imports
+        ]
+
+# No module name check needed for now
