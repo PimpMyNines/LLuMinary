@@ -84,7 +84,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LLMAuthenticationError</span><span class="p">,</span>
@@ -94,6 +94,9 @@
     <span class="n">LLMRateLimitError</span><span class="p">,</span>
     <span class="n">LLMServiceUnavailableError</span><span class="p">,</span>
     <span class="n">LLMValidationError</span><span class="p">,</span>
+    <span class="n">LLMContentError</span><span class="p">,</span>
+    <span class="n">LLMFormatError</span><span class="p">,</span>
+    <span class="n">LLMToolError</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLM</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.models.router</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm_from_model</span>
@@ -125,7 +128,7 @@
 
 <div class="viewcode-block" id="LLMHandler.__init__">
 <a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.__init__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the LLM handler with configuration.</span>
 
@@ -143,6 +146,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default_provider&quot;</span><span class="p">,</span> <span class="s2">&quot;openai&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fallback_providers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fallback_providers&quot;</span><span class="p">,</span> <span class="p">[])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">llm_instances</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LLM</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LLM</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_providers</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
         <span class="c1"># Initialize logger if specified in config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="kc">None</span>
@@ -778,41 +783,11 @@
 
 <div class="viewcode-block" id="LLMHandler.supports_embeddings">
 <a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.supports_embeddings">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">supports_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if the provider supports embeddings.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            provider: Optional provider name to check</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            bool: True if the provider supports embeddings, False otherwise</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            LLMProviderError: If the provider cannot be initialized</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">llm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">llm</span><span class="o">.</span><span class="n">supports_embeddings</span><span class="p">()</span>
-        <span class="k">except</span> <span class="n">LLMError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Error checking embedding support for provider </span><span class="si">{</span><span class="n">provider</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-            <span class="c1"># Re-raise provider errors</span>
-            <span class="k">raise</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="c1"># Map unexpected errors</span>
-            <span class="n">error</span> <span class="o">=</span> <span class="n">LLMProviderError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Error checking embedding support: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="n">provider</span><span class="o">=</span><span class="n">provider</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">,</span>
-                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Unexpected error checking embedding support: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span>
-                <span class="p">)</span>
-            <span class="k">raise</span> <span class="n">error</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">supports_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if provider supports embeddings.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">provider</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">[</span><span class="n">provider</span><span class="p">],</span> <span class="s2">&quot;supports_embeddings&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="LLMHandler.get_embeddings">
@@ -1382,7 +1357,39 @@
         <span class="k">return</span> <span class="n">llm</span><span class="o">.</span><span class="n">check_context_fit</span><span class="p">(</span>
             <span class="n">prompt</span><span class="o">=</span><span class="n">combined_text</span><span class="p">,</span> <span class="n">max_response_tokens</span><span class="o">=</span><span class="n">max_response_tokens</span>
         <span class="p">)</span></div>
-</div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_provider_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle provider-specific errors.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">LLMError</span><span class="p">):</span>
+            <span class="c1"># Re-raise LLM errors directly</span>
+            <span class="k">raise</span> <span class="n">error</span>
+        
+        <span class="c1"># For other errors, wrap them in LLMProviderError</span>
+        <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)}</span>
+        <span class="k">raise</span> <span class="n">LLMProviderError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="n">provider</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LLMHandler.add_provider">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.add_provider">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_provider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">LLM</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a provider to the handler.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_providers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.remove_provider">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.remove_provider">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_provider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove a provider from the handler.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">provider</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_providers</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register_active_provider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register a provider as active.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_providers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">provider_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 </pre></div>
 
