@@ -1,0 +1,143 @@
+diff --git a/docs/development/TYPE_CHECKING_PROGRESS.md b/docs/development/TYPE_CHECKING_PROGRESS.md
+index d122b0f..7cbf327 100644
+--- a/docs/development/TYPE_CHECKING_PROGRESS.md
++++ b/docs/development/TYPE_CHECKING_PROGRESS.md
+@@ -7,11 +7,11 @@ As of March 7, 2025, significant progress has been made in fixing type checking
+ ## Completed Fixes
+
+ ### OpenAI Provider
+-- Fixed type compatibility issues with ChatCompletionMessageParam format
++- Fixed type compatibility issues with ChatCompletionMessageParam format
+ - Added proper null checks for None attribute access
+ - Fixed dictionary access type safety issues using .get() with defaults
+ - Implemented proper type casting for API parameters
+-- Fixed arithmetic operations with None values
++- Fixed arithmetic operations with None values
+ - Fixed stream_generate generator return type
+ - Added proper handling of tools parameter
+
+diff --git a/src/lluminary/models/providers/anthropic.py b/src/lluminary/models/providers/anthropic.py
+index f6bad0f..0f250f1 100644
+--- a/src/lluminary/models/providers/anthropic.py
++++ b/src/lluminary/models/providers/anthropic.py
+@@ -1229,14 +1229,14 @@ class AnthropicLLM(LLM):
+                 # Import Anthropic types for proper casting
+                 import anthropic
+                 from anthropic.types import MessageParam
+-
++
+                 # Cast types to satisfy Anthropic's API typing requirements
+                 # First ensure we have the correct object structure
+                 api_messages = []
+                 for msg in formatted_messages:
+                     if isinstance(msg, dict) and "role" in msg and "content" in msg:
+                         api_messages.append(msg)
+-
++
+                 # Create API parameters dict
+                 api_params = {
+                     "model": self.model_name,
+@@ -1245,15 +1245,15 @@ class AnthropicLLM(LLM):
+                     "temperature": temp,
+                     "stream": True,  # Enable streaming
+                 }
+-
++
+                 # Only add system if it exists and is not empty
+                 if system_prompt:
+                     api_params["system"] = system_prompt
+-
++
+                 # Only add tools if they exist and are properly formatted
+                 if tools and isinstance(tools, list):
+                     api_params["tools"] = tools
+-
++
+                 # Create a streaming request with properly cast parameters
+                 response = self.client.messages.create(**api_params)
+             except anthropic.APIError as api_error:
+@@ -1364,7 +1364,10 @@ class AnthropicLLM(LLM):
+                 mapped_error = self._map_anthropic_error(api_error)
+                 # Only add details if the error type supports it
+                 if hasattr(mapped_error, "details"):
+-                    if not hasattr(mapped_error, "details") or mapped_error.details is None:
++                    if (
++                        not hasattr(mapped_error, "details")
++                        or mapped_error.details is None
++                    ):
+                         mapped_error.details = {}
+                     mapped_error.details["partial_text"] = accumulated_text
+                     mapped_error.details["tool_calls"] = tool_call_data
+@@ -1375,11 +1378,11 @@ class AnthropicLLM(LLM):
+
+             # Calculate costs
+             model_costs = self.get_model_costs()
+-
++
+             # Get cost values with safe defaults
+             read_token_cost = float(model_costs.get("read_token", 0.0) or 0.0)
+             write_token_cost = float(model_costs.get("write_token", 0.0) or 0.0)
+-
++
+             # Calculate costs with explicit type conversions
+             read_cost = float(input_tokens) * read_token_cost
+             write_cost = float(accumulated_tokens) * write_token_cost
+@@ -1388,7 +1391,7 @@ class AnthropicLLM(LLM):
+             image_cost = 0.0
+             if image_count > 0 and "image_cost" in model_costs:
+                 # Get image cost with safe default and ensure it's a float
+-                image_token_cost = float(model_costs.get("image_cost", 0.0) or 0.0)
++                image_token_cost = float(model_costs.get("image_cost", 0.0) or 0.0)
+                 image_cost = float(image_count) * image_token_cost
+
+             total_cost = read_cost + write_cost + image_cost
+diff --git a/src/lluminary/models/providers/openai.py b/src/lluminary/models/providers/openai.py
+index 3f9fffc..a87136f 100644
+--- a/src/lluminary/models/providers/openai.py
++++ b/src/lluminary/models/providers/openai.py
+@@ -930,7 +930,9 @@ class OpenAILLM(LLM):
+                     )
+
+                 # Cast the tools type if present and it's a list
+-                if create_params.get("tools") and isinstance(create_params["tools"], list):
++                if create_params.get("tools") and isinstance(
++                    create_params["tools"], list
++                ):
+                     create_params["tools"] = cast(
+                         List[ChatCompletionToolParam], create_params["tools"]
+                     )
+@@ -1004,7 +1006,7 @@ class OpenAILLM(LLM):
+                 read_token_cost = float(costs.get("read_token", 0.0) or 0.0)
+                 write_token_cost = float(costs.get("write_token", 0.0) or 0.0)
+                 image_token_cost = float(costs.get("image_cost", 0.0) or 0.0)
+-
++
+                 # Calculate costs safely
+                 read_cost = float(input_tokens) * read_token_cost
+                 write_cost = float(output_tokens) * write_token_cost
+@@ -1590,7 +1592,7 @@ class OpenAILLM(LLM):
+                         # Skip if tool_call doesn't have id attribute or id is None
+                         if not hasattr(tool_call, "id") or tool_call.id is None:
+                             continue
+-
++
+                         tool_id = tool_call.id
+
+                         # Initialize tool call data if not seen before
+@@ -1617,14 +1619,14 @@ class OpenAILLM(LLM):
+                         # Safely get arguments with defensive checks
+                         function_args = ""
+                         if (
+-                            hasattr(tool_call, "function")
++                            hasattr(tool_call, "function")
+                             and tool_call.function is not None
+                             and hasattr(tool_call.function, "arguments")
+                         ):
+                             # Handle potential None arguments
+                             if tool_call.function.arguments is not None:
+                                 function_args = str(tool_call.function.arguments)
+-
++
+                         # Append arguments if we have a valid ID in our data structure
+                         if tool_id in tool_call_data:
+                             tool_call_data[tool_id]["arguments"] += function_args

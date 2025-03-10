@@ -1,0 +1,337 @@
+name: Matrix Docker Tests
+
+# Enhanced CI workflow that runs tests in Docker across multiple Python versions
+# and integrates provider-specific test jobs
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/**'
+      - '!.github/workflows/matrix-docker-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/**'
+      - '!.github/workflows/matrix-docker-tests.yml'
+  workflow_dispatch:  # Allows manual triggering
+    inputs:
+      python-versions:
+        description: 'Python versions to test (comma-separated)'
+        required: false
+        default: '3.8,3.9,3.10,3.11'
+      run-provider-tests:
+        description: 'Run provider-specific test suites'
+        type: boolean
+        required: false
+        default: true
+
+jobs:
+  # Dynamic matrix test job that runs across multiple Python versions
+  matrix-docker-test:
+    name: Python ${{ matrix.python-version }} Tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false  # Continue testing other versions even if one fails
+      matrix:
+        python-version: ${{ fromJSON(inputs.python-versions || '["3.8", "3.9", "3.10", "3.11"]') }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Cache Docker layers
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-py${{ matrix.python-version }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-py${{ matrix.python-version }}-
+          ${{ runner.os }}-buildx-
+
+    # Create a temporary Dockerfile with the specific Python version
+    - name: Create Python ${{ matrix.python-version }} Dockerfile
+      run: |
+        cat > Dockerfile.matrix << EOF
+        FROM python:${{ matrix.python-version }}-slim
+
+        WORKDIR /app
+
+        # Install development dependencies
+        RUN apt-get update && apt-get install -y \\
+            git \\
+            && rm -rf /var/lib/apt/lists/*
+
+        # Copy requirements and install dependencies
+        COPY requirements.txt .
+        RUN pip install -r requirements.txt
+        RUN pip install pytest-xdist
+
+        # Copy source code and tests
+        COPY src/ /app/src/
+        COPY tests/ /app/tests/
+        COPY pyproject.toml pytest.ini mypy.ini ./
+
+        # Install the package in development mode
+        RUN pip install -e .
+
+        # Set environment variables for consistent test behavior
+        ENV PYTHONPATH=/app
+        ENV PYTHONDONTWRITEBYTECODE=1
+        ENV PYTHONUNBUFFERED=1
+
+        # Run tests by default
+        ENTRYPOINT ["python", "-m", "pytest"]
+        CMD ["tests/"]
+        EOF
+
+    - name: Build Docker image for Python ${{ matrix.python-version }}
+      run: make docker-build-matrix-cached DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" CACHE_FROM=/tmp/.buildx-cache CACHE_TO=/tmp/.buildx-cache-new
+
+    - name: Run unit tests with Python ${{ matrix.python-version }}
+      run: make test-docker-unit DOCKER="docker run --rm" DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" PYTEST="tests/unit -v -n auto"
+
+    - name: Run integration tests with Python ${{ matrix.python-version }}
+      run: make test-docker-integration DOCKER="docker run --rm" DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" PYTEST="tests/integration -v -n auto"
+
+    # Generate and extract coverage report
+    - name: Run tests with coverage for Python ${{ matrix.python-version }}
+      run: |
+        mkdir -p coverage/py${{ matrix.python-version }}
+        make test-docker DOCKER="docker run --rm -v ${{ github.workspace }}/coverage/py${{ matrix.python-version }}:/app/coverage" \
+          DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" \
+          PYTEST="tests/ --cov=src/lluminary --cov-report=xml:/app/coverage/coverage.xml -n auto"
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage/py${{ matrix.python-version }}/coverage.xml
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: python${{ matrix.python-version }},unittests,integrationtests
+        name: py${{ matrix.python-version }}-coverage
+
+    # Move cache to avoid growing cache size
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  # Provider-specific test jobs that run only when requested or when provider code changes
+  provider-tests:
+    name: ${{ matrix.provider }} Provider Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run-provider-tests || contains(github.event.pull_request.files.*.filename, matrix.file_pattern) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - provider: OpenAI
+            file_pattern: "src/lluminary/models/providers/openai.py"
+            test_path: "tests/unit/test_openai_*.py"
+          - provider: Anthropic
+            file_pattern: "src/lluminary/models/providers/anthropic.py"
+            test_path: "tests/unit/test_anthropic_*.py"
+          - provider: Google
+            file_pattern: "src/lluminary/models/providers/google.py"
+            test_path: "tests/unit/test_google_*.py"
+          - provider: Bedrock
+            file_pattern: "src/lluminary/models/providers/bedrock.py"
+            test_path: "tests/unit/test_bedrock_*.py"
+          - provider: Cohere
+            file_pattern: "src/lluminary/models/providers/cohere.py"
+            test_path: "tests/unit/test_cohere_*.py"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Cache Docker layers
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache-provider
+        key: ${{ runner.os }}-buildx-${{ matrix.provider }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-${{ matrix.provider }}-
+          ${{ runner.os }}-buildx-
+
+    - name: Build Docker image
+      run: make docker-build-cached DOCKER_TAG="lluminary-test:${{ matrix.provider }}" CACHE_FROM=/tmp/.buildx-cache-provider CACHE_TO=/tmp/.buildx-cache-provider-new
+
+    - name: Run ${{ matrix.provider }} provider tests
+      run: make test-docker-file DOCKER="docker run --rm" DOCKER_TAG="lluminary-test:${{ matrix.provider }}" FILE="${{ matrix.test_path }} -v -n auto"
+
+    - name: Generate ${{ matrix.provider }} coverage report
+      run: |
+        mkdir -p coverage/${{ matrix.provider }}
+        make test-docker-file DOCKER="docker run --rm -v ${{ github.workspace }}/coverage/${{ matrix.provider }}:/app/coverage" \
+          DOCKER_TAG="lluminary-test:${{ matrix.provider }}" \
+          FILE="${{ matrix.test_path }} --cov=src/lluminary/models/providers --cov-report=xml:/app/coverage/coverage.xml"
+
+    - name: Upload ${{ matrix.provider }} coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage/${{ matrix.provider }}/coverage.xml
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: ${{ matrix.provider }},unittests
+        name: ${{ matrix.provider }}-coverage
+
+    # Move cache to avoid growing cache size
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache-provider
+        mv /tmp/.buildx-cache-provider-new /tmp/.buildx-cache-provider
+
+  # Summary job that runs after all tests complete
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [matrix-docker-test, provider-tests]
+    if: always() && github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create test summary
+      run: |
+        echo "# Matrix Test Results" > test_summary.md
+        echo "" >> test_summary.md
+        echo "## Python Version Tests" >> test_summary.md
+
+        # Check matrix-docker-test job statuses
+        python_status="${{ needs.matrix-docker-test.result }}"
+        if [[ "$python_status" == "success" ]]; then
+          echo "✅ All Python version tests passed" >> test_summary.md
+        else
+          echo "❌ Python version tests had failures" >> test_summary.md
+        fi
+
+        echo "" >> test_summary.md
+        echo "## Provider Tests" >> test_summary.md
+
+        # Check provider-tests job status
+        provider_status="${{ needs.provider-tests.result }}"
+        if [[ "$provider_status" == "success" ]]; then
+          echo "✅ All provider tests passed" >> test_summary.md
+        elif [[ "$provider_status" == "skipped" ]]; then
+          echo "⏩ Provider tests were skipped" >> test_summary.md
+        else
+          echo "❌ Provider tests had failures" >> test_summary.md
+        fi
+
+        echo "" >> test_summary.md
+        echo "Tests run in containerized environments for consistency across Python versions and provider-specific testing." >> test_summary.md
+
+    - name: Comment PR
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          const summary = fs.readFileSync('test_summary.md', 'utf8');
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: summary
+          });
+
+  # Performance benchmarking
+  benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    needs: [matrix-docker-test]
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+        pip install pytest-benchmark
+
+    - name: Run benchmarks
+      run: |
+        python -m pytest tests/unit --benchmark-only --benchmark-json=benchmark.json
+
+    - name: Compare benchmarks
+      if: github.event_name == 'pull_request'
+      run: |
+        # Check out base branch for comparison
+        git checkout ${{ github.base_ref }}
+        python -m pytest tests/unit --benchmark-only --benchmark-json=baseline.json
+
+        # Create a simple comparison report
+        echo "# Performance Benchmark Results" > benchmark_report.md
+        echo "" >> benchmark_report.md
+        echo "Comparison between base branch and PR:" >> benchmark_report.md
+
+        # Simple Python script to compare the benchmarks
+        python -c '
+        import json
+        with open("baseline.json") as f:
+            baseline = json.load(f)
+        with open("benchmark.json") as f:
+            current = json.load(f)
+
+        with open("benchmark_report.md", "a") as report:
+            report.write("| Test | Base | PR | Change |\n")
+            report.write("|------|------|----|---------|\n")
+
+            # Map baseline tests by name
+            baseline_tests = {test["name"]: test for test in baseline["benchmarks"]}
+
+            for test in current["benchmarks"]:
+                name = test["name"]
+                if name in baseline_tests:
+                    base_time = baseline_tests[name]["stats"]["mean"]
+                    pr_time = test["stats"]["mean"]
+                    change_pct = ((pr_time - base_time) / base_time) * 100
+
+                    # Format row with color indicators
+                    if change_pct > 5:  # More than 5% slower
+                        change_str = f"🔴 +{change_pct:.2f}%"
+                    elif change_pct < -5:  # More than 5% faster
+                        change_str = f"🟢 {change_pct:.2f}%"
+                    else:  # Within 5% (neutral)
+                        change_str = f"⚪ {change_pct:.2f}%"
+
+                    report.write(f"| {name} | {base_time:.6f}s | {pr_time:.6f}s | {change_str} |\n")
+        '
+
+    - name: Comment PR with benchmark results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          const benchmarkReport = fs.readFileSync('benchmark_report.md', 'utf8');
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: benchmarkReport
+          });

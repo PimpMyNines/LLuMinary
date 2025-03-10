@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  @apply bg-gray-50 text-gray-900;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.chat-container {
+  height: calc(100vh - 10rem);
+}
+
+.message-content pre {
+  @apply bg-gray-800 text-white p-4 rounded my-2 overflow-x-auto;
+}
+
+.message-content code {
+  @apply bg-gray-100 text-gray-800 px-1 py-0.5 rounded;
+}
+
+.markdown-content {
+  @apply prose prose-slate max-w-none;
+}
+
+.llm-flow-diagram rect {
+  @apply fill-primary-100 stroke-primary-600 stroke-2;
+}
+
+.llm-flow-diagram circle {
+  @apply fill-secondary-100 stroke-secondary-600 stroke-2;
+}
+
+.llm-flow-diagram path {
+  @apply stroke-gray-600 stroke-2;
+}
+
+.llm-flow-diagram text {
+  @apply text-sm fill-gray-800;
+}
+
+.typewriter {
+  overflow: hidden;
+  border-right: 0.15em solid #6366f1;
+  white-space: nowrap;
+  margin: 0 auto;
+  letter-spacing: 0.15em;
+  animation:
+    typing 3.5s steps(40, end),
+    blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: #6366f1 }
+}
