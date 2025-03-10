@@ -94,9 +94,6 @@
     <span class="n">LLMRateLimitError</span><span class="p">,</span>
     <span class="n">LLMServiceUnavailableError</span><span class="p">,</span>
     <span class="n">LLMValidationError</span><span class="p">,</span>
-    <span class="n">LLMContentError</span><span class="p">,</span>
-    <span class="n">LLMFormatError</span><span class="p">,</span>
-    <span class="n">LLMToolError</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLM</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.models.router</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm_from_model</span>
@@ -1364,7 +1361,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">LLMError</span><span class="p">):</span>
             <span class="c1"># Re-raise LLM errors directly</span>
             <span class="k">raise</span> <span class="n">error</span>
-        
+
         <span class="c1"># For other errors, wrap them in LLMProviderError</span>
         <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)}</span>
         <span class="k">raise</span> <span class="n">LLMProviderError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="n">provider</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>

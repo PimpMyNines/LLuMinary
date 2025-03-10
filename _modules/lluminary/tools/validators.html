@@ -116,15 +116,13 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Validate docstring</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">tool</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; must have a docstring&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; must have a docstring&quot;</span><span class="p">)</span>
 
         <span class="c1"># Get and validate signature</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Could not inspect tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not inspect tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Validate return type</span>
         <span class="k">if</span> <span class="n">sig</span><span class="o">.</span><span class="n">return_annotation</span> <span class="o">==</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Signature</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
@@ -142,8 +140,7 @@
 
         <span class="c1"># Validate parameters are JSON-serializable</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span>
-            <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
@@ -251,8 +248,7 @@
 
         <span class="c1"># Handle Tuple[T, ...] - variable length tuple</span>
         <span class="k">if</span> <span class="n">args</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">Ellipsis</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
-                <span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
 
         <span class="c1"># Handle fixed length tuples</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">:</span>
@@ -263,8 +259,7 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="c1"># Validate each element against its expected type</span>
-        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
-            <span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span><span class="p">,</span> <span class="n">typ</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span><span class="p">,</span> <span class="n">typ</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
 
     <span class="c1"># Handle Dict types</span>
     <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="nb">dict</span> <span class="ow">or</span> <span class="n">origin</span> <span class="ow">is</span> <span class="n">Dict</span><span class="p">:</span>
