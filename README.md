@@ -1,12 +1,29 @@
 # LLuMinary
 
-A versatile Python library for illuminating the path to multiple LLM providers through a unified interface.
+A comprehensive and type-safe Python library providing a unified interface to multiple LLM providers.
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/PimpMyNines/LLuMinary/actions/workflows/ci.yml/badge.svg)](https://github.com/PimpMyNines/LLuMinary/actions/workflows/ci.yml)
+[![Matrix Tests](https://github.com/PimpMyNines/LLuMinary/actions/workflows/matrix-docker-tests.yml/badge.svg)](https://github.com/PimpMyNines/LLuMinary/actions/workflows/matrix-docker-tests.yml)
 [![Codecov](https://codecov.io/gh/PimpMyNines/LLuMinary/branch/main/graph/badge.svg)](https://codecov.io/gh/PimpMyNines/LLuMinary)
 [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://pimpmy9s.github.io/LLuMinary/)
+
+## Project Status: Beta Release 0.1.0
+
+This is the initial release of LLuMinary, a production-ready abstraction layer for Large Language Models. While feature-complete for the providers listed below, there are enhancements planned for future releases.
+
+### What's Included in This Release
+- Complete implementations of OpenAI, Anthropic, Google AI, Cohere, and AWS Bedrock providers
+- Type-safe interfaces with comprehensive error handling
+- Extensive test coverage (>85%) with both unit and integration tests
+- Docker-based testing and CI/CD pipeline
+- Thorough documentation and examples for all features
+- Robust error handling with standardized exceptions and proper context
+- Comprehensive type annotations and TypedDict definitions
+
+### Coming in Future Releases
+See our [roadmap](#roadmap) for a detailed view of upcoming features and improvements.
 
 ## Credits
 
@@ -14,7 +31,7 @@ This project is based on the original llm-handler created by [Chase Brown (@chas
 
 ## Overview
 
-LLuMinary provides a clean, extensible interface for working with various LLM providers including OpenAI, Anthropic, Google, and Cohere. It handles all the complexity of provider-specific implementations, message formatting, and error handling, allowing you to focus on building applications.
+LLuMinary provides a robust, extensible interface for working with various LLM providers including OpenAI, Anthropic, Google, Cohere, and AWS Bedrock. It handles all the complexity of provider-specific implementations, message formatting, and error handling, allowing you to focus on building applications.
 
 ## Features
 
@@ -652,9 +669,120 @@ print(f"Google API key: {mask_key(os.environ.get('GOOGLE_API_KEY', ''))}")
 print(f"Cohere API key: {mask_key(os.environ.get('COHERE_API_KEY', ''))}")
 ```
 
+## Development and Testing
+
+### Prerequisites
+
+- Python 3.10 or higher
+- Docker (optional, for containerized testing)
+- GNU Make (optional, for using the Makefile)
+
+### Installation for Development
+
+Install the package with development dependencies:
+
+```bash
+# Basic installation
+pip install -e .
+
+# With development dependencies
+pip install -e ".[dev]"
+
+# With AWS dependencies
+pip install -e ".[aws]"
+```
+
+### Testing
+
+LLuMinary includes a comprehensive test suite and development utilities via a Makefile:
+
+```bash
+# Run all tests
+make test
+
+# Run unit tests only
+make test-unit
+
+# Run integration tests only
+make test-integration
+
+# Run AWS-specific tests
+make test-aws
+
+# Run tests in Docker (environment-independent)
+make test-docker
+
+# Run specific test file in Docker
+make test-docker-file FILE=tests/unit/test_aws_utils.py
+```
+
+### Code Quality
+
+```bash
+# Run linting
+make lint
+
+# Run type checking
+make type-check
+
+# Format code
+make format
+
+# Run all checks (lint, type-check, test)
+make check
+```
+
+### Docker-based Testing
+
+For consistent test environments across different systems, use Docker-based testing:
+
+```bash
+# Build the test container
+make docker-build
+
+# Run all tests in Docker
+make test-docker
+```
+
+This approach ensures tests run in an isolated environment with consistent dependencies.
+
+For a full list of available commands, run:
+
+```bash
+make help
+```
+
 ## Contributing
 
 Contributions are welcome! Please check out our [contributing guidelines](CONTRIBUTING.md) for details.
+
+# Roadmap
+
+The following features and improvements are planned for upcoming releases:
+
+## Short-term (0.2.x)
+- Additional provider implementations (e.g., Mistral, Anthropic Claude 3.7)
+- Protocol-based type definitions for external libraries without type stubs
+- Enhanced tool usage in streaming mode
+- Additional documentation and examples for enterprise use cases
+- Improved telemetry for token/cost tracking
+- Support for vector database integrations (e.g., FAISS, Pinecone)
+
+## Medium-term (0.3.x)
+- Agent framework built on top of the LLM abstraction
+- Memory abstractions and conversation history management
+- Prompt template system with variable substitution
+- Local model support (via Ollama, llama.cpp)
+- Content moderation integrations
+- Fine-tuning API abstractions across providers
+
+## Long-term (1.0 and beyond)
+- Performance optimizations for high-throughput scenarios
+- Advanced caching mechanisms with semantic deduplication
+- Multi-model routing for cost/feature optimization
+- Distributed model serving support
+- Monitoring and observability integrations
+- Enterprise authentication integrations (SSO, Azure AD, etc.)
 
 ## License
 
