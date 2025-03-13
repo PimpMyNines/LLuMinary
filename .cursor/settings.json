@@ -1,0 +1,45 @@
+{
+    "customCommands": {
+        "github:find-duplicates": {
+            "command": "source .cursor/github_api_helpers.sh && find_duplicates",
+            "description": "Find potential duplicate issues in the repository"
+        },
+        "github:close-duplicate": {
+            "command": "source .cursor/github_api_helpers.sh && close_as_duplicate $1 $2",
+            "description": "Close an issue as a duplicate of another (Args: DUPLICATE_ISSUE ORIGINAL_ISSUE)"
+        },
+        "github:list-issues": {
+            "command": "source .cursor/github_api_helpers.sh && list_issues $1",
+            "description": "List all issues in the repository (Args: [state=open|closed|all])"
+        },
+        "github:compare-issues": {
+            "command": "source .cursor/github_api_helpers.sh && compare_issues $1 $2",
+            "description": "Compare two issues to check for duplicates (Args: ISSUE_NUMBER_1 ISSUE_NUMBER_2)"
+        },
+        "github:list-sub-issues": {
+            "command": "source .cursor/github_api_helpers.sh && list_sub_issues $1",
+            "description": "List all sub-issues for a parent issue (Args: PARENT_ISSUE_NUMBER)"
+        },
+        "github:add-sub-issue": {
+            "command": "source .cursor/github_api_helpers.sh && add_sub_issue $1 $2",
+            "description": "Add an existing issue as a sub-issue to a parent issue (Args: PARENT_ISSUE_NUMBER SUB_ISSUE_NUMBER)"
+        },
+        "github:remove-sub-issue": {
+            "command": "source .cursor/github_api_helpers.sh && remove_sub_issue $1 $2",
+            "description": "Remove a sub-issue from a parent issue (Args: PARENT_ISSUE_NUMBER SUB_ISSUE_NUMBER)"
+        },
+        "github:reprioritize-sub-issue": {
+            "command": "source .cursor/github_api_helpers.sh && reprioritize_sub_issue $1 $2 $3",
+            "description": "Change the priority of a sub-issue (Args: PARENT_ISSUE_NUMBER SUB_ISSUE_NUMBER [AFTER_ISSUE_NUMBER])"
+        },
+        "github:create-sub-issues-from-tasks": {
+            "command": "source .cursor/github_api_helpers.sh && create_sub_issues_from_tasks $1",
+            "description": "Create sub-issues from tasks in a parent issue (Args: PARENT_ISSUE_NUMBER)"
+        }
+    },
+    "github": {
+        "repository": "PimpMyNines/LLuMinary",
+        "apiHelpers": ".cursor/github_api_helpers.sh",
+        "apiReference": ".cursor/github_api_reference.md"
+    }
+}
