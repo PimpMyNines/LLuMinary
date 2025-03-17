@@ -1,14 +1,32 @@
-# LLuminary Project - Development Roadmap and Issue Resolution Guide
+# LLuminary Project - Development Guide
 
-This document provides a structured guide for addressing the open issues in the LLuminary project, ensuring GitHub Actions pass successfully, and maintaining code quality.
+This document serves as the central reference for the LLuminary project development. It consolidates all development plans, tasks, and implementation notes to maintain a clean repository structure while preserving essential information.
 
 ## Project Overview
 
-LLuminary is a platform for interfacing with various LLM providers (OpenAI, Anthropic, Google, AWS Bedrock, Cohere) with a unified API. The project aims to expand support for additional providers and features.
+LLuminary is a platform for interfacing with various LLM providers (OpenAI, Anthropic, Google, AWS Bedrock, Cohere) with a unified API. The project aims to expand support for additional providers and features while maintaining a consistent interface.
 
-## Testing and Quality Checks
+## Development Status
 
-Essential testing commands for LLuminary:
+Current version: v0.1.0 (Beta)
+
+**Implemented Features:**
+- ✅ Core abstraction layer for LLM providers
+- ✅ Complete implementations for OpenAI, Anthropic, Google AI, Cohere, and AWS Bedrock
+- ✅ Unified error handling with standardized exception types
+- ✅ Type-safe interfaces with comprehensive error handling
+- ✅ Support for text generation, streaming, and embeddings
+- ✅ Function/tool calling capabilities
+- ✅ Image understanding for multimodal models
+- ✅ Token counting and cost estimation
+- ✅ Classification functionality
+- ✅ Document reranking
+- ✅ Comprehensive test suite (>85% coverage)
+- ✅ Docker-based testing and CI/CD pipeline
+
+## Command Reference
+
+### Testing Commands
 
 ```bash
 # Basic testing
@@ -28,162 +46,110 @@ make format                               # Format code (black)
 make check                                # Run lint, type-check, and tests
 ```
 
-## GitHub Actions Workflow Issues
+### Docker Testing Commands
 
-The `.github/workflows/matrix-docker-tests.yml` file has the following issues that need to be addressed to ensure CI passes:
+```bash
+# Build Docker image
+make docker-build                         # Build standard Docker image
+make docker-build-matrix                  # Build matrix test Docker image
 
-1. **Dockerfile.matrix Handling**:
-   - Fix the workflow to properly use the dynamically created Dockerfile.matrix
+# Run tests in Docker
+make test-docker DOCKER_TAG="lluminary-test:latest"  # Run all tests
+make test-docker-file FILE="tests/unit/test_openai_*.py"  # Run specific tests
+```
 
-2. **Build Command Consistency**:
-   - Ensure docker-build-matrix-cached target properly uses the Dockerfile.matrix
+## Priority Tasks
 
-3. **Provider Tests Logic**:
-   - Improve the conditional logic for provider-specific tests
-   - Ensure the FILE parameter is properly passed to the test-docker-file command
+### Critical Issues (Fix First)
 
-4. **Secret Requirements**:
-   - Ensure CODECOV_TOKEN is set in GitHub repository secrets for coverage reporting
+1. **Fix GitHub Actions Workflow Issues**
+   - [ ] Fix Dockerfile.matrix handling in CI workflow
+   - [ ] Fix conditional execution logic for provider-specific tests
+   - [ ] Ensure docker-build-matrix-cached target properly uses Dockerfile.matrix
+   - [ ] Configure CODECOV_TOKEN in repository secrets for coverage reporting
 
-## Open GitHub Issues and Resolution Plan
+2. **Issue #3: Implement unified type definitions across providers**
+   - [ ] Finish implementation in `src/lluminary/models/types.py`
+   - [ ] Update provider files to use standard types:
+     - [ ] `anthropic.py`
+     - [ ] `openai.py`
+     - [ ] `google.py`
+     - [ ] `bedrock.py`
+     - [ ] `cohere.py`
+   - [ ] Add comprehensive type checking tests
+   - [ ] Ensure mypy type checking passes with --strict flag
 
-### High Priority
+### High Priority Features
 
-#### Issue #3: Implement unified type definitions across providers
+1. **Issue #4: Enhance streaming support for tool/function calling**
+   - [ ] Analyze current streaming implementation across providers
+   - [ ] Design unified streaming tool calls interface
+   - [ ] Update types.py to include streaming tool call types
+   - [ ] Add streaming tool call handling to base provider interface
+   - [ ] Implement for each provider (OpenAI, Anthropic, Bedrock)
+   - [ ] Create tests for streaming tool calls
 
-- **Progress**: Initial implementation in `src/lluminary/models/types.py`
-- **Next Steps**:
-  1. Audit all provider files to use standard types:
-     - [ ] Update `anthropic.py` to use unified types
-     - [ ] Update `openai.py` to use unified types
-     - [ ] Update `google.py` to use unified types
-     - [ ] Update `bedrock.py` to use unified types
-     - [ ] Update `cohere.py` to use unified types
-  2. Add comprehensive type checking tests:
-     - [ ] Create/update `tests/unit/test_types.py`
-     - [ ] Add specific type validation tests for each provider
-  3. Ensure mypy type checking works with --strict flag:
-     - [ ] Fix any type errors identified with mypy
+2. **Issue #2: Add support for Mistral AI provider**
+   - [ ] Create new provider file `src/lluminary/models/providers/mistral.py`
+   - [ ] Implement core MistralLLM class based on BaseLLM
+   - [ ] Add authentication via API key
+   - [ ] Implement text generation and streaming
+   - [ ] Implement token counting and cost estimation
+   - [ ] Implement error handling and mapping
+   - [ ] Create unit and integration tests
+   - [ ] Add API documentation and example script
 
-#### Issue #4: Enhance streaming support for tool/function calling
+### Medium Priority Features
 
-- **Next Steps**:
-  1. Analyze current streaming implementation across providers:
-     - [ ] Review OpenAI streaming implementation
-     - [ ] Review Anthropic streaming implementation
-     - [ ] Review Bedrock streaming implementation
-  2. Design unified streaming tool calls interface:
-     - [ ] Update types.py to include streaming tool call types
-     - [ ] Add streaming tool call handling to base provider interface
-  3. Implement for each provider:
-     - [ ] Add streaming tool calls for OpenAI
-     - [ ] Add streaming tool calls for Anthropic
-     - [ ] Add streaming tool calls for Bedrock
-  4. Create tests:
-     - [ ] Add unit tests for streaming tool calls
-     - [ ] Add integration tests for streaming tool calls
+1. **Issue #5: Add vector database integration support**
+   - [ ] Create `src/lluminary/vector_db/` module
+   - [ ] Design base interface for vector storage
+   - [ ] Add FAISS implementation
+   - [ ] Add Pinecone implementation
+   - [ ] Connect to existing embedding functionality
+   - [ ] Add similarity search capabilities
+   - [ ] Create unit and integration tests
 
-### Medium Priority
-
-#### Issue #2: Add support for Mistral AI provider
-
-- **Next Steps**:
-  1. Create new provider file:
-     - [ ] Create `src/lluminary/models/providers/mistral.py`
-     - [ ] Implement core MistralLLM class based on BaseLLM
-  2. Implement key features:
-     - [ ] Add authentication via API key
-     - [ ] Implement text generation and streaming
-     - [ ] Implement token counting and cost estimation
-     - [ ] Implement error handling and mapping
-  3. Add tests:
-     - [ ] Create unit tests (`tests/unit/test_mistral_*.py`)
-     - [ ] Create integration tests if possible
-  4. Add documentation and examples:
-     - [ ] Add API documentation for Mistral provider
-     - [ ] Create example script for Mistral usage
-
-#### Issue #5: Add vector database integration support
-
-- **Next Steps**:
-  1. Design vector storage abstraction:
-     - [ ] Create `src/lluminary/vector_db/` module
-     - [ ] Design base interface for vector storage
-  2. Implement adapters:
-     - [ ] Add FAISS implementation
-     - [ ] Add Pinecone implementation
-  3. Add integration with embeddings:
-     - [ ] Connect to existing embedding functionality
-     - [ ] Add similarity search capabilities
-  4. Create tests:
-     - [ ] Add unit tests for vector storage
-     - [ ] Add integration tests for full functionality
-
-#### Issue #6: Implement robust caching mechanism
-
-- **Next Steps**:
-  1. Design caching interface:
-     - [ ] Create `src/lluminary/cache/` module
-     - [ ] Design base caching interface
-  2. Implement providers:
-     - [ ] Add in-memory cache implementation
-     - [ ] Add disk-based cache implementation
-     - [ ] Add Redis cache implementation
-  3. Add semantic similarity caching:
-     - [ ] Implement embedding-based cache lookup
-  4. Create tests:
-     - [ ] Add unit tests for each cache type
-     - [ ] Add integration tests for caching behavior
+2. **Issue #6: Implement robust caching mechanism**
+   - [ ] Create `src/lluminary/cache/` module
+   - [ ] Design base caching interface
+   - [ ] Add in-memory cache implementation
+   - [ ] Add disk-based cache implementation
+   - [ ] Add Redis cache implementation
+   - [ ] Implement embedding-based cache lookup
+   - [ ] Create unit and integration tests
 
 ### Long-Term Goals
 
-#### Issue #7: Add support for local models via Ollama
+1. **Issue #7: Add support for local models via Ollama**
+   - [ ] Create `src/lluminary/models/providers/ollama.py`
+   - [ ] Implement OllamaLLM class based on BaseLLM
+   - [ ] Add offline text generation
+   - [ ] Handle Ollama-specific configuration
+   - [ ] Create unit and integration tests
 
-- **Next Steps**:
-  1. Create new provider:
-     - [ ] Create `src/lluminary/models/providers/ollama.py`
-     - [ ] Implement OllamaLLM class based on BaseLLM
-  2. Implement key features:
-     - [ ] Add offline text generation
-     - [ ] Handle Ollama-specific configuration
-  3. Add tests:
-     - [ ] Create unit tests with mocked Ollama
-     - [ ] Create integration tests for local deployment
+2. **Issue #8: Implement agent framework**
+   - [ ] Create `src/lluminary/agents/` module
+   - [ ] Design base agent interfaces and abstractions
+   - [ ] Add memory systems
+   - [ ] Implement planning capabilities
+   - [ ] Create standard agent types
+   - [ ] Connect to existing tools module
+   - [ ] Create unit and integration tests
 
-#### Issue #8: Implement agent framework
+3. **Issue #9: Add advanced observability and monitoring**
+   - [ ] Create `src/lluminary/observability/` module
+   - [ ] Add OpenTelemetry integration
+   - [ ] Add tracing support
+   - [ ] Add metrics collection
+   - [ ] Implement Prometheus export
+   - [ ] Add dashboard templates
+   - [ ] Implement budget alerts and cost reporting
+   - [ ] Create unit and integration tests
 
-- **Next Steps**:
-  1. Design agent architecture:
-     - [ ] Create `src/lluminary/agents/` module
-     - [ ] Design base agent interfaces and abstractions
-  2. Implement components:
-     - [ ] Add memory systems
-     - [ ] Implement planning capabilities
-     - [ ] Create standard agent types
-  3. Add tools integration:
-     - [ ] Connect to existing tools module
-  4. Create tests:
-     - [ ] Add unit tests for agent components
-     - [ ] Add integration tests for agent behaviors
+## Implementation Guidelines
 
-#### Issue #9: Add advanced observability and monitoring
-
-- **Next Steps**:
-  1. Implement OpenTelemetry integration:
-     - [ ] Create `src/lluminary/observability/` module
-     - [ ] Add tracing support
-     - [ ] Add metrics collection
-  2. Add monitoring features:
-     - [ ] Implement Prometheus export
-     - [ ] Add dashboard templates
-  3. Add cost tracking:
-     - [ ] Implement budget alerts
-     - [ ] Add cost reporting
-  4. Create tests:
-     - [ ] Add unit tests for observability components
-     - [ ] Add integration tests for monitoring
-
-## Github Actions Workflow Testing Procedure
+### CI/CD Workflow Testing Procedure
 
 Before creating a PR, run the following tests to ensure CI will pass:
 
@@ -212,7 +178,7 @@ Before creating a PR, run the following tests to ensure CI will pass:
    make test-docker-file FILE="tests/unit/test_openai_*.py"
    ```
 
-## Adding New Providers Checklist
+### Adding New Providers Checklist
 
 When implementing a new provider:
 
@@ -229,7 +195,7 @@ When implementing a new provider:
 6. [ ] Update documentation
 7. [ ] Add example usage script
 
-## Type Checking Guidelines
+### Type Checking Guidelines
 
 All code should pass mypy with strict mode:
 
@@ -244,12 +210,76 @@ For new types, follow these guidelines:
 4. Use Literal types for enumeration values
 5. Use Protocol classes for duck typing interfaces
 
+### Error Handling Best Practices
+
+1. **Standard Exception Hierarchy**
+   - Use exceptions defined in `src/lluminary/exceptions.py`
+   - Map provider-specific errors to our standard exceptions
+   - Include helpful error messages with context
+
+2. **Consistent Error Mapping**
+   - Categorize errors by type (Authentication, Rate Limiting, etc.)
+   - Add debug information when appropriate
+   - Preserve original error information when wrapping exceptions
+
+3. **Retry Logic**
+   - Implement appropriate backoff for retryable errors
+   - Add clear logging for retry attempts
+   - Use configurable retry policies
+
+## Provider Implementation Status
+
+### OpenAI
+- ✅ Text generation
+- ✅ Streaming
+- ✅ Function calling
+- ✅ Image understanding
+- ✅ Embeddings
+- ✅ Token counting
+- ✅ Reranking
+- ✅ Error handling
+
+### Anthropic
+- ✅ Text generation
+- ✅ Streaming
+- ✅ Function calling (tool use)
+- ✅ Image understanding
+- ✅ Embeddings
+- ✅ Token counting
+- ✅ Error handling
+
+### Google
+- ✅ Text generation
+- ✅ Streaming
+- ✅ Function calling
+- ✅ Image understanding
+- ✅ Embeddings
+- ✅ Token counting
+- ✅ Error handling
+
+### AWS Bedrock
+- ✅ Text generation
+- ✅ Streaming
+- ✅ Function calling (partial)
+- ✅ Image understanding
+- ✅ Embeddings (selected models)
+- ✅ Token counting
+- ✅ Error handling
+
+### Cohere
+- ✅ Text generation
+- ✅ Streaming
+- ✅ Embeddings
+- ✅ Reranking
+- ✅ Token counting
+- ✅ Error handling
+
 ## Session Notes
 
 | Date         | Notes                                                          |
 |--------------|----------------------------------------------------------------|
 | 2025-03-10   | Identified Issues #3 and #4 as highest priorities; began work on types.py |
-| [Next session] | [Notes for next session]                                      |
+| 2025-03-17   | Consolidated development notes into CLAUDE.md; fixed CI workflow issues in progress |
 
 ---
 

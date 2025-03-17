@@ -116,3 +116,4 @@ src/llmhandler/
 
 # AWS
 .aws-sam/
+*.code-workspace
