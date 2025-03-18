@@ -6,6 +6,15 @@ Thank you for considering contributing to LLuMinary! This document provides guid
 
 Please be respectful and considerate of others when contributing to this project.
 
+## Project Contributors
+
+### Original Author
+- **Chase Brown (@chaseabrown)** - Creator of the original llm-handler project that served as the foundation for LLuMinary
+
+### Core Team
+- **PimpMyNines Team** - Project lead, architecture redesign, and enhancements
+- **Chase Brown (@chaseabrown)** - Original author, ongoing development, and technical guidance
+
 ## How to Contribute
 
 1. Fork the repository
@@ -38,6 +47,12 @@ Run tests with coverage:
 python -m pytest tests/ --cov=lluminary --cov-report=term
 ```
 
+Run tests in Docker (safer, more isolated):
+```bash
+make test-docker-unit                     # Run unit tests in Docker
+make test-docker-integration              # Run integration tests in Docker
+```
+
 ## Code Style
 
 This project uses:
@@ -46,7 +61,15 @@ This project uses:
 - mypy for type checking
 - ruff for linting
 
-You can run these tools manually or let pre-commit handle them automatically.
+You can run these tools manually or let pre-commit handle them automatically:
+```bash
+make lint                                 # Run linting (ruff)
+make type-check                           # Run type checking (mypy)
+make format                               # Format code (black)
+
+# Combined checks
+make check                                # Run lint, type-check, and tests
+```
 
 ## Pull Request Process
 
