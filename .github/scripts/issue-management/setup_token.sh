@@ -19,11 +19,17 @@ if [ ! -z "$GITHUB_TOKEN" ]; then
     fi
 fi
 
-echo "To use these tools, you need a GitHub Personal Access Token with 'repo' scope."
+echo "To use these tools, you need a GitHub Personal Access Token with appropriate scopes:"
 echo "If you don't have one yet, you can create one at:"
 echo "https://github.com/settings/tokens/new"
 echo ""
-echo "Make sure to select the 'repo' scope when creating the token."
+echo "Required scopes:"
+echo "  - 'repo' (for basic repository operations)"
+echo ""
+echo "If you're working with organization repositories and want to use the Sub-issues feature:"
+echo "  - 'admin:org' or 'write:org' (for organization-level features)"
+echo ""
+echo "Make sure to grant the token access to your organization"
 echo ""
 
 # Get token from user
