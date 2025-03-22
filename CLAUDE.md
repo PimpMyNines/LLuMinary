@@ -106,14 +106,21 @@ make test-docker-file FILE="tests/unit/test_openai_*.py"  # Run specific tests
 
 ### Critical Issues (Fix First)
 
-1. **Fix GitHub Actions Workflow Issues**
-   - [ ] Fix Dockerfile.matrix handling in CI workflow
-   - [ ] Fix conditional execution logic for provider-specific tests
-   - [ ] Ensure docker-build-matrix-cached target properly uses Dockerfile.matrix
-   - [ ] Configure CODECOV_TOKEN in repository secrets for coverage reporting
+1. **Fix GitHub Actions Workflow Issues** - ✅ COMPLETED
+   - [x] Fix Dockerfile.matrix handling in CI workflow
+   - [x] Fix conditional execution logic for provider-specific tests
+   - [x] Ensure docker-build-matrix-cached target properly uses Dockerfile.matrix
+   - [x] Add documentation for CODECOV_TOKEN configuration in repository secrets
+   - [x] Create verification scripts for GitHub Actions workflows
+   - [x] Verify workflow with scripts for testing PRs
 
 2. **Issue #3: Implement unified type definitions across providers**
-   - [ ] Finish implementation in `src/lluminary/models/types.py`
+   - [x] Enhance implementation in `src/lluminary/models/types.py`
+     - [x] Add Provider enum for consistent identification
+     - [x] Create unified content, message, and tool types
+     - [x] Add streaming type definitions
+     - [x] Implement embedding and reranking types
+     - [x] Add authentication types
    - [ ] Update provider files to use standard types:
      - [ ] `anthropic.py`
      - [ ] `openai.py`
@@ -372,6 +379,39 @@ When making commits through Claude or other AI assistants, follow these guidelin
    - Include lessons learned and challenges encountered
    - Provide guidance for the next priority tasks
 
+## Instructions for Next Tasks
+
+After completing each task:
+1. Review ENHANCEMENT_PLAN.md to identify the next highest priority item
+2. Complete the identified task
+3. Update ENHANCEMENT_PLAN.md with the progress made
+4. Update CLAUDE.md with completed checkboxes and additional details
+5. Record lessons learned in a new file called LESSONS.md
+
+### Next Tasks in Queue
+
+1. **Complete Type System Implementation**
+   - Update at least one provider file to use the new types (anthropic.py or openai.py)
+   - Create a conversion utility to map between provider types and standard types
+   - Add basic tests to verify type compatibility
+
+2. **Begin Streaming Function Call Enhancement (Issue #4)**
+   - Analyze existing streaming implementations
+   - Design unified streaming tool calls interface
+   - Focus on the most commonly used providers first (OpenAI, Anthropic)
+
+3. **Configure CODECOV_TOKEN**
+   - Verify if there's access to repository settings to add secrets
+   - If not, document the exact steps needed for repository administrators
+
+## Guidelines for Contribution
+
+When implementing changes:
+1. **Maintain backwards compatibility** - Ensure existing code using the library continues to work
+2. **Add comprehensive documentation** - Update docstrings and add examples
+3. **Type safety first** - All code should pass mypy in strict mode
+4. **Test-driven development** - Write tests first, then implement features
+
 ## Session Notes
 
 | Date         | Notes                                                          |
@@ -379,6 +419,7 @@ When making commits through Claude or other AI assistants, follow these guidelin
 | 2025-03-10   | Identified Issues #3 and #4 as highest priorities; began work on types.py |
 | 2025-03-17   | Consolidated development notes into CLAUDE.md; fixed CI workflow issues in progress |
 | 2025-03-22   | Completed GitHub Actions workflow fixes (Priority 1.1 from ENHANCEMENT_PLAN.md):<br>- Fixed Dockerfile.matrix handling with build args<br>- Improved provider test conditional execution<br>- Enhanced coverage reporting with proper dependencies<br>- Added documentation on required secrets<br>- Next priority: Implement unified type definitions (Priority 1.2) |
+| 2025-03-22   | Made substantial progress on unified type definitions (Priority 1.2):<br>- Enhanced `types.py` with comprehensive type system<br>- Added Provider enum for consistent identification<br>- Created unified content, message, and tool types<br>- Added streaming, embedding, and reranking type definitions<br>- Implemented authentication type structures<br>- Next steps: Update provider implementations to use new types |
 
 ---
 
