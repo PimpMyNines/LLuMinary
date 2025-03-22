@@ -108,6 +108,36 @@ from ...exceptions import (
 )
 from ...utils.aws import get_secret
 from ..base import LLM
+from ..types import (
+    # Base content types
+    BaseTextContent,
+    BaseImageContent,
+    BaseImageSource,
+    BaseToolUseContent,
+    BaseToolResultContent,
+    ContentType,
+    
+    # Message types
+    BaseMessage,
+    BaseUserMessage,
+    BaseAssistantMessage,
+    BaseSystemMessage,
+    BaseToolMessage,
+    RoleType,
+    MessageList,
+    
+    # Tool and function types
+    BaseParameterProperty,
+    BaseParameters,
+    BaseToolDefinition,
+    BaseFunctionDefinition,
+    BaseToolCall,
+    BaseToolCallData,
+    BaseStreamingToolCall,
+    
+    # Provider identification
+    Provider,
+)
 
 
 # Type definitions for OpenAI API structures
@@ -371,11 +401,39 @@ class OpenAILLM(LLM):
 
         # Call super().__init__ after setting required attributes
         super().__init__(model_name, **kwargs)
+        
+        # Set provider identifier
+        self.provider = Provider.OPENAI
+        
+    def _validate_provider_config(self, config: Dict[str, Any]) -> None:
+        """
+        Validate OpenAI provider configuration.
+        
+        Args:
+            config: Provider configuration dictionary
+            
+        Raises:
+            LLMConfigurationError: If configuration is invalid
+        """
+        # OpenAI-specific configuration validation
+        if "api_base" in config and not isinstance(config["api_base"], (str, type(None))):
+            raise LLMConfigurationError(
+                message="api_base must be a string or None",
+                provider="openai",
+                details={"provided_type": type(config["api_base"]).__name__}
+            )
+            
+        if "timeout" in config and not isinstance(config["timeout"], (int, float)):
+            raise LLMConfigurationError(
+                message="timeout must be a number",
+                provider="openai",
+                details={"provided_type": type(config["timeout"]).__name__}
+            )
 
     @property
     def provider_name(self) -> str:
         """Get the provider name."""
-        return "openai"
+        return Provider.OPENAI.value
 
     def auth(self) -> None:
         """
@@ -1192,7 +1250,7 @@ class OpenAILLM(LLM):
                 # Note: Real image cost is more complex and depends on size/detail
                 image_cost = float(num_images) * image_token_cost
 
-                # Prepare comprehensive usage statistics
+                # Prepare comprehensive usage statistics using standardized structure
                 usage_stats = {
                     "read_tokens": input_tokens,
                     "write_tokens": output_tokens,
@@ -1202,20 +1260,26 @@ class OpenAILLM(LLM):
                     "write_cost": round(write_cost, 6),
                     "image_cost": round(image_cost, 6),
                     "total_cost": round(read_cost + write_cost + image_cost, 6),
+                    "model": self.model_name,
+                    "provider": Provider.OPENAI.value,
+                    "successful": True,
+                    "event_id": event_id,
                 }
             except Exception:
                 # Non-fatal: use defaults if usage calculation fails
                 usage_stats = {
-                    "read_tokens": len(str(formatted_messages)) // 4,
-                    # Approximate
+                    "read_tokens": len(str(formatted_messages)) // 4,  # Approximate
                     "write_tokens": len(response_text) // 4,  # Approximate
-                    "total_tokens": (len(str(formatted_messages)) + len(response_text))
-                    // 4,
+                    "total_tokens": (len(str(formatted_messages)) + len(response_text)) // 4,
                     "images": 0,
                     "read_cost": 0,
                     "write_cost": 0,
                     "image_cost": 0,
                     "total_cost": 0,
+                    "model": self.model_name,
+                    "provider": Provider.OPENAI.value,
+                    "successful": True,
+                    "event_id": event_id,
                 }
 
             # Extract function/tool calls from the response
@@ -2129,36 +2193,4 @@ class OpenAILLM(LLM):
         except Exception as e:
             raise Exception(f"Error generating image with OpenAI: {e!s}")
 
-    def _validate_provider_config(self, config: Dict[str, Any]) -> None:
-        """
-        Validate OpenAI-specific configuration.
-
-        Args:
-            config: Provider configuration dictionary
-
-        Raises:
-            LLMValidationError: If configuration is invalid
-        """
-        # Check for required API key
-        if "api_key" not in config and "use_aws_secrets" not in config:
-            raise LLMValidationError(
-                "Either 'api_key' or 'use_aws_secrets' must be provided for OpenAI provider",
-                details={"missing_fields": ["api_key or use_aws_secrets"]},
-            )
-
-        # Validate model
-        if self.model_name not in self.SUPPORTED_MODELS:
-            raise LLMValidationError(
-                f"Unsupported model: {self.model_name}",
-                details={
-                    "model": self.model_name,
-                    "supported_models": self.SUPPORTED_MODELS,
-                },
-            )
-
-        # If timeout is specified, ensure it's a number
-        if "timeout" in config and not isinstance(config["timeout"], (int, float)):
-            raise LLMValidationError(
-                f"Invalid timeout: {config['timeout']}",
-                details={"timeout": config["timeout"]},
-            )
+    # Note: _validate_provider_config is already implemented above

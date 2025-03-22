@@ -109,57 +109,85 @@ from ...exceptions import (
 )
 from ...utils.aws import get_secret
 from ..base import LLM
+from ..types import (
+    # Base content types
+    BaseTextContent,
+    BaseImageContent,
+    BaseImageSource,
+    BaseToolUseContent,
+    BaseToolResultContent,
+    BaseThinkingContent,
+    ContentType,
+    
+    # Message types
+    BaseMessage,
+    BaseUserMessage,
+    BaseAssistantMessage,
+    RoleType,
+    MessageList,
+    
+    # Tool and function types
+    BaseParameterProperty,
+    BaseParameters,
+    BaseToolDefinition,
+    BaseFunctionDefinition,
+    BaseToolCall,
+    BaseToolCallData,
+    
+    # Provider identification
+    Provider,
+)
 
 
-# Type definitions for Anthropic API structures
+# Anthropic-specific type definitions using the base types as reference
 class AnthropicImageSource(TypedDict):
-    """Type definition for Anthropic image source structure."""
-
+    """Anthropic-specific image source structure."""
+    
     type: Literal["base64"]
     media_type: str
     data: str
 
 
 class AnthropicTextContent(TypedDict):
-    """Type definition for Anthropic text content part."""
-
+    """Anthropic-specific text content part."""
+    
     type: Literal["text"]
     text: str
 
 
 class AnthropicImageContent(TypedDict):
-    """Type definition for Anthropic image content part."""
-
+    """Anthropic-specific image content part."""
+    
     type: Literal["image"]
     source: AnthropicImageSource
 
 
 class AnthropicToolUseContent(TypedDict):
-    """Type definition for Anthropic tool use content part."""
-
+    """Anthropic-specific tool use content part."""
+    
     type: Literal["tool_use"]
-    id: str
+    id: str  # Anthropic uses 'id' instead of 'tool_id'
     name: str
     input: Dict[str, Any]
 
 
 class AnthropicToolResultContent(TypedDict):
-    """Type definition for Anthropic tool result content part."""
-
+    """Anthropic-specific tool result content part."""
+    
     type: Literal["tool_result"]
-    tool_use_id: str
-    content: str
+    tool_use_id: str  # Anthropic uses 'tool_use_id' instead of 'tool_id'
+    content: str  # Anthropic uses 'content' instead of 'result'
 
 
 class AnthropicThinkingContent(TypedDict):
-    """Type definition for Anthropic thinking content part."""
-
+    """Anthropic-specific thinking content part."""
+    
     type: Literal["thinking"]
     thinking: str
-    signature: str
+    signature: str  # Anthropic requires a signature for thinking content
 
 
-# Union type for all content part types
+# Union type for all Anthropic content part types
 AnthropicContentPart = Union[
     AnthropicTextContent,
     AnthropicImageContent,
@@ -170,16 +198,16 @@ AnthropicContentPart = Union[
 
 
 class AnthropicMessage(TypedDict):
-    """Type definition for an Anthropic message."""
-
+    """Anthropic-specific message structure."""
+    
     role: Literal["user", "assistant"]
     content: List[AnthropicContentPart]
 
 
-# Tool-related type definitions
+# Tool-related Anthropic-specific type definitions
 class AnthropicParameterProperties(TypedDict, total=False):
-    """Type definition for parameter properties in a tool definition."""
-
+    """Anthropic-specific parameter properties."""
+    
     type: str
     description: Optional[str]
     enum: Optional[List[str]]
@@ -189,34 +217,34 @@ class AnthropicParameterProperties(TypedDict, total=False):
 
 
 class AnthropicParameters(TypedDict):
-    """Type definition for parameters in a tool definition."""
-
+    """Anthropic-specific parameters structure."""
+    
     type: str
     properties: Dict[str, AnthropicParameterProperties]
     required: Optional[List[str]]
 
 
 class AnthropicFunctionDefinition(TypedDict):
-    """Type definition for a function definition in a tool."""
-
+    """Anthropic-specific function definition."""
+    
     name: str
     description: str
     parameters: AnthropicParameters
 
 
 class AnthropicTool(TypedDict):
-    """Type definition for an Anthropic tool."""
-
+    """Anthropic-specific tool definition."""
+    
     type: Literal["function"]
     function: AnthropicFunctionDefinition
 
 
 class ToolCallData(TypedDict):
-    """Type definition for tool call data in streaming responses."""
-
+    """Anthropic-specific tool call data for streaming."""
+    
     id: str
     name: str
-    arguments: str
+    arguments: str  # Anthropic uses 'arguments' instead of 'input'
     type: Literal["function"]
 
 
@@ -305,6 +333,23 @@ class AnthropicLLM(LLM):
         # Initialize API key directly if provided in kwargs
         if "api_key" in kwargs:
             self.config["api_key"] = kwargs["api_key"]
+            
+        # Set provider identifier
+        self.provider = Provider.ANTHROPIC
+        
+    def _validate_provider_config(self, config: Dict[str, Any]) -> None:
+        """
+        Validate Anthropic provider configuration.
+        
+        Args:
+            config: Provider configuration dictionary
+            
+        Raises:
+            LLMConfigurationError: If configuration is invalid
+        """
+        # No specific validation required for initialization
+        # Authentication will be handled in the auth method
+        pass
 
     def auth(self) -> None:
         """
@@ -895,7 +940,7 @@ class AnthropicLLM(LLM):
             # Some models might not have image costs
             image_cost = num_images * (costs["image_cost"] or 0.0)
 
-            # Prepare comprehensive usage statistics
+            # Prepare comprehensive usage statistics (using base type structure)
             usage_stats = {
                 "read_tokens": input_tokens,
                 "write_tokens": output_tokens,
@@ -905,6 +950,9 @@ class AnthropicLLM(LLM):
                 "write_cost": round(write_cost, 6),
                 "image_cost": round(image_cost, 6),
                 "total_cost": round(read_cost + write_cost + image_cost, 6),
+                "model": self.model_name,
+                "provider": Provider.ANTHROPIC.value,
+                "successful": True,
             }
 
             # Extract text response and any special content
@@ -1283,7 +1331,8 @@ class AnthropicLLM(LLM):
         # Get the base tool definition
         base_tool = super()._convert_function_to_tool(function)
 
-        # Format specifically for Anthropic's API using regular Dict
+        # Format specifically for Anthropic's API using the unified type structure
+        # But still maintain compatibility with Anthropic's expected format
         anthropic_tool: Dict[str, Any] = {
             "type": "function",
             "function": {
@@ -1495,7 +1544,7 @@ class AnthropicLLM(LLM):
 
                             # Call the callback if provided
                             if callback is not None:
-                                # Create partial usage data
+                                # Create partial usage data following the standardized structure
                                 partial_usage = {
                                     "event_id": event_id,
                                     "model": self.model_name,
@@ -1505,10 +1554,12 @@ class AnthropicLLM(LLM):
                                     "total_tokens": input_tokens + accumulated_tokens,
                                     "is_complete": False,
                                     "tool_use": tool_call_data,
+                                    "provider": Provider.ANTHROPIC.value,
+                                    "successful": True,
                                 }
                                 callback(content, partial_usage)
 
-                            # Yield the content chunk and partial usage data
+                            # Yield the content chunk and partial usage data using standardized structure
                             yield content, {
                                 "event_id": event_id,
                                 "model": self.model_name,
@@ -1518,6 +1569,8 @@ class AnthropicLLM(LLM):
                                 "total_tokens": input_tokens + accumulated_tokens,
                                 "is_complete": False,
                                 "tool_use": tool_call_data,
+                                "provider": Provider.ANTHROPIC.value,
+                                "successful": True,
                             }
 
                     # Check for tool calls in the delta
@@ -1537,12 +1590,12 @@ class AnthropicLLM(LLM):
                                 )
 
                                 # Create a properly typed tool call data entry
-                                tool_call_data[tool_id] = ToolCallData(
-                                    id=tool_id,
-                                    name=tool_name,
-                                    arguments=str(tool_input),  # Ensure string type
-                                    type="function",
-                                )
+                                tool_call_data[tool_id] = {
+                                    "id": tool_id,
+                                    "name": tool_name,
+                                    "arguments": str(tool_input),  # Ensure string type
+                                    "type": "function",
+                                }
                             elif hasattr(tool_use, "input") and tool_use.input:
                                 # Append to existing arguments if this is a partial update
                                 # Using the dictionary access syntax since we're modifying an existing entry
@@ -1587,7 +1640,7 @@ class AnthropicLLM(LLM):
 
             total_cost = read_cost + write_cost + image_cost
 
-            # Create final usage data
+            # Create final usage data following the standardized structure
             final_usage = {
                 "event_id": event_id,
                 "model": self.model_name,
@@ -1601,6 +1654,9 @@ class AnthropicLLM(LLM):
                 "total_cost": total_cost,
                 "is_complete": True,
                 "tool_use": tool_call_data,
+                "provider": Provider.ANTHROPIC.value,
+                "successful": True,
+                "latency_ms": None,  # Would be calculated if timing is implemented
             }
 
             # Call the callback with an empty string to signal completion
