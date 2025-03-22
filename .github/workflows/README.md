@@ -54,7 +54,7 @@ This directory contains GitHub Actions workflows for continuous integration and 
 
 ## Using the Matrix Docker Tests Workflow
 
-The new `matrix-docker-tests.yml` workflow provides enhanced testing capabilities:
+The enhanced `matrix-docker-tests.yml` workflow provides comprehensive testing capabilities:
 
 ### Key Features
 
@@ -63,6 +63,25 @@ The new `matrix-docker-tests.yml` workflow provides enhanced testing capabilitie
 - **Conditional Execution**: Provider tests only run when relevant files change
 - **Performance Benchmarking**: Compares performance metrics between base branch and PR
 - **Comprehensive Reports**: Adds detailed test results as PR comments
+
+### Recent Improvements
+
+The following issues have been addressed in the matrix-docker-tests workflow:
+
+1. **Fixed Dockerfile.matrix Handling**
+   - Added `PYTHON_VERSION` build arg to properly handle Python version selection
+   - Updated `docker-build-matrix-cached` Makefile target to use the build arg
+   - Modified Dockerfile.matrix to use the build arg, defaulting to Python 3.10 if not specified
+
+2. **Improved Provider Test Conditional Logic**
+   - Fixed conditional execution for provider-specific tests
+   - Added support for running provider tests based on commit messages
+   - Enhanced provider test discovery based on file changes
+
+3. **Enhanced Test Coverage Reporting**
+   - Added pytest-cov and pytest-asyncio to all test containers
+   - Added documentation about CODECOV_TOKEN requirement
+   - Improved coverage reporting with appropriate test flags
 
 ### Manual Triggering Options
 
@@ -83,6 +102,36 @@ When run on a PR, the workflow adds:
 1. A test summary comment showing pass/fail status for each category
 2. A performance benchmark report comparing test execution times
 3. Detailed coverage information in Codecov
+
+## Required Repository Secrets
+
+For the CI workflows to function correctly, the following GitHub repository secrets must be configured:
+
+- `CODECOV_TOKEN` - Token for uploading test coverage data to codecov.io
+  - Generate a token at [codecov.io](https://codecov.io)
+  - Add it to repository secrets in GitHub Settings > Secrets > Actions > New repository secret
+
+## Using CI Workflows Locally
+
+To simulate the CI environment locally:
+
+```bash
+# Run basic CI checks (similar to ci.yml)
+make check
+
+# Run tests in Docker (similar to docker-tests.yml)
+make docker-build
+make test-docker-unit
+make test-docker-integration
+
+# Run matrix tests for a specific Python version
+make docker-create-matrix-file PYTHON_VERSION=3.9
+make docker-build-matrix
+make test-matrix-python
+
+# Run provider-specific tests
+make test-docker-file FILE="tests/unit/test_openai_*.py"
+```
 
 ## Adding New Workflows
 

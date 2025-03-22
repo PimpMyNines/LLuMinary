@@ -72,7 +72,7 @@ jobs:
         # Copy requirements and install dependencies
         COPY requirements.txt .
         RUN pip install -r requirements.txt
-        RUN pip install pytest-xdist
+        RUN pip install pytest-xdist pytest-asyncio pytest-cov
 
         # Copy source code and tests
         COPY src/ /app/src/
@@ -94,10 +94,11 @@ jobs:
 
     - name: Build Docker image for Python ${{ matrix.python-version }}
       run: |
-        # Use direct docker build command to ensure we use the dynamically created Dockerfile.matrix
-        docker buildx build --load -t "lluminary-test:py${{ matrix.python-version }}" -f Dockerfile.matrix \
-          --cache-from=type=local,src=/tmp/.buildx-cache \
-          --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max .
+        # Use make command to leverage our updated docker-build-matrix-cached target
+        make docker-build-matrix-cached DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" \
+          CACHE_FROM=/tmp/.buildx-cache \
+          CACHE_TO=/tmp/.buildx-cache-new \
+          PYTHON_VERSION=${{ matrix.python-version }}
 
     - name: Run unit tests with Python ${{ matrix.python-version }}
       run: make test-docker-unit DOCKER="docker run --rm" DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" PYTEST="tests/unit -v -n auto"
@@ -113,6 +114,7 @@ jobs:
           DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" \
           PYTEST="tests/ --cov=src/lluminary --cov-report=xml:/app/coverage/coverage.xml -n auto"
 
+    # NOTE: Make sure to add CODECOV_TOKEN as a repository secret in GitHub Settings > Secrets
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
@@ -134,8 +136,9 @@ jobs:
     runs-on: ubuntu-latest
     # Improved condition to ensure proper execution
     if: |
-      github.event_name == 'workflow_dispatch' && inputs.run-provider-tests ||
-      github.event_name == 'pull_request' && contains(join(github.event.pull_request.files.*.filename, ' '), matrix.file_pattern)
+      (github.event_name == 'workflow_dispatch' && inputs.run-provider-tests == true) ||
+      (github.event_name == 'pull_request' && contains(join(github.event.pull_request.files.*.filename, ' '), matrix.file_pattern)) ||
+      (github.event_name == 'push' && contains(github.event.head_commit.message, matrix.provider))
     strategy:
       fail-fast: false
       matrix:
@@ -172,10 +175,45 @@ jobs:
           ${{ runner.os }}-buildx-${{ matrix.provider }}-
           ${{ runner.os }}-buildx-
 
-    - name: Build Docker image
+    - name: Build Docker image for ${{ matrix.provider }} tests
       run: |
-        # Use direct Docker build command for consistency with matrix-docker-test job
-        docker buildx build --load -t "lluminary-test:${{ matrix.provider }}" -f Dockerfile.test \
+        # Create a specialized Dockerfile for this provider
+        cat > Dockerfile.provider << EOF
+        FROM python:3.10-slim
+
+        WORKDIR /app
+
+        # Install development dependencies
+        RUN apt-get update && apt-get install -y \
+            git \
+            && rm -rf /var/lib/apt/lists/*
+
+        # Copy requirements and install dependencies
+        COPY requirements.txt .
+        RUN pip install -r requirements.txt
+        RUN pip install pytest-xdist pytest-asyncio pytest-cov
+
+        # Copy source code and tests
+        COPY src/ /app/src/
+        COPY tests/ /app/tests/
+        COPY pyproject.toml pytest.ini mypy.ini ./
+
+        # Install the package in development mode
+        RUN pip install -e .
+
+        # Set environment variables for consistent test behavior
+        ENV PYTHONPATH=/app
+        ENV PYTHONDONTWRITEBYTECODE=1
+        ENV PYTHONUNBUFFERED=1
+        ENV PROVIDER_UNDER_TEST=${{ matrix.provider }}
+
+        # Run tests by default
+        ENTRYPOINT ["python", "-m", "pytest"]
+        CMD ["tests/"]
+        EOF
+
+        # Build Docker image with provider-specific configuration
+        docker buildx build --load -t "lluminary-test:${{ matrix.provider }}" -f Dockerfile.provider \
           --cache-from=type=local,src=/tmp/.buildx-cache-provider \
           --cache-to=type=local,dest=/tmp/.buildx-cache-provider-new,mode=max .
 
@@ -190,6 +228,7 @@ jobs:
           DOCKER_TAG="lluminary-test:${{ matrix.provider }}" \
           FILE="${{ matrix.test_path }} --cov=src/lluminary/models/providers --cov-report=xml:/app/coverage/coverage.xml"
 
+    # NOTE: Make sure to add CODECOV_TOKEN as a repository secret in GitHub Settings > Secrets
     - name: Upload ${{ matrix.provider }} coverage to Codecov
       uses: codecov/codecov-action@v4
       with:

@@ -89,7 +89,8 @@ docker-build-matrix:
 docker-build-matrix-cached:
 	$(DOCKER) buildx build --load -t $(DOCKER_TAG) -f Dockerfile.matrix \
 		--cache-from=type=local,src=$(CACHE_FROM) \
-		--cache-to=type=local,dest=$(CACHE_TO),mode=max .
+		--cache-to=type=local,dest=$(CACHE_TO),mode=max \
+		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) .
 
 # For local development matrix testing
 docker-create-matrix-file:
