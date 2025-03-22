@@ -1,4 +1,4 @@
-flask==2.2.3
-flask-cors==3.0.10
+flask==2.2.5
+flask-cors==4.0.2
 # LLuMinary is installed from the parent directory
 # During setup, install with: pip install -e ..
