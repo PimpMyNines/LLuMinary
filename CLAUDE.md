@@ -257,7 +257,59 @@ The following implementation plan is organized by priority and dependencies. Eac
    - [ ] Create comprehensive test matrix for Mistral models
    - [ ] Test compatibility with unified type system
 
-#### 3.2. Add Provider-Agnostic Prompt System
+#### 3.2. Add Support for XAI Grok Models
+**Impact**: Incorporates high-quality, highly capable open-source models
+**Dependencies**: Unified type definitions (1.2)
+
+##### Agent Tasks:
+1. **Grok API Integration Agent**
+   - [ ] Create new provider file `src/lluminary/models/providers/grok.py`
+   - [ ] Implement core GrokLLM class extending BaseLLM
+   - [ ] Add authentication mechanism
+   - [ ] Implement Grok-specific parameter handling
+
+2. **Grok Functionality Agent**
+   - [ ] Implement text generation and streaming
+   - [ ] Implement token counting and cost estimation
+   - [ ] Add support for function calling if available
+   - [ ] Handle any Grok-specific capabilities
+
+3. **Grok Testing and Documentation Agent**
+   - [ ] Create unit and integration tests for Grok
+   - [ ] Add API documentation and example script
+   - [ ] Create comprehensive test matrix for Grok models
+   - [ ] Test compatibility with unified type system
+
+#### 3.3. Add Support for Custom/Local Models
+**Impact**: Enables self-hosting and private model deployment
+**Dependencies**: Unified type definitions (1.2) and retry mechanism (2.2)
+
+##### Agent Tasks:
+1. **Local Model Integration Agent**
+   - [ ] Design `src/lluminary/models/providers/custom.py` interface
+   - [ ] Create CustomLLM class that can connect to self-hosted models
+   - [ ] Implement host, port, and endpoint configuration
+   - [ ] Add support for API key authentication if needed
+
+2. **Hugging Face Integration Agent**
+   - [ ] Add support for Hugging Face Inference API
+   - [ ] Create adapter for Hugging Face models
+   - [ ] Implement token counting for various model families
+   - [ ] Support quantized models for efficient deployment
+
+3. **Ollama Integration Agent**
+   - [ ] Add support for Ollama-hosted models
+   - [ ] Implement streaming support
+   - [ ] Create model management utilities
+   - [ ] Optimize for performance with local models
+
+4. **Custom/Local Model Testing Agent**
+   - [ ] Create test fixtures with small test models
+   - [ ] Implement CI/CD compatible tests that don't require specific hardware
+   - [ ] Test compatibility with major frameworks (PyTorch, ONNX, TensorRT)
+   - [ ] Create comprehensive documentation for self-hosting
+
+#### 3.4. Add Provider-Agnostic Prompt System
 **Impact**: Simplifies multi-provider usage with unified prompt format
 **Dependencies**: Unified type definitions (1.2)
 
@@ -356,6 +408,162 @@ The following implementation plan is organized by priority and dependencies. Eac
    - [ ] Add usage examples for each vector store
    - [ ] Create performance comparison guide
    - [ ] Document advanced configuration options
+
+### Priority 5: Open-Source and Custom Model Support
+
+#### 5.1. Embedding Models Framework
+**Impact**: Enables use of state-of-the-art open-source embedding models
+**Dependencies**: None - can be implemented independently
+
+##### Agent Tasks:
+1. **Embedding Framework Design Agent**
+   - [ ] Create `src/lluminary/models/embeddings/` module
+   - [ ] Design unified embedding interface
+   - [ ] Implement model loading and caching
+   - [ ] Create evaluation and benchmarking utilities
+
+2. **HuggingFace Embeddings Agent**
+   - [ ] Integrate with Hugging Face Transformers
+   - [ ] Add support for MTEB-top models (BGE, E5, etc.)
+   - [ ] Implement batching and efficiency optimizations
+   - [ ] Create model version management
+
+3. **SentenceTransformers Integration Agent**
+   - [ ] Add SentenceTransformers models integration
+   - [ ] Implement all-MiniLM-L6/L12 models
+   - [ ] Support multilingual embedding models
+   - [ ] Add domain-specific model support
+
+4. **Embedding Testing Agent**
+   - [ ] Create benchmark suite for embedding models
+   - [ ] Implement MTEB-compatible evaluation
+   - [ ] Test compatibility with vector stores
+   - [ ] Ensure efficient memory management
+
+#### 5.2. Custom Model Hosting Integration
+**Impact**: Enables self-hosting and private model deployment
+**Dependencies**: Unified type definitions (1.2)
+
+##### Agent Tasks:
+1. **Custom Deployment Interface Agent**
+   - [ ] Design `src/lluminary/models/custom/` module
+   - [ ] Create deployment configuration system
+   - [ ] Implement abstract interface for custom-hosted models
+   - [ ] Add authentication and security features
+
+2. **Self-Hosted Model Integration Agent**
+   - [ ] Support vLLM deployments
+   - [ ] Add TGI (Text Generation Inference) support
+   - [ ] Implement OpenLLM compatibility
+   - [ ] Create deployment guides for different hosting options
+
+3. **Model Format Conversion Agent**
+   - [ ] Add ONNX model conversion utilities
+   - [ ] Support TensorRT-LLM optimized models
+   - [ ] Implement quantization helpers (GPTQ, AWQ, GGUF)
+   - [ ] Create model format validation tools
+
+4. **Custom Model Testing Agent**
+   - [ ] Design test harness for custom models
+   - [ ] Create benchmark suite compatible with different hosting options
+   - [ ] Implement CI/CD compatible testing
+   - [ ] Add performance comparison tools
+
+### Priority 6: Advanced Model Features and Capabilities
+
+#### 6.1. Structured Output Framework
+**Impact**: Simplifies extraction of structured data from LLM responses
+**Dependencies**: None - can be implemented independently
+
+##### Agent Tasks:
+1. **Structured Output Design Agent**
+   - [ ] Create `src/lluminary/models/structured_output.py` module
+   - [ ] Implement StructuredOutputParser class
+   - [ ] Design Pydantic model integration
+   - [ ] Create robust error handling
+
+2. **Output Strategy Agent**
+   - [ ] Implement various extraction methods (JSON, function calling)
+   - [ ] Add provider-specific optimizations
+   - [ ] Create fallback strategies for parsing failures
+   - [ ] Implement schema validation
+
+3. **BaseLLM Integration Agent**
+   - [ ] Add `with_structured_output` method to BaseLLM
+   - [ ] Create decorator for structured output functions
+   - [ ] Implement type coercion and validation
+   - [ ] Add error recovery strategies
+
+#### 6.2. Advanced RAG Features
+**Impact**: Enhances retrieval-augmented generation capabilities
+**Dependencies**: Vector database integration (4.x) and embedding models (5.1)
+
+##### Agent Tasks:
+1. **Advanced Retrieval Agent**
+   - [ ] Implement hybrid search (keyword + semantic)
+   - [ ] Add multi-stage retrieval patterns
+   - [ ] Create re-ranking integration
+   - [ ] Support contextual compression
+
+2. **Query Transformation Agent**
+   - [ ] Implement query expansion and reformulation
+   - [ ] Add query routing based on content
+   - [ ] Create query decomposition for complex questions
+   - [ ] Implement HyDE (Hypothetical Document Embeddings)
+
+3. **RAG Evaluation Agent**
+   - [ ] Create evaluation framework for RAG pipelines
+   - [ ] Implement RAGAS metrics
+   - [ ] Add faithfulness and relevance scoring
+   - [ ] Create visualization tools for retrieval analysis
+
+### Priority 7: Specialized Model Integrations
+
+#### 7.1. XAI Grok Models Integration
+**Impact**: Incorporates high-quality, highly capable open-source models
+**Dependencies**: Unified type definitions (1.2)
+
+##### Agent Tasks:
+1. **Grok API Integration Agent**
+   - [ ] Create new provider file `src/lluminary/models/providers/grok.py`
+   - [ ] Implement core GrokLLM class extending BaseLLM
+   - [ ] Add authentication mechanism
+   - [ ] Implement Grok-specific parameter handling
+
+2. **Grok Functionality Agent**
+   - [ ] Implement text generation and streaming
+   - [ ] Implement token counting and cost estimation
+   - [ ] Add support for function calling if available
+   - [ ] Handle any Grok-specific capabilities
+
+3. **Grok Testing and Documentation Agent**
+   - [ ] Create unit and integration tests for Grok
+   - [ ] Add API documentation and example script
+   - [ ] Create comprehensive test matrix for Grok models
+   - [ ] Test compatibility with unified type system
+
+#### 7.2. Multi-Modal Model Features
+**Impact**: Enhances capabilities for vision, audio, and other modalities
+**Dependencies**: Unified type definitions (1.2)
+
+##### Agent Tasks:
+1. **Vision Model Integration Agent**
+   - [ ] Enhance image understanding capabilities
+   - [ ] Add support for image generation
+   - [ ] Implement specialized vision models
+   - [ ] Create unified image processing utilities
+
+2. **Audio Model Integration Agent**
+   - [ ] Add speech-to-text capabilities
+   - [ ] Implement text-to-speech features
+   - [ ] Add audio embedding support
+   - [ ] Create audio processing utilities
+
+3. **Multi-Modal Testing Agent**
+   - [ ] Design test fixtures for multi-modal capabilities
+   - [ ] Create benchmark suite for image processing
+   - [ ] Implement evaluations for audio processing
+   - [ ] Add performance comparison tools
 
 ## Provider Implementation Status
 
@@ -576,19 +784,31 @@ After completing each task:
    - Design unified streaming tool calls interface
    - Focus on the most commonly used providers first (OpenAI, Anthropic)
 
+3. **Start Open-Source Embedding Models Integration (Priority 5.1)**
+   - Design unified interface for embedding models
+   - Integrate SentenceTransformers models
+   - Add benchmarking tools for embedding evaluation
+
+4. **Prepare for XAI Grok Models Integration (Priority 7.1)**
+   - Research XAI Grok model capabilities and requirements
+   - Design provider interface based on other similar providers
+   - Outline authentication and API integration approach
+
 ## Dependency Map
 
 ```
 [1.1 GitHub Actions] → [All other tasks benefit]
 [1.2 Type Definitions] → [2.1 Streaming] → [3.1 Mistral AI]
-                       → [3.2 Prompts]
-                       → [4.x Vector DB] → [5.2 Doc Processing]
-                                         → [6.2 Semantic Cache]
+                       → [3.4 Prompts]
+                       → [4.x Vector DB] → [6.2 RAG Features]
+                       → [5.2 Custom Models]
+                       → [7.1 Grok Models]
 [2.2 Retry] → [3.1 Mistral AI]
            → [All provider interactions benefit]
 [4.1 Vector Base] → [4.2 Vector Implementations] → [4.3 Vector Testing]
-[5.1 Doc Loaders] → [5.2 Doc Processing]
-[6.1 Cache Base] → [6.2 Semantic Cache]
+[5.1 Embedding Models] → [6.2 RAG Features]
+                       → [7.2 Multi-Modal Features]
+[5.2 Custom Models] → [7.1 Grok Models]
 ```
 
 ## Session Notes
@@ -600,6 +820,7 @@ After completing each task:
 | 2025-03-22   | Completed GitHub Actions workflow fixes (Priority 1.1 from plan):<br>- Fixed Dockerfile.matrix handling with build args<br>- Improved provider test conditional execution<br>- Enhanced coverage reporting with proper dependencies<br>- Added verification scripts and required secrets documentation<br>- Next priority: Implement unified type definitions (Priority 1.2) |
 | 2025-03-22   | Made substantial progress on unified type definitions (Priority 1.2):<br>- Enhanced `types.py` with comprehensive type system<br>- Added Provider enum for consistent identification<br>- Created unified content, message, and tool types<br>- Added streaming, embedding, and reranking type definitions<br>- Implemented authentication type structures<br>- Next steps: Update provider implementations to use new types |
 | 2025-03-22   | Combined LESSONS.md and ENHANCEMENT_PLAN.md into CLAUDE.md for a single comprehensive development guide for future agents. Reorganized plan with completed status updates. |
+| 2025-03-22   | Added comprehensive support for open-source models to the development plan:<br>- Added Priority 5 for open-source embedding models and custom model hosting<br>- Added Priority 7 for specialized model integrations including XAI Grok models<br>- Enhanced the dependency map to include new components<br>- Added detailed agent tasks for implementing open-source model support |
 
 ---
 
