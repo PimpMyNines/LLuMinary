@@ -1,0 +1,608 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Models Reference &mdash; LLuMinary 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LLuMinary
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="providers.html">Provider Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LLuMinary</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Models Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/models_reference.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="models-reference">
+<span id="id1"></span><h1>Models Reference<a class="headerlink" href="#models-reference" title="Link to this heading"></a></h1>
+<p>This page provides a comprehensive reference of all models supported by LLuMinary, including their capabilities, context windows, and pricing information.</p>
+<section id="model-support-matrix">
+<h2>Model Support Matrix<a class="headerlink" href="#model-support-matrix" title="Link to this heading"></a></h2>
+<p>The table below provides a quick overview of the features supported by each provider model:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>OpenAI</p></th>
+<th class="head"><p>Anthropic</p></th>
+<th class="head"><p>Google</p></th>
+<th class="head"><p>Cohere</p></th>
+<th class="head"><p>Bedrock</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Text Generation</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p>Embeddings</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p>Streaming</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p>Tool Calling</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p>Image Input</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p>Image Generation</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p>Reranking</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+</tr>
+<tr class="row-odd"><td colspan="2"><p>Thinking/Reasoning | ✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>✓</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="openai-models">
+<h2>OpenAI Models<a class="headerlink" href="#openai-models" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 13.3%" />
+<col style="width: 13.3%" />
+<col style="width: 13.3%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>Context Window</p></th>
+<th class="head"><p>Image Support</p></th>
+<th class="head"><p>Tool Calling</p></th>
+<th class="head"><p>Reasoning</p></th>
+<th class="head"><p>Input Cost</p></th>
+<th class="head"><p>Output Cost</p></th>
+<th class="head"><p>Image Cost</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>gpt-4.5-preview</p></td>
+<td><p>128,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.0000750</p></td>
+<td><p>$0.00015</p></td>
+<td><p>Variable</p></td>
+</tr>
+<tr class="row-odd"><td><p>gpt-4o</p></td>
+<td><p>128,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.0000025</p></td>
+<td><p>$0.00001</p></td>
+<td><p>Variable</p></td>
+</tr>
+<tr class="row-even"><td><p>gpt-4o-mini</p></td>
+<td><p>128,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.00000015</p></td>
+<td><p>$0.0000006</p></td>
+<td><p>Variable</p></td>
+</tr>
+<tr class="row-odd"><td><p>o1</p></td>
+<td><p>200,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>$0.000015</p></td>
+<td><p>$0.00006</p></td>
+<td><p>Variable</p></td>
+</tr>
+<tr class="row-even"><td><p>o3-mini</p></td>
+<td><p>200,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>$0.0000011</p></td>
+<td><p>$0.0000044</p></td>
+<td><p>Variable</p></td>
+</tr>
+</tbody>
+</table>
+<p>OpenAI’s image costs depend on resolution and detail level. Low detail: 85 tokens, High detail: varies by size.</p>
+</section>
+<section id="anthropic-models">
+<h2>Anthropic Models<a class="headerlink" href="#anthropic-models" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 13.3%" />
+<col style="width: 13.3%" />
+<col style="width: 13.3%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>Context Window</p></th>
+<th class="head"><p>Image Support</p></th>
+<th class="head"><p>Tool Calling</p></th>
+<th class="head"><p>Reasoning</p></th>
+<th class="head"><p>Input Cost</p></th>
+<th class="head"><p>Output Cost</p></th>
+<th class="head"><p>Image Cost</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>claude-3-5-sonnet-20240620-v1:0</p></td>
+<td><p>200,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.000003</p></td>
+<td><p>$0.000015</p></td>
+<td><p>$0.024/image</p></td>
+</tr>
+<tr class="row-odd"><td><p>claude-3-haiku-20240307-v1:0</p></td>
+<td><p>200,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.00000025</p></td>
+<td><p>$0.00000125</p></td>
+<td><p>$0.024/image</p></td>
+</tr>
+<tr class="row-even"><td><p>claude-3-opus-20240229-v1:0</p></td>
+<td><p>200,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.000015</p></td>
+<td><p>$0.000075</p></td>
+<td><p>$0.024/image</p></td>
+</tr>
+<tr class="row-odd"><td><p>claude-3-sonnet-20240229-v1:0</p></td>
+<td><p>200,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.000003</p></td>
+<td><p>$0.000015</p></td>
+<td><p>$0.024/image</p></td>
+</tr>
+<tr class="row-even"><td><p>claude-3-7-sonnet-preview-20240626-v1:0</p></td>
+<td><p>200,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>$0.000003</p></td>
+<td><p>$0.000015</p></td>
+<td><p>$0.024/image</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="google-gemini-models">
+<h2>Google (Gemini) Models<a class="headerlink" href="#google-gemini-models" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 13.3%" />
+<col style="width: 13.3%" />
+<col style="width: 13.3%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>Context Window</p></th>
+<th class="head"><p>Image Support</p></th>
+<th class="head"><p>Tool Calling</p></th>
+<th class="head"><p>Reasoning</p></th>
+<th class="head"><p>Input Cost</p></th>
+<th class="head"><p>Output Cost</p></th>
+<th class="head"><p>Image Cost</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>gemini-2.0-flash</p></td>
+<td><p>128,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.0000025</p></td>
+<td><p>$0.00001</p></td>
+<td><p>$0.001/image</p></td>
+</tr>
+<tr class="row-odd"><td><p>gemini-2.0-flash-lite-preview-02-05</p></td>
+<td><p>128,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.000001</p></td>
+<td><p>$0.000004</p></td>
+<td><p>$0.0005/image</p></td>
+</tr>
+<tr class="row-even"><td><p>gemini-2.0-pro-exp-02-05</p></td>
+<td><p>128,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.000003</p></td>
+<td><p>$0.000012</p></td>
+<td><p>$0.002/image</p></td>
+</tr>
+<tr class="row-odd"><td><p>gemini-2.0-flash-thinking-exp-01-21</p></td>
+<td><p>128,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>$0.000004</p></td>
+<td><p>$0.000016</p></td>
+<td><p>$0.002/image</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="cohere-models">
+<h2>Cohere Models<a class="headerlink" href="#cohere-models" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 40.0%" />
+<col style="width: 15.0%" />
+<col style="width: 15.0%" />
+<col style="width: 15.0%" />
+<col style="width: 15.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Context Window</p></th>
+<th class="head"><p>Tool Calling</p></th>
+<th class="head"><p>Pricing</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>command-r</p></td>
+<td><p>Text Generation</p></td>
+<td><p>128,000</p></td>
+<td><p>✓</p></td>
+<td><p>$1.00/M tokens (input), $3.00/M tokens (output)</p></td>
+</tr>
+<tr class="row-odd"><td><p>command-r-plus</p></td>
+<td><p>Text Generation</p></td>
+<td><p>128,000</p></td>
+<td><p>✓</p></td>
+<td><p>$3.00/M tokens (input), $15.00/M tokens (output)</p></td>
+</tr>
+<tr class="row-even"><td><p>command-light</p></td>
+<td><p>Text Generation</p></td>
+<td><p>128,000</p></td>
+<td><p>✓</p></td>
+<td><p>$0.30/M tokens (input), $0.60/M tokens (output)</p></td>
+</tr>
+<tr class="row-odd"><td><p>embed-english-v3.0</p></td>
+<td><p>Embedding</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>$0.10/M tokens</p></td>
+</tr>
+<tr class="row-even"><td><p>embed-multilingual-v3.0</p></td>
+<td><p>Embedding</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>$0.10/M tokens</p></td>
+</tr>
+<tr class="row-odd"><td><p>rerank-english-v3.0</p></td>
+<td><p>Reranking</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>$0.10/M tokens</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="aws-bedrock-models">
+<h2>AWS Bedrock Models<a class="headerlink" href="#aws-bedrock-models" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 13.3%" />
+<col style="width: 13.3%" />
+<col style="width: 13.3%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>Context Window</p></th>
+<th class="head"><p>Image Support</p></th>
+<th class="head"><p>Tool Calling</p></th>
+<th class="head"><p>Reasoning</p></th>
+<th class="head"><p>Input Cost</p></th>
+<th class="head"><p>Output Cost</p></th>
+<th class="head"><p>Image Cost</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>us.anthropic.claude-3-5-haiku-20241022-v1:0</p></td>
+<td><p>200,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.000001</p></td>
+<td><p>$0.000005</p></td>
+<td><p>$0.024/image</p></td>
+</tr>
+<tr class="row-odd"><td><p>us.anthropic.claude-3-5-sonnet-20240620-v1:0</p></td>
+<td><p>200,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>×</p></td>
+<td><p>$0.000003</p></td>
+<td><p>$0.000015</p></td>
+<td><p>$0.024/image</p></td>
+</tr>
+<tr class="row-even"><td><p>us.anthropic.claude-3-7-sonnet-20250219-v1:0</p></td>
+<td><p>200,000</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>$0.000003</p></td>
+<td><p>$0.000015</p></td>
+<td><p>$0.024/image</p></td>
+</tr>
+<tr class="row-odd"><td><p>amazon.titan-text-express-v1</p></td>
+<td><p>8,000</p></td>
+<td><p>×</p></td>
+<td><p>×</p></td>
+<td><p>×</p></td>
+<td><p>$0.0000008</p></td>
+<td><p>$0.0000008</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p>amazon.titan-text-premier-v1</p></td>
+<td><p>32,000</p></td>
+<td><p>×</p></td>
+<td><p>×</p></td>
+<td><p>×</p></td>
+<td><p>$0.000009</p></td>
+<td><p>$0.000009</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>amazon.titan-embed-text-v1</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+<td><p>$0.0000002/token</p></td>
+<td><p>N/A</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p>meta.llama3-70b-instruct-v1</p></td>
+<td><p>8,000</p></td>
+<td><p>×</p></td>
+<td><p>×</p></td>
+<td><p>×</p></td>
+<td><p>$0.00000075</p></td>
+<td><p>$0.000001</p></td>
+<td><p>N/A</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="feature-support-details">
+<h2>Feature Support Details<a class="headerlink" href="#feature-support-details" title="Link to this heading"></a></h2>
+<section id="image-support">
+<h3>Image Support<a class="headerlink" href="#image-support" title="Link to this heading"></a></h3>
+<p>Models with image support can process images as part of the input:</p>
+<ul class="simple">
+<li><p><strong>OpenAI</strong>: Processes images as JPEG with base64 encoding</p></li>
+<li><p><strong>Anthropic</strong>: Supports multiple image formats with various sizing</p></li>
+<li><p><strong>Google</strong>: Supports multiple image formats</p></li>
+<li><p><strong>AWS Bedrock</strong>: Uses PNG format with preserved transparency</p></li>
+</ul>
+</section>
+<section id="tool-function-calling">
+<h3>Tool/Function Calling<a class="headerlink" href="#tool-function-calling" title="Link to this heading"></a></h3>
+<p>Models supporting tool/function calling can:</p>
+<ul class="simple">
+<li><p>Parse and understand function schemas</p></li>
+<li><p>Choose appropriate functions to call</p></li>
+<li><p>Format arguments correctly for function execution</p></li>
+<li><p>Process function results and incorporate them into responses</p></li>
+</ul>
+<p>Each provider has a unique format for tool definitions and responses:</p>
+<ul class="simple">
+<li><p><strong>OpenAI</strong>: Uses a function calling format with “arguments” as a JSON string</p></li>
+<li><p><strong>Anthropic</strong>: Uses a structured content format with toolUse and toolResult objects</p></li>
+<li><p><strong>Google</strong>: Uses Part.from_function_call and Part.from_function_response</p></li>
+<li><p><strong>Cohere</strong>: Uses tools with parameter_definitions format</p></li>
+<li><p><strong>AWS Bedrock</strong>: Uses provider-specific formats depending on underlying model</p></li>
+</ul>
+</section>
+<section id="reasoning-thinking">
+<h3>Reasoning/Thinking<a class="headerlink" href="#reasoning-thinking" title="Link to this heading"></a></h3>
+<p>Models with reasoning/thinking capabilities can:</p>
+<ul class="simple">
+<li><p>Generate detailed step-by-step reasoning</p></li>
+<li><p>Provide internal thought process (visible or invisible to user)</p></li>
+<li><p>Solve complex problems more systematically</p></li>
+</ul>
+<p>Available on:
+- <strong>OpenAI</strong>: o1, o3-mini
+- <strong>Anthropic</strong>: claude-3-7-sonnet-preview models
+- <strong>Google</strong>: gemini-2.0-flash-thinking-exp-01-21
+- <strong>AWS Bedrock</strong>: claude-3-7-sonnet models</p>
+</section>
+</section>
+<section id="usage-notes">
+<h2>Usage Notes<a class="headerlink" href="#usage-notes" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Context Window</strong>: Represents the maximum number of tokens the model can process in a single conversation (input + output).</p></li>
+<li><p><strong>Token Calculation</strong>: Different providers calculate tokens differently:
+- Text tokens: ~4 characters per token (English, varies by language)
+- Image tokens: Different calculation methods per provider</p></li>
+<li><p><strong>Costs</strong>: Prices are in USD and subject to change. Always check the provider’s pricing page for current rates.</p></li>
+<li><p><strong>Model Availability</strong>: Some models may be experimental or in preview. Availability might change.</p></li>
+<li><p><strong>Rate Limits</strong>: Each provider implements different rate limiting policies. Check provider documentation for details.</p></li>
+</ol>
+</section>
+<section id="provider-specific-considerations">
+<h2>Provider-Specific Considerations<a class="headerlink" href="#provider-specific-considerations" title="Link to this heading"></a></h2>
+<p>For detailed information about each provider, including authentication, specific parameters, and error handling, see the individual provider documentation pages:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="providers/openai.html"><span class="doc">OpenAI Provider</span></a></p></li>
+<li><p><a class="reference internal" href="providers/anthropic.html"><span class="doc">Anthropic Provider</span></a></p></li>
+<li><p><a class="reference internal" href="providers/google.html"><span class="doc">Google Provider</span></a></p></li>
+<li><p><a class="reference internal" href="providers/cohere.html"><span class="doc">Cohere Provider</span></a></p></li>
+<li><p><a class="reference internal" href="providers/bedrock.html"><span class="doc">AWS Bedrock Provider</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, PimpMyNines.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

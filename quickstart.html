@@ -1,0 +1,247 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quickstart &mdash; LLuMinary 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LLuMinary
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-different-providers">Using Different Providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#streaming-responses">Streaming Responses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#embeddings">Embeddings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-the-client-class">Using the Client Class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="providers.html">Provider Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LLuMinary</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quickstart</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
+<p>This guide will help you get started with LLuMinary, a versatile Python library for working with various LLM providers.</p>
+<section id="basic-usage">
+<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading"></a></h2>
+<p>Here’s a simple example of using LLuMinary with OpenAI:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm_from_model</span>
+
+<span class="c1"># Initialize model (automatically selects the right provider)</span>
+<span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm_from_model</span><span class="p">(</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;your-api-key&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generate a response</span>
+<span class="n">response</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
+    <span class="n">event_id</span><span class="o">=</span><span class="s2">&quot;quick-start&quot;</span><span class="p">,</span>
+    <span class="n">system_prompt</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;message_type&quot;</span><span class="p">:</span> <span class="s2">&quot;human&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;What is machine learning?&quot;</span><span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tokens used: </span><span class="si">{</span><span class="n">usage</span><span class="p">[</span><span class="s1">&#39;total_tokens&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cost: $</span><span class="si">{</span><span class="n">usage</span><span class="p">[</span><span class="s1">&#39;total_cost&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="using-different-providers">
+<h2>Using Different Providers<a class="headerlink" href="#using-different-providers" title="Link to this heading"></a></h2>
+<p>LLuMinary supports multiple providers through the same interface:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># OpenAI</span>
+<span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm_from_model</span><span class="p">(</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+
+<span class="c1"># Anthropic</span>
+<span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm_from_model</span><span class="p">(</span><span class="s2">&quot;claude-haiku-3.5&quot;</span><span class="p">)</span>
+
+<span class="c1"># Google</span>
+<span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm_from_model</span><span class="p">(</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">)</span>
+
+<span class="c1"># Cohere</span>
+<span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm_from_model</span><span class="p">(</span><span class="s2">&quot;cohere-command&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="streaming-responses">
+<h2>Streaming Responses<a class="headerlink" href="#streaming-responses" title="Link to this heading"></a></h2>
+<p>Stream responses from LLMs for real-time output:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm_from_model</span>
+
+<span class="c1"># Initialize a streaming-capable model</span>
+<span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm_from_model</span><span class="p">(</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define a callback function to process chunks</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_chunk</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">usage_data</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">chunk</span><span class="p">:</span>  <span class="c1"># Empty chunk signals completion</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Stream completed&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total tokens: </span><span class="si">{</span><span class="n">usage_data</span><span class="p">[</span><span class="s1">&#39;total_tokens&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cost: $</span><span class="si">{</span><span class="n">usage_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;total_cost&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Stream a response</span>
+<span class="k">for</span> <span class="n">chunk</span><span class="p">,</span> <span class="n">usage</span> <span class="ow">in</span> <span class="n">llm</span><span class="o">.</span><span class="n">stream_generate</span><span class="p">(</span>
+    <span class="n">event_id</span><span class="o">=</span><span class="s2">&quot;my_stream&quot;</span><span class="p">,</span>
+    <span class="n">system_prompt</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;message_type&quot;</span><span class="p">:</span> <span class="s2">&quot;human&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Explain quantum computing briefly.&quot;</span><span class="p">}</span>
+    <span class="p">],</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">temp</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="n">process_chunk</span>  <span class="c1"># Optional: Process chunks as they arrive</span>
+<span class="p">):</span>
+    <span class="k">pass</span>  <span class="c1"># The callback handles the chunks</span>
+</pre></div>
+</div>
+</section>
+<section id="embeddings">
+<h2>Embeddings<a class="headerlink" href="#embeddings" title="Link to this heading"></a></h2>
+<p>Generate embeddings for text with supported models:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm_from_model</span>
+
+<span class="c1"># Initialize an LLM that supports embeddings</span>
+<span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm_from_model</span><span class="p">(</span><span class="s2">&quot;text-embedding-3-small&quot;</span><span class="p">)</span>
+
+<span class="c1"># Check if the model supports embeddings</span>
+<span class="k">if</span> <span class="n">llm</span><span class="o">.</span><span class="n">supports_embeddings</span><span class="p">():</span>
+    <span class="c1"># Generate embeddings</span>
+    <span class="n">texts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;This is a sample text&quot;</span><span class="p">,</span> <span class="s2">&quot;Another example&quot;</span><span class="p">]</span>
+    <span class="n">embeddings</span><span class="p">,</span> <span class="n">usage</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span><span class="n">texts</span><span class="o">=</span><span class="n">texts</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generated </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span><span class="si">}</span><span class="s2"> embeddings&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;First embedding dimensions: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">embeddings</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tokens used: </span><span class="si">{</span><span class="n">usage</span><span class="p">[</span><span class="s1">&#39;total_tokens&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cost: $</span><span class="si">{</span><span class="n">usage</span><span class="p">[</span><span class="s1">&#39;total_cost&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="using-the-client-class">
+<h2>Using the Client Class<a class="headerlink" href="#using-the-client-class" title="Link to this heading"></a></h2>
+<p>For more advanced usage, you can use the LLuMinary client class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLuMinary</span>
+
+<span class="c1"># Initialize with configuration</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">LLuMinary</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="p">{</span>
+    <span class="s2">&quot;default_provider&quot;</span><span class="p">:</span> <span class="s2">&quot;openai&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;providers&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;openai&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;api_key&quot;</span><span class="p">:</span> <span class="s2">&quot;your-openai-key&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_model&quot;</span><span class="p">:</span> <span class="s2">&quot;gpt-4o&quot;</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;anthropic&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;api_key&quot;</span><span class="p">:</span> <span class="s2">&quot;your-anthropic-key&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_model&quot;</span><span class="p">:</span> <span class="s2">&quot;claude-haiku-3.5&quot;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="c1"># Generate responses</span>
+<span class="n">response</span><span class="p">,</span> <span class="n">usage</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_with_usage</span><span class="p">(</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;message_type&quot;</span><span class="p">:</span> <span class="s2">&quot;human&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;What is machine learning?&quot;</span><span class="p">}</span>
+    <span class="p">],</span>
+    <span class="n">system_prompt</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cost: $</span><span class="si">{</span><span class="n">usage</span><span class="p">[</span><span class="s1">&#39;total_cost&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See the API documentation for more details on available methods and options.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, PimpMyNines.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

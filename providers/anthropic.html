@@ -1,0 +1,378 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anthropic Provider &mdash; LLuMinary 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Google Provider" href="google.html" />
+    <link rel="prev" title="OpenAI Provider" href="openai.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LLuMinary
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../providers.html">Provider Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="openai.html">OpenAI Provider</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Anthropic Provider</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setup-and-authentication">Setup and Authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#supported-models">Supported Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#advanced-features">Advanced Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#provider-specific-parameters">Provider-Specific Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#error-handling">Error Handling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#models-reference">Models Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="google.html">Google Provider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cohere.html">Cohere Provider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bedrock.html">AWS Bedrock Provider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../providers.html#provider-comparison">Provider Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../providers.html#authentication-strategy">Authentication Strategy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../providers.html#switching-between-providers">Switching Between Providers</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LLuMinary</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../providers.html">Provider Documentation</a></li>
+      <li class="breadcrumb-item active">Anthropic Provider</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/providers/anthropic.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="anthropic-provider">
+<h1>Anthropic Provider<a class="headerlink" href="#anthropic-provider" title="Link to this heading"></a></h1>
+<p>The Anthropic provider in LLuMinary allows you to interact with Anthropic’s Claude models, which excel at understanding and following complex instructions, reasoning through problems, and handling nuanced conversations.</p>
+<section id="setup-and-authentication">
+<h2>Setup and Authentication<a class="headerlink" href="#setup-and-authentication" title="Link to this heading"></a></h2>
+<p>To use the Anthropic provider, you need an API key from Anthropic. Here’s how to set it up:</p>
+<p><strong>Method 1: Direct initialization with API key</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLuMinary</span>
+
+<span class="n">llm</span> <span class="o">=</span> <span class="n">LLuMinary</span><span class="p">(</span>
+    <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-20240620-v1:0&quot;</span><span class="p">,</span>
+    <span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;your-anthropic-api-key&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Method 2: Using environment variables</strong></p>
+<p>Set the <code class="docutils literal notranslate"><span class="pre">ANTHROPIC_API_KEY</span></code> environment variable:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span>your-anthropic-api-key
+</pre></div>
+</div>
+<p>Then initialize without explicitly providing the key:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLuMinary</span>
+
+<span class="n">llm</span> <span class="o">=</span> <span class="n">LLuMinary</span><span class="p">(</span>
+    <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-20240620-v1:0&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="supported-models">
+<h2>Supported Models<a class="headerlink" href="#supported-models" title="Link to this heading"></a></h2>
+<p>The Anthropic provider supports these Claude models:</p>
+<ul class="simple">
+<li><p><strong>claude-3-5-sonnet-20240620-v1:0</strong> - High-performance model balancing intelligence and speed</p></li>
+<li><p><strong>claude-3-haiku-20240307-v1:0</strong> - Fast, cost-effective model for simpler tasks</p></li>
+<li><p><strong>claude-3-opus-20240229-v1:0</strong> - Most powerful model with advanced reasoning</p></li>
+<li><p><strong>claude-3-sonnet-20240229-v1:0</strong> - Earlier version of the sonnet model</p></li>
+<li><p><strong>claude-3-7-sonnet-preview-20240626-v1:0</strong> - Preview model with thinking/reasoning capabilities</p></li>
+</ul>
+<p>All models support a 200,000 token context window, image inputs, and tool use.</p>
+<p>For the complete list with capabilities and pricing, see the <a class="reference internal" href="openai.html#models-reference"><span class="std std-ref">Models Reference</span></a>.</p>
+</section>
+<section id="basic-usage">
+<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading"></a></h2>
+<p><strong>Text Generation</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLuMinary</span>
+
+<span class="n">llm</span> <span class="o">=</span> <span class="n">LLuMinary</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-20240620-v1:0&quot;</span><span class="p">)</span>
+
+<span class="c1"># Simple completion</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="s2">&quot;Explain quantum computing in simple terms&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+
+<span class="c1"># Chat completion with messages</span>
+<span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;What&#39;s the capital of France?&quot;</span><span class="p">}</span>
+<span class="p">]</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>  <span class="c1"># &quot;The capital of France is Paris.&quot;</span>
+</pre></div>
+</div>
+<p><strong>Streaming</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Stream the response</span>
+<span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">llm</span><span class="o">.</span><span class="n">stream</span><span class="p">(</span><span class="s2">&quot;Write a short poem about AI&quot;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="advanced-features">
+<h2>Advanced Features<a class="headerlink" href="#advanced-features" title="Link to this heading"></a></h2>
+<p><strong>Image Input</strong></p>
+<p>Process images as part of your prompt:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLuMinary</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">llm</span> <span class="o">=</span> <span class="n">LLuMinary</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-20240620-v1:0&quot;</span><span class="p">)</span>
+
+<span class="c1"># From a file path</span>
+<span class="n">image_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;path/to/image.jpg&quot;</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;What&#39;s in this image?&quot;</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">image_path</span><span class="p">)}}</span>
+    <span class="p">]}</span>
+<span class="p">])</span>
+
+<span class="c1"># From a URL</span>
+<span class="n">image_url</span> <span class="o">=</span> <span class="s2">&quot;https://example.com/image.jpg&quot;</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">([</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;Describe this image in detail.&quot;</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">image_url</span><span class="p">}}</span>
+    <span class="p">]}</span>
+<span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>Tool Calling</strong></p>
+<p>Define and use tools that the model can call:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLuMinary</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="c1"># Define tools</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;get_weather&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Get the current weather in a location&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;input_schema&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;The city and state, e.g., San Francisco, CA&quot;</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+
+<span class="n">llm</span> <span class="o">=</span> <span class="n">LLuMinary</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-20240620-v1:0&quot;</span><span class="p">)</span>
+
+<span class="c1"># First message with tool definition</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
+    <span class="s2">&quot;What&#39;s the weather like in San Francisco?&quot;</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="n">tools</span>
+<span class="p">)</span>
+
+<span class="c1"># Handle tool calls</span>
+<span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+    <span class="n">tool_call</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">tool_name</span> <span class="o">=</span> <span class="n">tool_call</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+    <span class="n">tool_input</span> <span class="o">=</span> <span class="n">tool_call</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Simulate function execution</span>
+    <span class="k">if</span> <span class="n">tool_name</span> <span class="o">==</span> <span class="s2">&quot;get_weather&quot;</span><span class="p">:</span>
+        <span class="c1"># Parse input and generate result</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="n">tool_input</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;location&quot;</span><span class="p">)</span>
+        <span class="n">weather_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="mi">72</span><span class="p">,</span> <span class="s2">&quot;condition&quot;</span><span class="p">:</span> <span class="s2">&quot;sunny&quot;</span><span class="p">}</span>
+
+        <span class="c1"># Send function result back</span>
+        <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;What&#39;s the weather like in San Francisco?&quot;</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;tool_use&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">tool_call</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">tool_name</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">tool_input</span><span class="p">}</span>
+            <span class="p">]},</span>
+            <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;tool_result&quot;</span><span class="p">,</span> <span class="s2">&quot;tool_use_id&quot;</span><span class="p">:</span> <span class="n">tool_call</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">weather_data</span><span class="p">)}</span>
+            <span class="p">]}</span>
+        <span class="p">]</span>
+        <span class="n">final_response</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">final_response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Embeddings</strong></p>
+<p>Generate embeddings for text:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLuMinary</span>
+
+<span class="n">llm</span> <span class="o">=</span> <span class="n">LLuMinary</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generate embeddings for a single text</span>
+<span class="n">embedding</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span><span class="s2">&quot;The quick brown fox jumps over the lazy dog&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Embedding dimension: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Process batch of texts</span>
+<span class="n">texts</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;The quick brown fox jumps over the lazy dog&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Machine learning is fascinating&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Natural language processing is powerful&quot;</span>
+<span class="p">]</span>
+<span class="n">embeddings</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">embed_batch</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of embeddings: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dimension of each embedding: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">embeddings</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Thinking Budget</strong></p>
+<p>Newer Claude models support a thinking budget feature that allows them to spend time thinking before responding:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLuMinary</span>
+
+<span class="n">llm</span> <span class="o">=</span> <span class="n">LLuMinary</span><span class="p">(</span>
+    <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-7-sonnet-preview-20240626-v1:0&quot;</span><span class="p">,</span>
+    <span class="n">thinking_budget</span><span class="o">=</span><span class="mf">0.7</span>  <span class="c1"># Allocate 70% of tokens to thinking before responding</span>
+<span class="p">)</span>
+
+<span class="c1"># Generate response with thinking</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="s2">&quot;Solve this complex problem: What is the largest prime factor of 600851475143?&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+
+<span class="c1"># Access thinking token usage</span>
+<span class="n">usage</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">usage</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Thinking tokens: </span><span class="si">{</span><span class="n">usage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;thinking_tokens&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Response tokens: </span><span class="si">{</span><span class="n">usage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;completion_tokens&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="provider-specific-parameters">
+<h2>Provider-Specific Parameters<a class="headerlink" href="#provider-specific-parameters" title="Link to this heading"></a></h2>
+<p>The Anthropic provider supports these additional parameters:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLuMinary</span>
+
+<span class="n">llm</span> <span class="o">=</span> <span class="n">LLuMinary</span><span class="p">(</span>
+    <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-20240620-v1:0&quot;</span><span class="p">,</span>
+    <span class="c1"># Anthropic-specific parameters</span>
+    <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>          <span class="c1"># Controls randomness (0.0 to 1.0)</span>
+    <span class="n">top_p</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>                <span class="c1"># Controls diversity via nucleus sampling</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>          <span class="c1"># Maximum tokens to generate</span>
+    <span class="n">thinking_budget</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>      <span class="c1"># Thinking budget ratio (for supported models)</span>
+    <span class="n">system</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant who speaks like a pirate.&quot;</span><span class="p">,</span>  <span class="c1"># System prompt</span>
+    <span class="n">anthropic_version</span><span class="o">=</span><span class="s2">&quot;2023-06-01&quot;</span><span class="p">,</span>  <span class="c1"># API version</span>
+    <span class="n">stop_sequences</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STOP&quot;</span><span class="p">],</span>  <span class="c1"># Custom sequences that stop generation</span>
+    <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span>                <span class="c1"># Request timeout in seconds</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="error-handling">
+<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading"></a></h2>
+<p>LLuMinary implements comprehensive error handling for Anthropic:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lluminary</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLuMinary</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lluminary.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AnthropicAuthenticationError</span><span class="p">,</span>
+    <span class="n">AnthropicRateLimitError</span><span class="p">,</span>
+    <span class="n">AnthropicAPIError</span><span class="p">,</span>
+    <span class="n">AnthropicTimeoutError</span>
+<span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">llm</span> <span class="o">=</span> <span class="n">LLuMinary</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-20240620-v1:0&quot;</span><span class="p">)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">AnthropicAuthenticationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Authentication error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">AnthropicRateLimitError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rate limit exceeded: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">AnthropicTimeoutError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request timed out: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">AnthropicAPIError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;API error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="models-reference">
+<h2>Models Reference<a class="headerlink" href="#models-reference" title="Link to this heading"></a></h2>
+<p>For detailed information about Anthropic models, their capabilities, and pricing, see the <a class="reference internal" href="../models_reference.html"><span class="doc">Models Reference</span></a> page.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="openai.html" class="btn btn-neutral float-left" title="OpenAI Provider" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="google.html" class="btn btn-neutral float-right" title="Google Provider" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, PimpMyNines.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

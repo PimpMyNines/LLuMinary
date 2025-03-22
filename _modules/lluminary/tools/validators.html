@@ -1,0 +1,449 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lluminary.tools.validators &mdash; LLuMinary 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LLuMinary
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../providers.html">Provider Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LLuMinary</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">lluminary.tools.validators</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for lluminary.tools.validators</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Validators for tool functions.</span>
+
+<span class="sd">This module provides decorators and utilities for validating tool functions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Set</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+    <span class="n">get_args</span><span class="p">,</span>
+    <span class="n">get_origin</span><span class="p">,</span>
+    <span class="n">get_type_hints</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolValidationError</span>
+
+
+<div class="viewcode-block" id="validate_tool">
+<a class="viewcode-back" href="../../../api.html#lluminary.tools.validators.validate_tool">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_tool</span><span class="p">(</span><span class="n">tool</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to validate a tool function.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tool: The tool function to validate</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The validated tool function</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ToolValidationError: If validation fails</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Validate docstring</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tool</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; must have a docstring&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Get and validate signature</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not inspect tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Validate return type</span>
+        <span class="k">if</span> <span class="n">sig</span><span class="o">.</span><span class="n">return_annotation</span> <span class="o">==</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Signature</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; must have a return type annotation&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Validate parameter types</span>
+        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">annotation</span> <span class="o">==</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Parameter &#39;</span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">&#39; of tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; &quot;</span>
+                    <span class="s2">&quot;must have a type annotation&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Validate parameters are JSON-serializable</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; parameters must be JSON-serializable&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Execute the tool</span>
+        <span class="k">return</span> <span class="n">tool</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+
+<div class="viewcode-block" id="validate_return_type">
+<a class="viewcode-back" href="../../../api.html#lluminary.tools.validators.validate_return_type">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_return_type</span><span class="p">(</span><span class="n">expected_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to validate a tool&#39;s return type at runtime.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        expected_type: The expected return type</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Decorator function</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        @validate_return_type(Dict[str, Any])</span>
+<span class="sd">        def my_tool() -&gt; Dict[str, Any]:</span>
+<span class="sd">            return {&quot;result&quot;: &quot;success&quot;}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">decorator</span><span class="p">(</span><span class="n">tool</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">tool</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">expected_type</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; returned </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;expected </span><span class="si">{</span><span class="n">expected_type</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="k">return</span> <span class="n">decorator</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_type_structure</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">expected_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate value against expected type, handling complex nested types.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        value: The value to validate</span>
+<span class="sd">        expected_type: The expected type</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if value matches expected_type, False otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Special case for Any</span>
+    <span class="k">if</span> <span class="n">expected_type</span> <span class="ow">is</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># Handle None with Optional types</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Check if expected_type is Optional[...] (Union[..., None])</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">get_origin</span><span class="p">(</span><span class="n">expected_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="n">Union</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">get_args</span><span class="p">(</span><span class="n">expected_type</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="ow">in</span> <span class="n">args</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Get the origin and args for generic types (like List, Dict, etc.)</span>
+    <span class="n">origin</span> <span class="o">=</span> <span class="n">get_origin</span><span class="p">(</span><span class="n">expected_type</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">get_args</span><span class="p">(</span><span class="n">expected_type</span><span class="p">)</span>
+
+    <span class="c1"># Handle basic types</span>
+    <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">expected_type</span><span class="p">)</span>
+
+    <span class="c1"># Handle Union types</span>
+    <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="n">Union</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+
+    <span class="c1"># Handle List, Set, Tuple types</span>
+    <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="nb">list</span> <span class="ow">or</span> <span class="n">origin</span> <span class="ow">is</span> <span class="n">List</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span> <span class="ow">or</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">Any</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="nb">set</span> <span class="ow">or</span> <span class="n">origin</span> <span class="ow">is</span> <span class="n">Set</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span> <span class="ow">or</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">Any</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="nb">tuple</span> <span class="ow">or</span> <span class="n">origin</span> <span class="ow">is</span> <span class="n">Tuple</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Handle Tuple[T, ...] - variable length tuple</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">Ellipsis</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="c1"># Handle fixed length tuples</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># Check if lengths match for fixed length tuples</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Validate each element against its expected type</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span><span class="p">,</span> <span class="n">typ</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+
+    <span class="c1"># Handle Dict types</span>
+    <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="nb">dict</span> <span class="ow">or</span> <span class="n">origin</span> <span class="ow">is</span> <span class="n">Dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">key_type</span><span class="p">,</span> <span class="n">val_type</span> <span class="o">=</span> <span class="n">args</span>
+
+        <span class="k">if</span> <span class="n">key_type</span> <span class="ow">is</span> <span class="n">Any</span> <span class="ow">and</span> <span class="n">val_type</span> <span class="ow">is</span> <span class="n">Any</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># Validate keys</span>
+        <span class="k">if</span> <span class="n">key_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Any</span><span class="p">:</span>
+            <span class="n">key_valid</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">key_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">key_valid</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Validate values</span>
+        <span class="k">if</span> <span class="n">val_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Any</span><span class="p">:</span>
+            <span class="n">val_valid</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">val_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">val_valid</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># Fall back to simple isinstance check for other cases</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">origin</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="validate_params">
+<a class="viewcode-back" href="../../../api.html#lluminary.tools.validators.validate_params">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_params</span><span class="p">(</span><span class="o">*</span><span class="n">types</span><span class="p">:</span> <span class="n">Type</span><span class="p">,</span> <span class="o">**</span><span class="n">named_types</span><span class="p">:</span> <span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to validate parameter types at runtime.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        *types: Expected types for positional arguments</span>
+<span class="sd">        **named_types: Expected types for keyword arguments</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Decorator function</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        @validate_params(str, int, optional_param=bool)</span>
+<span class="sd">        def my_tool(text: str, number: int, optional_param: bool = False):</span>
+<span class="sd">            return {&quot;result&quot;: &quot;success&quot;}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">decorator</span><span class="p">(</span><span class="n">tool</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+        <span class="n">type_hints</span> <span class="o">=</span> <span class="n">get_type_hints</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="c1"># Validate positional arguments</span>
+            <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">expected_type</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">expected_type</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Argument </span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2"> is type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;expected </span><span class="si">{</span><span class="n">expected_type</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+            <span class="c1"># Validate keyword arguments</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">named_types</span><span class="p">:</span>
+                    <span class="n">expected_type</span> <span class="o">=</span> <span class="n">named_types</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">_validate_type_structure</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">expected_type</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Argument &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; is type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;expected </span><span class="si">{</span><span class="n">expected_type</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">tool</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="k">return</span> <span class="n">decorator</span></div>
+
+
+
+<div class="viewcode-block" id="validate_nested_structure">
+<a class="viewcode-back" href="../../../api.html#lluminary.tools.validators.validate_nested_structure">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_nested_structure</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate that a value&#39;s nested structure is JSON-serializable.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        value: The value to validate</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if the value is JSON-serializable, False otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">validate_nested_structure</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="c1"># Check that all keys are strings (JSON requirement)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Check that all values are serializable</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">validate_nested_structure</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="c1"># Any other type is not JSON-serializable</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="json_serializable">
+<a class="viewcode-back" href="../../../api.html#lluminary.tools.validators.json_serializable">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">json_serializable</span><span class="p">(</span><span class="n">tool</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to validate that a tool&#39;s return value is JSON-serializable.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tool: The tool function to validate</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The validated tool function</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        @json_serializable</span>
+<span class="sd">        def my_tool() -&gt; Dict[str, Any]:</span>
+<span class="sd">            return {&quot;result&quot;: &quot;success&quot;}  # OK</span>
+<span class="sd">            # return lambda x: x  # Would raise ToolValidationError</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">tool</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># First check the nested structure without serializing</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">validate_nested_structure</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; return value contains non-JSON-serializable types&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Then do the actual serialization</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ToolValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; return value is not JSON-serializable: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, PimpMyNines.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

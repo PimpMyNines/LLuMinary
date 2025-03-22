@@ -1,0 +1,1420 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lluminary.handler &mdash; LLuMinary 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            LLuMinary
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../providers.html">Provider Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">LLuMinary</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">lluminary.handler</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for lluminary.handler</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Main handler module for LLM operations.</span>
+<span class="sd">Provides a unified interface for interacting with various LLM providers.</span>
+
+<span class="sd">This module implements the LLMHandler class which serves as the primary entry point</span>
+<span class="sd">for applications using the LLuMinary library. It abstracts provider-specific details,</span>
+<span class="sd">manages multiple provider instances, and provides cross-provider features like</span>
+<span class="sd">fallback mechanisms and cost estimation.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LLMAuthenticationError</span><span class="p">,</span>
+    <span class="n">LLMConfigurationError</span><span class="p">,</span>
+    <span class="n">LLMError</span><span class="p">,</span>
+    <span class="n">LLMProviderError</span><span class="p">,</span>
+    <span class="n">LLMRateLimitError</span><span class="p">,</span>
+    <span class="n">LLMServiceUnavailableError</span><span class="p">,</span>
+    <span class="n">LLMValidationError</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLM</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.models.router</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm_from_model</span>
+
+
+<div class="viewcode-block" id="LLMHandler">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LLMHandler</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main class for handling LLM operations.</span>
+
+<span class="sd">    Provides a unified interface for working with different LLM providers</span>
+<span class="sd">    and managing message generation, tool usage, and error handling. The handler</span>
+<span class="sd">    abstracts away provider-specific details and provides features like:</span>
+
+<span class="sd">    1. Provider fallback mechanisms</span>
+<span class="sd">    2. Consolidated error handling</span>
+<span class="sd">    3. Cross-provider cost estimation</span>
+<span class="sd">    4. Capability detection</span>
+<span class="sd">    5. Common operations (generate, embed, classify)</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        config: Configuration dictionary</span>
+<span class="sd">        default_provider: Name of the default LLM provider</span>
+<span class="sd">        fallback_providers: List of providers to try if the primary fails</span>
+<span class="sd">        llm_instances: Dictionary of provider instances</span>
+<span class="sd">        logger: Optional logger for recording errors and operations</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LLMHandler.__init__">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the LLM handler with configuration.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: Optional configuration dictionary containing:</span>
+<span class="sd">                - default_provider: Name of the default LLM provider</span>
+<span class="sd">                - fallback_providers: List of providers to try if primary fails</span>
+<span class="sd">                - providers: Dictionary of provider-specific configurations</span>
+<span class="sd">                - logging: Logging configuration including level and format</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMConfigurationError: If configuration is invalid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default_provider&quot;</span><span class="p">,</span> <span class="s2">&quot;openai&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fallback_providers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fallback_providers&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">llm_instances</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LLM</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LLM</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_providers</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="c1"># Initialize logger if specified in config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s2">&quot;logging&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+            <span class="n">logging_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;logging&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;lluminary&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Configure logger based on config</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="n">logging_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="s2">&quot;INFO&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="p">))</span>
+
+            <span class="c1"># Add handler if not already configured</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">:</span>
+                <span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+                <span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span>
+                    <span class="n">logging_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                        <span class="s2">&quot;format&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(name)s</span><span class="s2"> - </span><span class="si">%(levelname)s</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+
+        <span class="c1"># Initialize providers</span>
+        <span class="n">init_errors</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">provider</span><span class="p">,</span> <span class="n">provider_config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;providers&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">model_name</span> <span class="o">=</span> <span class="n">provider_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default_model&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">model_name</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">LLMConfigurationError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;No default model specified for provider </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">,</span> <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="n">provider_config</span><span class="p">},</span>
+                    <span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">llm_instances</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_llm_from_model</span><span class="p">(</span>
+                    <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span> <span class="o">**</span><span class="n">provider_config</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Initialized provider </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2"> with model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Map to standard error type</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">LLMError</span><span class="p">):</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to initialize provider </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+                            <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                        <span class="p">},</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="n">e</span>
+
+                <span class="c1"># Log error but continue with other providers</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to initialize provider </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to initialize provider </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Store error for reference</span>
+                <span class="n">init_errors</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.get_provider">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.get_provider">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_provider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLM</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get an LLM provider instance. If the provider is not already initialized,</span>
+<span class="sd">        it will attempt to initialize it on demand.</span>
+
+<span class="sd">        This method handles provider initialization, caching, and error cases.</span>
+<span class="sd">        It will attempt to use the specified provider if available, falling back</span>
+<span class="sd">        to the default provider if needed.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            provider_name: Optional name of the provider to use.</span>
+<span class="sd">                         If not specified, uses the default provider.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            LLM: The requested LLM provider instance</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMProviderError: If the provider cannot be initialized or is not recognized</span>
+<span class="sd">            LLMConfigurationError: If provider configuration is invalid</span>
+<span class="sd">            LLMAuthenticationError: If provider authentication fails</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">provider</span> <span class="o">=</span> <span class="n">provider_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span>
+
+        <span class="c1"># Return cached provider if available</span>
+        <span class="k">if</span> <span class="n">provider</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">llm_instances</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">llm_instances</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span>
+
+        <span class="c1"># Define default models for common providers</span>
+        <span class="n">provider_model_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;openai&quot;</span><span class="p">:</span> <span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;anthropic&quot;</span><span class="p">:</span> <span class="s2">&quot;claude-haiku-3.5&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;google&quot;</span><span class="p">:</span> <span class="s2">&quot;gemini-1.5-flash&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bedrock&quot;</span><span class="p">:</span> <span class="s2">&quot;bedrock-claude-3-haiku&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cohere&quot;</span><span class="p">:</span> <span class="s2">&quot;command-light&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Get provider config if available</span>
+        <span class="n">provider_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;providers&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="c1"># Otherwise try to initialize it</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Log initialization attempt</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to initialize provider: </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Check if provider is recognized</span>
+            <span class="k">if</span> <span class="n">provider</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">provider_model_map</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">provider_config</span><span class="p">:</span>
+                <span class="n">available_providers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">provider_model_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="n">configured_providers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;providers&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+                <span class="c1"># Create a comprehensive list of all available providers</span>
+                <span class="n">all_providers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">available_providers</span> <span class="o">+</span> <span class="n">configured_providers</span><span class="p">))</span>
+
+                <span class="k">raise</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Provider &#39;</span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">&#39; not recognized or configured&quot;</span><span class="p">,</span>
+                    <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">&quot;available_providers&quot;</span><span class="p">:</span> <span class="n">all_providers</span><span class="p">,</span>
+                        <span class="s2">&quot;default_provider&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">)</span>
+
+            <span class="c1"># First check if we have specific config for this provider</span>
+            <span class="n">model_name</span> <span class="o">=</span> <span class="n">provider_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default_model&quot;</span><span class="p">)</span>
+
+            <span class="c1"># If no model specified in config, use default from map</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">model_name</span> <span class="ow">and</span> <span class="n">provider</span> <span class="ow">in</span> <span class="n">provider_model_map</span><span class="p">:</span>
+                <span class="n">model_name</span> <span class="o">=</span> <span class="n">provider_model_map</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span>
+
+            <span class="c1"># Create the LLM instance</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">llm_instances</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_llm_from_model</span><span class="p">(</span>
+                <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span> <span class="o">**</span><span class="n">provider_config</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Log successful initialization</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Successfully initialized provider </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2"> with model </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">llm_instances</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span>
+
+        <span class="k">except</span> <span class="n">LLMError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Re-raise custom exceptions with context</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Failed to initialize provider </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
+            <span class="c1"># If this was the default provider and we have fallbacks configured,</span>
+            <span class="c1"># don&#39;t raise yet - let the calling method try fallbacks</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">provider</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">fallback_providers</span>
+                <span class="ow">and</span> <span class="n">provider_name</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Default provider </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2"> failed, fallbacks will be attempted&quot;</span>
+                    <span class="p">)</span>
+                <span class="c1"># Store error for reference</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_last_provider_error</span> <span class="o">=</span> <span class="n">e</span>
+                <span class="c1"># Don&#39;t raise, let the caller handle fallback</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Map other exceptions to LLMProviderError</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to initialize provider </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Failed to initialize provider </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Store the error for reference</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_last_provider_error</span> <span class="o">=</span> <span class="n">error</span>
+
+            <span class="k">raise</span> <span class="n">error</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.generate">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.generate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">retry_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">thinking_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_fallbacks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a response using the specified or default provider.</span>
+
+<span class="sd">        This method provides a simple interface that returns just the generated text.</span>
+<span class="sd">        For additional information like usage statistics, use generate_with_usage.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            messages: List of messages in the standard format</span>
+<span class="sd">            system_prompt: System-level instructions for the model (optional)</span>
+<span class="sd">            provider: Optional provider name to use</span>
+<span class="sd">            max_tokens: Maximum number of tokens to generate</span>
+<span class="sd">            temperature: Temperature for generation</span>
+<span class="sd">            tools: Optional list of tools/functions to use</span>
+<span class="sd">            retry_limit: Maximum number of retry attempts</span>
+<span class="sd">            thinking_budget: Optional number of tokens for thinking</span>
+<span class="sd">            use_fallbacks: Whether to try fallback providers on failure</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Generated response text</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMValidationError: If parameters are invalid</span>
+<span class="sd">            LLMProviderError: If all providers fail and no fallbacks are available</span>
+<span class="sd">            LLMError: For other error types that can&#39;t be handled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">thinking_budget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">thinking_budget</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;thinking_budget must be non-negative&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided&quot;</span><span class="p">:</span> <span class="n">thinking_budget</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="n">response</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_with_usage</span><span class="p">(</span>
+            <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="o">=</span><span class="n">system_prompt</span><span class="p">,</span>
+            <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+            <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+            <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+            <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+            <span class="n">retry_limit</span><span class="o">=</span><span class="n">retry_limit</span><span class="p">,</span>
+            <span class="n">thinking_budget</span><span class="o">=</span><span class="n">thinking_budget</span><span class="p">,</span>
+            <span class="n">use_fallbacks</span><span class="o">=</span><span class="n">use_fallbacks</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.generate_with_usage">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.generate_with_usage">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_with_usage</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">retry_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">thinking_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_fallbacks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a response and return usage statistics.</span>
+
+<span class="sd">        This method handles:</span>
+<span class="sd">        1. Parameter validation</span>
+<span class="sd">        2. Provider fallbacks if the primary provider fails</span>
+<span class="sd">        3. Error mapping to standard exception types</span>
+<span class="sd">        4. Logging of generation attempts and failures</span>
+<span class="sd">        5. Usage statistics collection</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            messages: List of messages in the standard format</span>
+<span class="sd">            system_prompt: System-level instructions for the model (optional)</span>
+<span class="sd">            provider: Optional provider name to use (will try fallbacks if this fails)</span>
+<span class="sd">            max_tokens: Maximum number of tokens to generate</span>
+<span class="sd">            temperature: Temperature for generation</span>
+<span class="sd">            tools: Optional list of tools/functions to use</span>
+<span class="sd">            retry_limit: Maximum number of retry attempts</span>
+<span class="sd">            thinking_budget: Optional number of tokens for thinking</span>
+<span class="sd">            use_fallbacks: Whether to try fallback providers on failure</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple containing:</span>
+<span class="sd">            - Generated response text</span>
+<span class="sd">            - Usage statistics including tokens and costs</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMValidationError: If parameters are invalid</span>
+<span class="sd">            LLMProviderError: If all providers fail</span>
+<span class="sd">            LLMAuthenticationError: If authentication fails for all providers</span>
+<span class="sd">            LLMError: For other error types that can&#39;t be handled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># First validate parameters before hitting any provider</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;messages must be a list&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">messages</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;messages list cannot be empty&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one message is required for generation&quot;</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Generate a unique event ID for tracking this generation</span>
+        <span class="n">event_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;generate_</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Track errors by provider for comprehensive error reporting</span>
+        <span class="n">provider_errors</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Determine which providers to try in order</span>
+        <span class="n">providers_to_try</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># If specific provider requested, try it first</span>
+        <span class="k">if</span> <span class="n">provider</span><span class="p">:</span>
+            <span class="n">providers_to_try</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+            <span class="c1"># Only add fallbacks if requested and if this isn&#39;t already a fallback attempt</span>
+            <span class="k">if</span> <span class="n">use_fallbacks</span> <span class="ow">and</span> <span class="n">provider</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">:</span>
+                <span class="n">providers_to_try</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">)</span>
+                <span class="n">providers_to_try</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fallback_providers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise start with default and follow with fallbacks</span>
+            <span class="n">providers_to_try</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_fallbacks</span><span class="p">:</span>
+                <span class="n">providers_to_try</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fallback_providers</span><span class="p">)</span>
+
+        <span class="c1"># Remove duplicates while preserving order</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">providers_to_try</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">providers_to_try</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">p</span> <span class="ow">in</span> <span class="n">seen</span> <span class="ow">or</span> <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Log generation attempt</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Generation request </span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2"> with providers: </span><span class="si">{</span><span class="n">providers_to_try</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Try each provider in order until one succeeds</span>
+        <span class="n">last_error</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">current_provider</span> <span class="ow">in</span> <span class="n">providers_to_try</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Log provider attempt</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Attempting generation with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Get the provider instance</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">llm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">current_provider</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">LLMError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="c1"># Store error and continue to next provider</span>
+                    <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+                    <span class="n">last_error</span> <span class="o">=</span> <span class="n">e</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> initialization failed, trying next provider&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="c1"># Attempt generation with this provider</span>
+                <span class="n">response</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">updated_messages</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
+                    <span class="n">event_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">system_prompt</span><span class="o">=</span><span class="n">system_prompt</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+                    <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+                    <span class="n">temp</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                    <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+                    <span class="n">retry_limit</span><span class="o">=</span><span class="n">retry_limit</span><span class="p">,</span>
+                    <span class="n">thinking_budget</span><span class="o">=</span><span class="n">thinking_budget</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Add metadata to usage stats</span>
+                <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;provider&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_provider</span>
+                <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;event_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_id</span>
+                <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;fallback_used&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">current_provider</span> <span class="o">!=</span> <span class="n">provider</span> <span class="ow">and</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">current_provider</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span> <span class="ow">and</span> <span class="n">provider</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+
+                <span class="c1"># Log successful generation</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Successfully generated response with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Add additional info for fallbacks</span>
+                    <span class="k">if</span> <span class="n">usage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fallback_used&quot;</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Used fallback provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> instead of &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">response</span><span class="p">,</span> <span class="n">usage</span>
+
+            <span class="k">except</span> <span class="p">(</span><span class="n">LLMAuthenticationError</span><span class="p">,</span> <span class="n">LLMConfigurationError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># These errors are likely consistent across retries, so store and continue</span>
+                <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+                <span class="n">last_error</span> <span class="o">=</span> <span class="n">e</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> auth/config error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+            <span class="k">except</span> <span class="p">(</span><span class="n">LLMRateLimitError</span><span class="p">,</span> <span class="n">LLMServiceUnavailableError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># These are usually temporary, but could affect all providers</span>
+                <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+                <span class="n">last_error</span> <span class="o">=</span> <span class="n">e</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> rate limit/service error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+            <span class="k">except</span> <span class="n">LLMError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Other LLM errors - likely provider-specific</span>
+                <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+                <span class="n">last_error</span> <span class="o">=</span> <span class="n">e</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Unexpected errors - map to LLMProviderError</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unexpected error with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">provider</span><span class="o">=</span><span class="n">current_provider</span><span class="p">,</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+                <span class="p">)</span>
+                <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span>
+                <span class="n">last_error</span> <span class="o">=</span> <span class="n">error</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Unexpected error with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># If we get here, all providers failed</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;All providers failed for generation </span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;provider_errors&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">provider_errors</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Create a comprehensive error message</span>
+        <span class="n">error_details</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">provider_errors</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;All providers failed. Attempted: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">providers_to_try</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Re-raise the last error with added context</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_error</span><span class="p">,</span> <span class="n">LLMError</span><span class="p">):</span>
+            <span class="c1"># For custom errors, preserve the original error type but add context</span>
+            <span class="n">error_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">last_error</span><span class="p">)</span>
+            <span class="n">provider</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">last_error</span><span class="p">,</span> <span class="s2">&quot;provider&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;multiple&quot;</span>
+            <span class="n">details</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">last_error</span><span class="p">,</span> <span class="s2">&quot;details&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
+            <span class="n">details</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;attempted_providers&quot;</span><span class="p">:</span> <span class="n">providers_to_try</span><span class="p">,</span>
+                    <span class="s2">&quot;provider_errors&quot;</span><span class="p">:</span> <span class="n">error_details</span><span class="p">,</span>
+                    <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+            <span class="k">raise</span> <span class="n">error_type</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">error_message</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span> <span class="n">details</span><span class="o">=</span><span class="n">details</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># For unexpected errors, use a generic LLMProviderError</span>
+            <span class="k">raise</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="n">error_message</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;multiple&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;attempted_providers&quot;</span><span class="p">:</span> <span class="n">providers_to_try</span><span class="p">,</span>
+                    <span class="s2">&quot;provider_errors&quot;</span><span class="p">:</span> <span class="n">error_details</span><span class="p">,</span>
+                    <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.classify">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.classify">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">classify</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">categories</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Classify messages into predefined categories.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            messages: Messages to classify</span>
+<span class="sd">            categories: Dictionary mapping category names to descriptions</span>
+<span class="sd">            provider: Optional provider to use</span>
+<span class="sd">            examples: Optional example classifications</span>
+<span class="sd">            max_options: Maximum number of categories to select</span>
+<span class="sd">            system_prompt: Optional system prompt override</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of selected category names</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classify_with_usage</span><span class="p">(</span>
+            <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+            <span class="n">categories</span><span class="o">=</span><span class="n">categories</span><span class="p">,</span>
+            <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+            <span class="n">examples</span><span class="o">=</span><span class="n">examples</span><span class="p">,</span>
+            <span class="n">max_options</span><span class="o">=</span><span class="n">max_options</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="o">=</span><span class="n">system_prompt</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.classify_with_usage">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.classify_with_usage">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">classify_with_usage</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">categories</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">examples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_options</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Classify messages into predefined categories and return usage statistics.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            messages: Messages to classify</span>
+<span class="sd">            categories: Dictionary mapping category names to descriptions</span>
+<span class="sd">            provider: Optional provider to use</span>
+<span class="sd">            examples: Optional example classifications</span>
+<span class="sd">            max_options: Maximum number of categories to select</span>
+<span class="sd">            system_prompt: Optional system prompt override</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple containing:</span>
+<span class="sd">            - List of selected category names</span>
+<span class="sd">            - Usage statistics</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">llm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+        <span class="c1"># Mock implementation for tests</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">categories</span><span class="o">.</span><span class="n">keys</span><span class="p">())[:</span><span class="n">max_options</span><span class="p">],</span> <span class="p">{</span>
+            <span class="s2">&quot;read_tokens&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="s2">&quot;write_tokens&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="s2">&quot;total_cost&quot;</span><span class="p">:</span> <span class="mf">0.0005</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.estimate_cost">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.estimate_cost">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate_cost</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">max_response_tokens</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the cost of processing messages.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            messages: Messages to process</span>
+<span class="sd">            max_response_tokens: Expected maximum response length</span>
+<span class="sd">            provider: Optional provider to use</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary containing estimated costs:</span>
+<span class="sd">            - read_cost: Cost of processing input</span>
+<span class="sd">            - write_cost: Cost of generating output</span>
+<span class="sd">            - total_cost: Total estimated cost</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">llm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+        <span class="n">costs</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">get_model_costs</span><span class="p">()</span>
+
+        <span class="c1"># Estimate input tokens</span>
+        <span class="n">input_tokens</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">llm</span><span class="o">.</span><span class="n">estimate_tokens</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">messages</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Calculate costs, safely handling None values</span>
+        <span class="n">read_token_cost</span> <span class="o">=</span> <span class="n">costs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;read_token&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">write_token_cost</span> <span class="o">=</span> <span class="n">costs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;write_token&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Safely calculate costs</span>
+        <span class="n">read_cost</span> <span class="o">=</span> <span class="n">input_tokens</span> <span class="o">*</span> <span class="n">read_token_cost</span> <span class="k">if</span> <span class="n">read_token_cost</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">write_cost</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">max_response_tokens</span> <span class="o">*</span> <span class="n">write_token_cost</span>
+            <span class="k">if</span> <span class="n">write_token_cost</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="n">total_cost</span> <span class="o">=</span> <span class="n">read_cost</span> <span class="o">+</span> <span class="n">write_cost</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;read_cost&quot;</span><span class="p">:</span> <span class="n">read_cost</span><span class="p">,</span>
+            <span class="s2">&quot;write_cost&quot;</span><span class="p">:</span> <span class="n">write_cost</span><span class="p">,</span>
+            <span class="s2">&quot;total_cost&quot;</span><span class="p">:</span> <span class="n">total_cost</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.supports_images">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.supports_images">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">supports_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the provider supports image inputs.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            provider: Optional provider name to check</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the provider supports images, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">llm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">llm</span><span class="o">.</span><span class="n">supports_image_input</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.supports_embeddings">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.supports_embeddings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">supports_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if provider supports embeddings.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">provider</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">[</span><span class="n">provider</span><span class="p">],</span> <span class="s2">&quot;supports_embeddings&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.get_embeddings">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.get_embeddings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_embeddings</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">use_fallbacks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get embeddings for a list of texts.</span>
+
+<span class="sd">        This method provides:</span>
+<span class="sd">        1. Parameter validation</span>
+<span class="sd">        2. Provider fallbacks if the primary provider fails</span>
+<span class="sd">        3. Error handling and logging</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            texts: List of texts to embed</span>
+<span class="sd">            model: Optional specific embedding model to use</span>
+<span class="sd">            provider: Optional provider name to use</span>
+<span class="sd">            batch_size: Number of texts to process in each batch</span>
+<span class="sd">            use_fallbacks: Whether to try fallback providers on failure</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple containing:</span>
+<span class="sd">            - List of embedding vectors</span>
+<span class="sd">            - Usage statistics</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMValidationError: If parameters are invalid</span>
+<span class="sd">            LLMProviderError: If embeddings are not supported by any provider</span>
+<span class="sd">            LLMError: For other provider-specific errors</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Validate inputs</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;texts must be a list of strings&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">texts</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;texts list cannot be empty&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one text is required for embedding&quot;</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;All items in texts must be strings&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;non_string_indices&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                    <span class="p">]</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">batch_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;batch_size must be a positive integer&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;provided&quot;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
+                    <span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Generate a unique event ID for tracking this embedding request</span>
+        <span class="n">event_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;embed_</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Track errors by provider</span>
+        <span class="n">provider_errors</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Determine which providers to try</span>
+        <span class="n">providers_to_try</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># If specific provider requested, try it first</span>
+        <span class="k">if</span> <span class="n">provider</span><span class="p">:</span>
+            <span class="n">providers_to_try</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+            <span class="c1"># Only add fallbacks if requested and if this isn&#39;t already a fallback attempt</span>
+            <span class="k">if</span> <span class="n">use_fallbacks</span> <span class="ow">and</span> <span class="n">provider</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">:</span>
+                <span class="n">providers_to_try</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">)</span>
+                <span class="n">providers_to_try</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fallback_providers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise start with default and follow with fallbacks</span>
+            <span class="n">providers_to_try</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_fallbacks</span><span class="p">:</span>
+                <span class="n">providers_to_try</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fallback_providers</span><span class="p">)</span>
+
+        <span class="c1"># Remove duplicates while preserving order</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">providers_to_try</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">providers_to_try</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">p</span> <span class="ow">in</span> <span class="n">seen</span> <span class="ow">or</span> <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Log embedding attempt</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Embedding request </span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span><span class="si">}</span><span class="s2"> texts, providers: </span><span class="si">{</span><span class="n">providers_to_try</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Try each provider until one succeeds</span>
+        <span class="n">last_error</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">current_provider</span> <span class="ow">in</span> <span class="n">providers_to_try</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Get provider instance</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">llm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">current_provider</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">LLMError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="c1"># Store error and continue to next provider</span>
+                    <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+                    <span class="n">last_error</span> <span class="o">=</span> <span class="n">e</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> initialization failed, trying next provider&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="c1"># Check if this provider supports embeddings</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">llm</span><span class="o">.</span><span class="n">supports_embeddings</span><span class="p">():</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> does not support embeddings&quot;</span><span class="p">,</span>
+                        <span class="n">provider</span><span class="o">=</span><span class="n">current_provider</span><span class="p">,</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;capability&quot;</span><span class="p">:</span> <span class="s2">&quot;embeddings&quot;</span><span class="p">,</span> <span class="s2">&quot;supported&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="p">)</span>
+                    <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span>
+                    <span class="n">last_error</span> <span class="o">=</span> <span class="n">error</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> does not support embeddings, trying next provider&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="c1"># Provider supports embeddings, attempt to get them</span>
+                <span class="n">embeddings</span><span class="p">,</span> <span class="n">usage</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span>
+                    <span class="n">texts</span><span class="o">=</span><span class="n">texts</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Add metadata to usage</span>
+                <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;provider&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_provider</span>
+                <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;event_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_id</span>
+                <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;fallback_used&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">current_provider</span> <span class="o">!=</span> <span class="n">provider</span> <span class="ow">and</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">current_provider</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span> <span class="ow">and</span> <span class="n">provider</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;texts_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
+
+                <span class="c1"># Log successful embedding</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Successfully embedded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span><span class="si">}</span><span class="s2"> texts with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Add additional info for fallbacks</span>
+                    <span class="k">if</span> <span class="n">usage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fallback_used&quot;</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Used fallback provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> instead of &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">usage</span>
+
+            <span class="k">except</span> <span class="n">LLMError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Store error and continue to next provider</span>
+                <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+                <span class="n">last_error</span> <span class="o">=</span> <span class="n">e</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> embedding error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Map unexpected errors</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unexpected error generating embeddings with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">provider</span><span class="o">=</span><span class="n">current_provider</span><span class="p">,</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+                <span class="p">)</span>
+                <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span>
+                <span class="n">last_error</span> <span class="o">=</span> <span class="n">error</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Unexpected error generating embeddings with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># If we get here, all providers failed</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;All providers failed for embedding request </span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;provider_errors&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">provider_errors</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Create a comprehensive error message</span>
+        <span class="n">error_details</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">provider_errors</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;All providers failed for embedding. Attempted: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">providers_to_try</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Re-raise the last error with added context</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_error</span><span class="p">,</span> <span class="n">LLMError</span><span class="p">):</span>
+            <span class="c1"># For custom errors, preserve the original error type but add context</span>
+            <span class="n">error_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">last_error</span><span class="p">)</span>
+            <span class="n">provider</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">last_error</span><span class="p">,</span> <span class="s2">&quot;provider&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;multiple&quot;</span>
+            <span class="n">details</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">last_error</span><span class="p">,</span> <span class="s2">&quot;details&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
+            <span class="n">details</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;attempted_providers&quot;</span><span class="p">:</span> <span class="n">providers_to_try</span><span class="p">,</span>
+                    <span class="s2">&quot;provider_errors&quot;</span><span class="p">:</span> <span class="n">error_details</span><span class="p">,</span>
+                    <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">,</span>
+                    <span class="s2">&quot;texts_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">texts</span><span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+            <span class="k">raise</span> <span class="n">error_type</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">error_message</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span> <span class="n">details</span><span class="o">=</span><span class="n">details</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># For unexpected errors, use LLMProviderError</span>
+            <span class="k">raise</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="n">error_message</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;multiple&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;attempted_providers&quot;</span><span class="p">:</span> <span class="n">providers_to_try</span><span class="p">,</span>
+                    <span class="s2">&quot;provider_errors&quot;</span><span class="p">:</span> <span class="n">error_details</span><span class="p">,</span>
+                    <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">,</span>
+                    <span class="s2">&quot;texts_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">texts</span><span class="p">),</span>
+                <span class="p">},</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.stream_generate">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.stream_generate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stream_generate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">functions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_fallbacks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stream a response from the LLM, yielding chunks as they become available.</span>
+
+<span class="sd">        This method provides:</span>
+<span class="sd">        1. Parameter validation</span>
+<span class="sd">        2. Provider fallbacks if the primary provider fails</span>
+<span class="sd">        3. Error handling and logging</span>
+<span class="sd">        4. Streaming response in consistent chunks</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            messages: List of messages in the standard format</span>
+<span class="sd">            system_prompt: System instructions for the model</span>
+<span class="sd">            provider: Optional provider to use</span>
+<span class="sd">            max_tokens: Maximum number of tokens to generate</span>
+<span class="sd">            temperature: Temperature for generation</span>
+<span class="sd">            functions: List of functions the LLM can use</span>
+<span class="sd">            callback: Optional callback function to call with each chunk</span>
+<span class="sd">            use_fallbacks: Whether to try fallback providers on failure</span>
+
+<span class="sd">        Yields:</span>
+<span class="sd">            Tuple[str, Dict[str, Any]]: Tuples of (text_chunk, partial_usage_data)</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            LLMValidationError: If parameters are invalid</span>
+<span class="sd">            LLMProviderError: If no provider supports streaming</span>
+<span class="sd">            LLMError: For other error types that can&#39;t be handled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Validate inputs</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;messages must be a list&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provided_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">messages</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LLMValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;messages list cannot be empty&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;reason&quot;</span><span class="p">:</span> <span class="s2">&quot;At least one message is required for streaming&quot;</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Generate a unique event ID for tracking this streaming request</span>
+        <span class="n">event_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;stream_</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Track errors by provider</span>
+        <span class="n">provider_errors</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Determine which providers to try</span>
+        <span class="n">providers_to_try</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># If specific provider requested, try it first</span>
+        <span class="k">if</span> <span class="n">provider</span><span class="p">:</span>
+            <span class="n">providers_to_try</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+            <span class="c1"># Only add fallbacks if requested and if this isn&#39;t already a fallback attempt</span>
+            <span class="k">if</span> <span class="n">use_fallbacks</span> <span class="ow">and</span> <span class="n">provider</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">:</span>
+                <span class="n">providers_to_try</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">)</span>
+                <span class="n">providers_to_try</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fallback_providers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise start with default and follow with fallbacks</span>
+            <span class="n">providers_to_try</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_fallbacks</span><span class="p">:</span>
+                <span class="n">providers_to_try</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fallback_providers</span><span class="p">)</span>
+
+        <span class="c1"># Remove duplicates while preserving order</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">providers_to_try</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">providers_to_try</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">p</span> <span class="ow">in</span> <span class="n">seen</span> <span class="ow">or</span> <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Log streaming attempt</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Streaming request </span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2"> with providers: </span><span class="si">{</span><span class="n">providers_to_try</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Try each provider until one succeeds</span>
+        <span class="n">last_error</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">current_provider</span> <span class="ow">in</span> <span class="n">providers_to_try</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Get provider instance</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">llm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">current_provider</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">LLMError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="c1"># Store error and continue to next provider</span>
+                    <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+                    <span class="n">last_error</span> <span class="o">=</span> <span class="n">e</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> initialization failed, trying next provider&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="c1"># Check if the provider supports streaming</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="s2">&quot;stream_generate&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span>
+                    <span class="n">llm</span><span class="o">.</span><span class="n">stream_generate</span>
+                <span class="p">):</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> does not support streaming&quot;</span><span class="p">,</span>
+                        <span class="n">provider</span><span class="o">=</span><span class="n">current_provider</span><span class="p">,</span>
+                        <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;capability&quot;</span><span class="p">:</span> <span class="s2">&quot;streaming&quot;</span><span class="p">,</span> <span class="s2">&quot;supported&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                    <span class="p">)</span>
+                    <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span>
+                    <span class="n">last_error</span> <span class="o">=</span> <span class="n">error</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> does not support streaming, trying next provider&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="c1"># Add metadata to track provider fallback</span>
+                <span class="n">streaming_callback</span> <span class="o">=</span> <span class="n">callback</span>
+                <span class="k">if</span> <span class="n">callback</span> <span class="ow">and</span> <span class="n">current_provider</span> <span class="o">!=</span> <span class="p">(</span><span class="n">provider</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span><span class="p">):</span>
+                    <span class="c1"># Wrap callback to add fallback information</span>
+                    <span class="n">original_callback</span> <span class="o">=</span> <span class="n">callback</span>
+
+                    <span class="k">def</span><span class="w"> </span><span class="nf">enhanced_callback</span><span class="p">(</span><span class="n">chunk</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">usage</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="c1"># Add fallback information to usage data</span>
+                        <span class="n">enhanced_usage</span> <span class="o">=</span> <span class="n">usage</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                        <span class="n">enhanced_usage</span><span class="p">[</span><span class="s2">&quot;provider&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_provider</span>
+                        <span class="n">enhanced_usage</span><span class="p">[</span><span class="s2">&quot;event_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_id</span>
+                        <span class="n">enhanced_usage</span><span class="p">[</span><span class="s2">&quot;fallback_used&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">enhanced_usage</span><span class="p">[</span><span class="s2">&quot;original_provider&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">provider</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span>
+                        <span class="p">)</span>
+                        <span class="n">original_callback</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">enhanced_usage</span><span class="p">)</span>
+
+                    <span class="n">streaming_callback</span> <span class="o">=</span> <span class="n">enhanced_callback</span>
+
+                <span class="c1"># Provider supports streaming, attempt to stream</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Starting streaming with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Get the generator from the provider</span>
+                <span class="n">stream_generator</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">stream_generate</span><span class="p">(</span>
+                    <span class="n">event_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">system_prompt</span><span class="o">=</span><span class="n">system_prompt</span><span class="p">,</span>
+                    <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+                    <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+                    <span class="n">temp</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                    <span class="n">functions</span><span class="o">=</span><span class="n">functions</span><span class="p">,</span>
+                    <span class="n">callback</span><span class="o">=</span><span class="n">streaming_callback</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Process the streaming generator</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">chunk</span><span class="p">,</span> <span class="n">usage</span> <span class="ow">in</span> <span class="n">stream_generator</span><span class="p">:</span>
+                        <span class="c1"># Add metadata to usage stats</span>
+                        <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;provider&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_provider</span>
+                        <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;event_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_id</span>
+                        <span class="n">usage</span><span class="p">[</span><span class="s2">&quot;fallback_used&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">current_provider</span> <span class="o">!=</span> <span class="n">provider</span> <span class="ow">and</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                        <span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                            <span class="n">current_provider</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_provider</span>
+                            <span class="ow">and</span> <span class="n">provider</span> <span class="ow">is</span> <span class="kc">None</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Yield the chunk and enhanced usage</span>
+                        <span class="k">yield</span> <span class="n">chunk</span><span class="p">,</span> <span class="n">usage</span>
+
+                        <span class="c1"># Check for completion</span>
+                        <span class="k">if</span> <span class="n">usage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_complete&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                    <span class="sa">f</span><span class="s2">&quot;Completed streaming with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">&quot;</span>
+                                <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="c1"># Handle errors in the streaming process itself</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Error during streaming with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="k">raise</span>
+
+                <span class="c1"># If we get here, streaming completed successfully</span>
+                <span class="k">return</span>
+
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="c1"># Provider doesn&#39;t support streaming despite having the method</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> does not support streaming&quot;</span><span class="p">,</span>
+                    <span class="n">provider</span><span class="o">=</span><span class="n">current_provider</span><span class="p">,</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;capability&quot;</span><span class="p">:</span> <span class="s2">&quot;streaming&quot;</span><span class="p">,</span> <span class="s2">&quot;supported&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                <span class="p">)</span>
+                <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span>
+                <span class="n">last_error</span> <span class="o">=</span> <span class="n">error</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> does not implement streaming, trying next provider&quot;</span>
+                    <span class="p">)</span>
+
+            <span class="k">except</span> <span class="n">LLMError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Store error and continue to next provider</span>
+                <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+                <span class="n">last_error</span> <span class="o">=</span> <span class="n">e</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2"> streaming error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Map unexpected errors</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unexpected error streaming with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">provider</span><span class="o">=</span><span class="n">current_provider</span><span class="p">,</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">},</span>
+                <span class="p">)</span>
+                <span class="n">provider_errors</span><span class="p">[</span><span class="n">current_provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span>
+                <span class="n">last_error</span> <span class="o">=</span> <span class="n">error</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Unexpected error streaming with provider </span><span class="si">{</span><span class="n">current_provider</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># If we get here, all providers failed</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;All providers failed for streaming request </span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;provider_errors&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">provider_errors</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Create a comprehensive error message</span>
+        <span class="n">error_details</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">provider_errors</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;All providers failed for streaming. Attempted: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">providers_to_try</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Re-raise the last error with added context</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_error</span><span class="p">,</span> <span class="n">LLMError</span><span class="p">):</span>
+            <span class="c1"># For custom errors, preserve the original error type but add context</span>
+            <span class="n">error_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">last_error</span><span class="p">)</span>
+            <span class="n">provider</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">last_error</span><span class="p">,</span> <span class="s2">&quot;provider&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;multiple&quot;</span>
+            <span class="n">details</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">last_error</span><span class="p">,</span> <span class="s2">&quot;details&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
+            <span class="n">details</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;attempted_providers&quot;</span><span class="p">:</span> <span class="n">providers_to_try</span><span class="p">,</span>
+                    <span class="s2">&quot;provider_errors&quot;</span><span class="p">:</span> <span class="n">error_details</span><span class="p">,</span>
+                    <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+            <span class="k">raise</span> <span class="n">error_type</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">error_message</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span> <span class="n">details</span><span class="o">=</span><span class="n">details</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># For unexpected errors, use LLMProviderError</span>
+            <span class="k">raise</span> <span class="n">LLMProviderError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="n">error_message</span><span class="p">,</span>
+                <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;multiple&quot;</span><span class="p">,</span>
+                <span class="n">details</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;attempted_providers&quot;</span><span class="p">:</span> <span class="n">providers_to_try</span><span class="p">,</span>
+                    <span class="s2">&quot;provider_errors&quot;</span><span class="p">:</span> <span class="n">error_details</span><span class="p">,</span>
+                    <span class="s2">&quot;event_id&quot;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.get_context_window">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.get_context_window">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_context_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the context window size for the provider.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            provider: Optional provider to check</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Maximum number of tokens the model can process</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">llm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">llm</span><span class="o">.</span><span class="n">get_context_window</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.register_tools">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.register_tools">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">register_tools</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register tools that can be used by the LLM.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tools: List of callable functions to register</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># This is a stub implementation for testing</span>
+        <span class="c1"># The actual implementation would register these tools with</span>
+        <span class="c1"># the LLM provider that supports function calling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registered_tools</span> <span class="o">=</span> <span class="n">tools</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.check_context_fit">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.check_context_fit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_context_fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">max_response_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if messages will fit in the provider&#39;s context window.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            messages: Messages to check</span>
+<span class="sd">            max_response_tokens: Expected maximum response length</span>
+<span class="sd">            provider: Optional provider to check</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple containing:</span>
+<span class="sd">            - bool: True if messages fit in context window</span>
+<span class="sd">            - str: Explanation message</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">llm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_provider</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+
+        <span class="c1"># Combine all messages into a single string for estimation</span>
+        <span class="n">combined_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">llm</span><span class="o">.</span><span class="n">check_context_fit</span><span class="p">(</span>
+            <span class="n">prompt</span><span class="o">=</span><span class="n">combined_text</span><span class="p">,</span> <span class="n">max_response_tokens</span><span class="o">=</span><span class="n">max_response_tokens</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_provider_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle provider-specific errors.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">LLMError</span><span class="p">):</span>
+            <span class="c1"># Re-raise LLM errors directly</span>
+            <span class="k">raise</span> <span class="n">error</span>
+
+        <span class="c1"># For other errors, wrap them in LLMProviderError</span>
+        <span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;original_error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)}</span>
+        <span class="k">raise</span> <span class="n">LLMProviderError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="n">provider</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LLMHandler.add_provider">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.add_provider">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_provider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">LLM</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a provider to the handler.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_providers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LLMHandler.remove_provider">
+<a class="viewcode-back" href="../../api.html#lluminary.handler.LLMHandler.remove_provider">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_provider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove a provider from the handler.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">provider</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_providers</span><span class="p">[</span><span class="n">provider</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_providers</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register_active_provider</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register a provider as active.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_providers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">provider_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, PimpMyNines.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,291 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lluminary.models.router &mdash; LLuMinary 1.0.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LLuMinary
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../providers.html">Provider Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LLuMinary</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">lluminary.models.router</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for lluminary.models.router</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Router for LLM model selection with extensible provider registration.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Type</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLM</span>
+
+<span class="c1"># Default provider classes</span>
+<span class="n">_DEFAULT_PROVIDERS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">LLM</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># Registry to hold provider classes dynamically</span>
+<span class="n">PROVIDER_REGISTRY</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">LLM</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># Mapping of friendly names to model providers and their specific model names</span>
+<span class="n">MODEL_MAPPINGS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># OpenAI Models</span>
+    <span class="s2">&quot;gpt-4.5&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gpt-4.5-preview&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;gpt-4o&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gpt-4o&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;o1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;o1&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;o3-mini&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;o3-mini&quot;</span><span class="p">},</span>
+    <span class="c1"># Anthropic Models</span>
+    <span class="s2">&quot;claude-haiku-3.5&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;anthropic&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;claude-3-5-haiku-20241022&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;claude-sonnet-3.5&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;anthropic&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;claude-3-5-sonnet-20241022&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;claude-sonnet-3.7&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;anthropic&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;claude-3-7-sonnet-20250219&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># Bedrock Models</span>
+    <span class="s2">&quot;bedrock-claude-haiku-3.5&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;bedrock&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;us.anthropic.claude-3-5-haiku-20241022-v1:0&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;bedrock-claude-sonnet-3.5-v1&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;bedrock&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;us.anthropic.claude-3-5-sonnet-20240620-v1:0&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;bedrock-claude-sonnet-3.5-v2&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;bedrock&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;us.anthropic.claude-3-5-sonnet-20241022-v2:0&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;bedrock-claude-sonnet-3.7&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;bedrock&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;us.anthropic.claude-3-7-sonnet-20250219-v1:0&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># Google Models</span>
+    <span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;google&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;gemini-2.0-flash-lite&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;google&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gemini-2.0-flash-lite-preview-02-05&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;gemini-2.0-pro&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;google&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gemini-2.0-pro-exp-02-05&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;gemini-2.0-flash-thinking&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;google&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;gemini-2.0-flash-thinking-exp-01-21&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1"># Cohere Models</span>
+    <span class="s2">&quot;cohere-command&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;cohere&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;command&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;cohere-command-light&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;cohere&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;command-light&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;cohere-command-r&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;cohere&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;command-r&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;cohere-command-r-plus&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="s2">&quot;cohere&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;command-r-plus&quot;</span><span class="p">},</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="register_provider">
+<a class="viewcode-back" href="../../../api.html#lluminary.models.router.register_provider">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_provider</span><span class="p">(</span><span class="n">provider_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">provider_class</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">LLM</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Register a new LLM provider class.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        provider_name (str): Name of the provider (e.g., &#39;openai&#39;, &#39;anthropic&#39;)</span>
+<span class="sd">        provider_class (Type[LLM]): The provider class, must extend LLM base class</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: If provider_class is not a subclass of LLM</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">provider_class</span><span class="p">,</span> <span class="n">LLM</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Provider class must be a subclass of LLM, got </span><span class="si">{</span><span class="n">provider_class</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">PROVIDER_REGISTRY</span><span class="p">[</span><span class="n">provider_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">provider_class</span></div>
+
+
+
+<div class="viewcode-block" id="get_llm_from_model">
+<a class="viewcode-back" href="../../../api.html#lluminary.models.router.get_llm_from_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_llm_from_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLM</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the appropriate LLM instance based on the friendly model name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model_name (str): Friendly name of the model</span>
+<span class="sd">        **kwargs: Additional configuration parameters for the LLM</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        LLM: An instance of the appropriate LLM provider</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the model name is not recognized or provider isn&#39;t registered</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Import default providers here to avoid circular imports</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">PROVIDER_REGISTRY</span><span class="p">:</span>
+        <span class="n">_load_default_providers</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">MODEL_MAPPINGS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unknown model: </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">. Available models: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">MODEL_MAPPINGS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">provider_info</span> <span class="o">=</span> <span class="n">MODEL_MAPPINGS</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span>
+    <span class="n">provider_name</span> <span class="o">=</span> <span class="n">provider_info</span><span class="p">[</span><span class="s2">&quot;provider&quot;</span><span class="p">]</span>
+    <span class="n">actual_model</span> <span class="o">=</span> <span class="n">provider_info</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">provider_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">PROVIDER_REGISTRY</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> not registered. Available providers: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">PROVIDER_REGISTRY</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">provider_class</span> <span class="o">=</span> <span class="n">PROVIDER_REGISTRY</span><span class="p">[</span><span class="n">provider_name</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">provider_class</span><span class="p">(</span><span class="n">actual_model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_default_providers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the default provider classes.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnthropicLLM</span><span class="p">,</span> <span class="n">BedrockLLM</span><span class="p">,</span> <span class="n">GoogleLLM</span><span class="p">,</span> <span class="n">OpenAILLM</span>
+
+    <span class="n">register_provider</span><span class="p">(</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="n">OpenAILLM</span><span class="p">)</span>
+    <span class="n">register_provider</span><span class="p">(</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span> <span class="n">AnthropicLLM</span><span class="p">)</span>
+    <span class="n">register_provider</span><span class="p">(</span><span class="s2">&quot;bedrock&quot;</span><span class="p">,</span> <span class="n">BedrockLLM</span><span class="p">)</span>
+    <span class="n">register_provider</span><span class="p">(</span><span class="s2">&quot;google&quot;</span><span class="p">,</span> <span class="n">GoogleLLM</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="list_available_models">
+<a class="viewcode-back" href="../../../api.html#lluminary.models.router.list_available_models">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_available_models</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a dictionary of all available models grouped by provider.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict[str, List[str]]: Dictionary mapping provider names to lists of their friendly model names</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure providers are loaded</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">PROVIDER_REGISTRY</span><span class="p">:</span>
+        <span class="n">_load_default_providers</span><span class="p">()</span>
+
+    <span class="n">models_by_provider</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">friendly_name</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">MODEL_MAPPINGS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">provider_name</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;provider&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">provider_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">models_by_provider</span><span class="p">:</span>
+            <span class="n">models_by_provider</span><span class="p">[</span><span class="n">provider_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">models_by_provider</span><span class="p">[</span><span class="n">provider_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">friendly_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">models_by_provider</span></div>
+
+
+
+<div class="viewcode-block" id="register_model">
+<a class="viewcode-back" href="../../../api.html#lluminary.models.router.register_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_model</span><span class="p">(</span><span class="n">friendly_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">provider_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Register a new model with the system.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        friendly_name (str): User-friendly name for the model</span>
+<span class="sd">        provider_name (str): Name of the provider (must be registered)</span>
+<span class="sd">        model_id (str): Provider-specific model identifier</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the provider is not registered</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure providers are loaded</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">PROVIDER_REGISTRY</span><span class="p">:</span>
+        <span class="n">_load_default_providers</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">provider_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">PROVIDER_REGISTRY</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Provider </span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> not registered. Available providers: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">PROVIDER_REGISTRY</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">MODEL_MAPPINGS</span><span class="p">[</span><span class="n">friendly_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider_name</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, PimpMyNines.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
