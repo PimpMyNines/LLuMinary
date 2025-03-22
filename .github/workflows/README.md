@@ -44,11 +44,17 @@ This directory contains GitHub Actions workflows for continuous integration and 
    - Checks code formatting
    - Ensures version is bumped for main branch PRs
 
-7. **docs.yml**: Documentation
+7. **direct-to-main-pr.yml**: Direct main PR handling (NEW)
+   - Checks if PR author has collaborator permission
+   - Provides guidance for non-collaborators
+   - Performs comprehensive validation for collaborator PRs
+   - Adds helpful PR comments with requirements
+
+8. **docs.yml**: Documentation
    - Builds and validates documentation
    - Publishes documentation to GitHub Pages
 
-8. **version.yml**: Version management
+9. **version.yml**: Version management
    - Checks version consistency
    - Validates version changes
 
