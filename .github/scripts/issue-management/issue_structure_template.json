@@ -1,0 +1,200 @@
+{
+    "parent_issues": [
+        {
+            "title": "Implement Mistral AI Provider Support",
+            "body": "Add support for Mistral AI models in the LLuMinary project.\n\n## Tasks\n- [ ] Research Mistral AI API documentation\n- [ ] Design integration with existing provider interfaces\n- [ ] Implement basic client for Mistral AI\n- [ ] Add streaming support\n- [ ] Add tool/function calling support\n- [ ] Write tests for the implementation\n- [ ] Update documentation",
+            "labels": [
+                "enhancement",
+                "provider"
+            ],
+            "sub_issues": [
+                {
+                    "title": "Research Mistral AI API documentation",
+                    "body": "Research and document the Mistral AI API, focusing on authentication, available models, and supported features.",
+                    "labels": [
+                        "research",
+                        "documentation"
+                    ]
+                },
+                {
+                    "title": "Design integration with existing provider interfaces",
+                    "body": "Design how the Mistral AI provider will integrate with the existing provider interfaces in the LLuMinary project.",
+                    "labels": [
+                        "design"
+                    ]
+                },
+                {
+                    "title": "Implement basic client for Mistral AI",
+                    "body": "Implement a basic client for Mistral AI that can authenticate and make simple completion requests.",
+                    "labels": [
+                        "implementation"
+                    ]
+                },
+                {
+                    "title": "Add streaming support for Mistral AI",
+                    "body": "Implement streaming support for the Mistral AI provider.",
+                    "labels": [
+                        "implementation",
+                        "streaming"
+                    ]
+                },
+                {
+                    "title": "Add tool/function calling support for Mistral AI",
+                    "body": "Implement tool/function calling support for the Mistral AI provider.",
+                    "labels": [
+                        "implementation",
+                        "tools"
+                    ]
+                },
+                {
+                    "title": "Write tests for Mistral AI implementation",
+                    "body": "Write unit and integration tests for the Mistral AI provider implementation.",
+                    "labels": [
+                        "testing"
+                    ]
+                },
+                {
+                    "title": "Update documentation for Mistral AI provider",
+                    "body": "Update the project documentation to include information about the Mistral AI provider.",
+                    "labels": [
+                        "documentation"
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Add support for local models via Ollama",
+            "body": "Implement support for running local models through Ollama integration.\n\n## Tasks\n- [ ] Research Ollama API and capabilities\n- [ ] Design integration with existing provider interfaces\n- [ ] Implement basic client for Ollama\n- [ ] Add streaming support\n- [ ] Add tool/function calling support if available\n- [ ] Write tests for the implementation\n- [ ] Create documentation for local model setup",
+            "labels": [
+                "enhancement",
+                "provider",
+                "local-models"
+            ],
+            "sub_issues": [
+                {
+                    "title": "Research Ollama API and capabilities",
+                    "body": "Research the Ollama API, focusing on how to interact with local models, available features, and limitations.",
+                    "labels": [
+                        "research"
+                    ]
+                },
+                {
+                    "title": "Design Ollama integration with existing provider interfaces",
+                    "body": "Design how the Ollama provider will integrate with the existing provider interfaces in the LLuMinary project.",
+                    "labels": [
+                        "design"
+                    ]
+                },
+                {
+                    "title": "Implement basic client for Ollama",
+                    "body": "Implement a basic client for Ollama that can connect to the local service and make completion requests.",
+                    "labels": [
+                        "implementation"
+                    ]
+                },
+                {
+                    "title": "Add streaming support for Ollama",
+                    "body": "Implement streaming support for the Ollama provider to enable real-time responses.",
+                    "labels": [
+                        "implementation",
+                        "streaming"
+                    ]
+                },
+                {
+                    "title": "Investigate and implement tool/function calling for Ollama",
+                    "body": "Research if Ollama supports tool/function calling and implement if available, or create a fallback mechanism.",
+                    "labels": [
+                        "implementation",
+                        "tools",
+                        "research"
+                    ]
+                },
+                {
+                    "title": "Write tests for Ollama implementation",
+                    "body": "Write unit and integration tests for the Ollama provider implementation.",
+                    "labels": [
+                        "testing"
+                    ]
+                },
+                {
+                    "title": "Create documentation for local model setup with Ollama",
+                    "body": "Create comprehensive documentation for setting up and using local models with Ollama in the LLuMinary project.",
+                    "labels": [
+                        "documentation"
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Implement agent framework",
+            "body": "Create a flexible agent framework for building AI agents with different capabilities.\n\n## Tasks\n- [ ] Design agent architecture and interfaces\n- [ ] Implement AgentExecutor for orchestrating agent steps\n- [ ] Create memory systems for storing conversation history and context\n- [ ] Implement planning capabilities for multi-step reasoning\n- [ ] Add tool registry for agent tool use\n- [ ] Create standard agent types (ReAct, ReflexionAgent, PlanAndExecute)\n- [ ] Create example applications showcasing agent capabilities\n- [ ] Add comprehensive documentation and tutorials",
+            "labels": [
+                "enhancement",
+                "agent",
+                "feature"
+            ],
+            "sub_issues": [
+                {
+                    "title": "Design agent architecture and interfaces",
+                    "body": "Design the core architecture and interfaces for the agent framework, focusing on flexibility and extensibility.",
+                    "labels": [
+                        "design"
+                    ]
+                },
+                {
+                    "title": "Implement AgentExecutor for orchestrating agent steps",
+                    "body": "Create an AgentExecutor component that can orchestrate the execution of agent steps and handle the agent loop.",
+                    "labels": [
+                        "implementation"
+                    ]
+                },
+                {
+                    "title": "Create memory systems for storing conversation history and context",
+                    "body": "Implement memory systems that can store and retrieve conversation history and context for agents.",
+                    "labels": [
+                        "implementation",
+                        "memory"
+                    ]
+                },
+                {
+                    "title": "Implement planning capabilities for multi-step reasoning",
+                    "body": "Add planning capabilities to enable agents to perform multi-step reasoning and solve complex tasks.",
+                    "labels": [
+                        "implementation",
+                        "planning"
+                    ]
+                },
+                {
+                    "title": "Add tool registry for agent tool use",
+                    "body": "Create a tool registry system that allows agents to discover and use tools dynamically.",
+                    "labels": [
+                        "implementation",
+                        "tools"
+                    ]
+                },
+                {
+                    "title": "Create standard agent types",
+                    "body": "Implement standard agent types such as ReAct, ReflexionAgent, and PlanAndExecute.",
+                    "labels": [
+                        "implementation",
+                        "agents"
+                    ]
+                },
+                {
+                    "title": "Create example applications showcasing agent capabilities",
+                    "body": "Develop example applications that showcase the capabilities of the agent framework.",
+                    "labels": [
+                        "examples"
+                    ]
+                },
+                {
+                    "title": "Add comprehensive documentation and tutorials for agents",
+                    "body": "Create comprehensive documentation and tutorials for using and extending the agent framework.",
+                    "labels": [
+                        "documentation"
+                    ]
+                }
+            ]
+        }
+    ]
+}

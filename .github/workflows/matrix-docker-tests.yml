@@ -56,44 +56,22 @@ jobs:
           ${{ runner.os }}-buildx-py${{ matrix.python-version }}-
           ${{ runner.os }}-buildx-
 
-    # Create a temporary Dockerfile with the specific Python version
-    - name: Create Python ${{ matrix.python-version }} Dockerfile
+    # Use the existing Dockerfile.matrix with ARG
+    - name: Check Dockerfile.matrix exists
       run: |
-        cat > Dockerfile.matrix << EOF
-        FROM python:${{ matrix.python-version }}-slim
-
-        WORKDIR /app
-
-        # Install development dependencies
-        RUN apt-get update && apt-get install -y \\
-            git \\
-            && rm -rf /var/lib/apt/lists/*
-
-        # Copy requirements and install dependencies
-        COPY requirements.txt .
-        RUN pip install -r requirements.txt
-        RUN pip install pytest-xdist
-
-        # Copy source code and tests
-        COPY src/ /app/src/
-        COPY tests/ /app/tests/
-        COPY pyproject.toml pytest.ini mypy.ini ./
-
-        # Install the package in development mode
-        RUN pip install -e .
-
-        # Set environment variables for consistent test behavior
-        ENV PYTHONPATH=/app
-        ENV PYTHONDONTWRITEBYTECODE=1
-        ENV PYTHONUNBUFFERED=1
-
-        # Run tests by default
-        ENTRYPOINT ["python", "-m", "pytest"]
-        CMD ["tests/"]
-        EOF
+        if [ ! -f Dockerfile.matrix ]; then
+          echo "::error::Dockerfile.matrix is missing!"
+          exit 1
+        fi
+        echo "Using existing Dockerfile.matrix with PYTHON_VERSION=${{ matrix.python-version }}"
 
     - name: Build Docker image for Python ${{ matrix.python-version }}
-      run: make docker-build-matrix-cached DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" CACHE_FROM=/tmp/.buildx-cache CACHE_TO=/tmp/.buildx-cache-new
+      run: |
+        # Use make command to leverage our updated docker-build-matrix-cached target
+        make docker-build-matrix-cached DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" \
+          CACHE_FROM=/tmp/.buildx-cache \
+          CACHE_TO=/tmp/.buildx-cache-new \
+          PYTHON_VERSION=${{ matrix.python-version }}
 
     - name: Run unit tests with Python ${{ matrix.python-version }}
       run: make test-docker-unit DOCKER="docker run --rm" DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" PYTEST="tests/unit -v -n auto"
@@ -109,6 +87,7 @@ jobs:
           DOCKER_TAG="lluminary-test:py${{ matrix.python-version }}" \
           PYTEST="tests/ --cov=src/lluminary --cov-report=xml:/app/coverage/coverage.xml -n auto"
 
+    # NOTE: Make sure to add CODECOV_TOKEN as a repository secret in GitHub Settings > Secrets
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
@@ -117,6 +96,14 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: python${{ matrix.python-version }},unittests,integrationtests
         name: py${{ matrix.python-version }}-coverage
+      
+    # Verify CODECOV_TOKEN exists and show helpful error if it doesn't
+    - name: Check CODECOV_TOKEN configuration
+      if: ${{ !secrets.CODECOV_TOKEN && (success() || failure()) }}
+      run: |
+        echo "::error::CODECOV_TOKEN secret is not configured in repository settings!"
+        echo "::error::Please see .github/workflows/README.md for detailed instructions on setting up CODECOV_TOKEN"
+        echo "::error::Coverage reports will not be uploaded until CODECOV_TOKEN is configured"
 
     # Move cache to avoid growing cache size
     - name: Move cache
@@ -128,7 +115,17 @@ jobs:
   provider-tests:
     name: ${{ matrix.provider }} Provider Tests
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run-provider-tests || contains(github.event.pull_request.files.*.filename, matrix.file_pattern) }}
+    # Fixed condition to ensure proper execution of provider tests
+    if: |
+      (github.event_name == 'workflow_dispatch' && inputs.run-provider-tests == true) ||
+      (github.event_name == 'pull_request' && (
+          contains(join(github.event.pull_request.files.*.filename, ' '), matrix.file_pattern) ||
+          contains(join(github.event.pull_request.files.*.filename, ' '), format('tests/unit/test_{0}_', lower(matrix.provider)))
+      )) ||
+      (github.event_name == 'push' && (
+          contains(github.event.head_commit.message, matrix.provider) ||
+          contains(github.event.head_commit.message, format('test_{0}_', lower(matrix.provider)))
+      ))
     strategy:
       fail-fast: false
       matrix:
@@ -165,10 +162,50 @@ jobs:
           ${{ runner.os }}-buildx-${{ matrix.provider }}-
           ${{ runner.os }}-buildx-
 
-    - name: Build Docker image
-      run: make docker-build-cached DOCKER_TAG="lluminary-test:${{ matrix.provider }}" CACHE_FROM=/tmp/.buildx-cache-provider CACHE_TO=/tmp/.buildx-cache-provider-new
+    - name: Build Docker image for ${{ matrix.provider }} tests
+      run: |
+        # Create a specialized Dockerfile for this provider
+        cat > Dockerfile.provider << EOF
+        FROM python:3.10-slim
+
+        WORKDIR /app
+
+        # Install development dependencies
+        RUN apt-get update && apt-get install -y \
+            git \
+            && rm -rf /var/lib/apt/lists/*
+
+        # Copy requirements and install dependencies
+        COPY requirements.txt .
+        RUN pip install -r requirements.txt
+        RUN pip install pytest-xdist pytest-asyncio pytest-cov
+
+        # Copy source code and tests
+        COPY src/ /app/src/
+        COPY tests/ /app/tests/
+        COPY pyproject.toml pytest.ini mypy.ini ./
+
+        # Install the package in development mode
+        RUN pip install -e .
+
+        # Set environment variables for consistent test behavior
+        ENV PYTHONPATH=/app
+        ENV PYTHONDONTWRITEBYTECODE=1
+        ENV PYTHONUNBUFFERED=1
+        ENV PROVIDER_UNDER_TEST=${{ matrix.provider }}
+
+        # Run tests by default
+        ENTRYPOINT ["python", "-m", "pytest"]
+        CMD ["tests/"]
+        EOF
+
+        # Build Docker image with provider-specific configuration
+        docker buildx build --load -t "lluminary-test:${{ matrix.provider }}" -f Dockerfile.provider \
+          --cache-from=type=local,src=/tmp/.buildx-cache-provider \
+          --cache-to=type=local,dest=/tmp/.buildx-cache-provider-new,mode=max .
 
     - name: Run ${{ matrix.provider }} provider tests
+      # Explicitly pass FILE parameter to ensure proper handling
       run: make test-docker-file DOCKER="docker run --rm" DOCKER_TAG="lluminary-test:${{ matrix.provider }}" FILE="${{ matrix.test_path }} -v -n auto"
 
     - name: Generate ${{ matrix.provider }} coverage report
@@ -178,6 +215,7 @@ jobs:
           DOCKER_TAG="lluminary-test:${{ matrix.provider }}" \
           FILE="${{ matrix.test_path }} --cov=src/lluminary/models/providers --cov-report=xml:/app/coverage/coverage.xml"
 
+    # NOTE: Make sure to add CODECOV_TOKEN as a repository secret in GitHub Settings > Secrets
     - name: Upload ${{ matrix.provider }} coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
@@ -186,6 +224,14 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ matrix.provider }},unittests
         name: ${{ matrix.provider }}-coverage
+        
+    # Verify CODECOV_TOKEN exists and show helpful error if it doesn't
+    - name: Check CODECOV_TOKEN configuration
+      if: ${{ !secrets.CODECOV_TOKEN && (success() || failure()) }}
+      run: |
+        echo "::error::CODECOV_TOKEN secret is not configured in repository settings!"
+        echo "::error::Please see .github/workflows/README.md for detailed instructions on setting up CODECOV_TOKEN"
+        echo "::error::Coverage reports will not be uploaded until CODECOV_TOKEN is configured"
 
     # Move cache to avoid growing cache size
     - name: Move cache
@@ -221,18 +267,30 @@ jobs:
         echo "" >> test_summary.md
         echo "## Provider Tests" >> test_summary.md
 
-        # Check provider-tests job status
+        # Check provider-tests job status with improved handling
         provider_status="${{ needs.provider-tests.result }}"
+
+        # Handle each possible status
         if [[ "$provider_status" == "success" ]]; then
           echo "✅ All provider tests passed" >> test_summary.md
         elif [[ "$provider_status" == "skipped" ]]; then
-          echo "⏩ Provider tests were skipped" >> test_summary.md
+          echo "⏩ Provider tests were skipped (no relevant provider file changes)" >> test_summary.md
+        elif [[ "$provider_status" == "cancelled" ]]; then
+          echo "⚠️ Provider tests were cancelled" >> test_summary.md
+        elif [[ "$provider_status" == "" ]]; then
+          echo "ℹ️ No provider tests were triggered" >> test_summary.md
         else
           echo "❌ Provider tests had failures" >> test_summary.md
         fi
 
         echo "" >> test_summary.md
         echo "Tests run in containerized environments for consistency across Python versions and provider-specific testing." >> test_summary.md
+
+        # Additional context about test requirements
+        echo "" >> test_summary.md
+        echo "### Environment Requirements" >> test_summary.md
+        echo "- Python versions: 3.8, 3.9, 3.10, 3.11" >> test_summary.md
+        echo "- Docker required for complete testing" >> test_summary.md
 
     - name: Comment PR
       uses: actions/github-script@v7

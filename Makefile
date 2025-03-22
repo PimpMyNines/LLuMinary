@@ -85,22 +85,65 @@ docker-build-matrix:
 	$(DOCKER) build -t $(DOCKER_TAG) -f Dockerfile.matrix .
 
 # For GitHub Actions with buildx and caching
+# This target expects Dockerfile.matrix to exist (created dynamically in CI)
 docker-build-matrix-cached:
 	$(DOCKER) buildx build --load -t $(DOCKER_TAG) -f Dockerfile.matrix \
 		--cache-from=type=local,src=$(CACHE_FROM) \
-		--cache-to=type=local,dest=$(CACHE_TO),mode=max .
+		--cache-to=type=local,dest=$(CACHE_TO),mode=max \
+		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) .
+
+# For local development matrix testing
+docker-create-matrix-file:
+	@echo "Creating Dockerfile.matrix for Python $(PYTHON_VERSION)"
+	@echo 'FROM python:$(PYTHON_VERSION)-slim' > Dockerfile.matrix
+	@echo '' >> Dockerfile.matrix
+	@echo 'WORKDIR /app' >> Dockerfile.matrix
+	@echo '' >> Dockerfile.matrix
+	@echo '# Install development dependencies' >> Dockerfile.matrix
+	@echo 'RUN apt-get update && apt-get install -y \\' >> Dockerfile.matrix
+	@echo '    git \\' >> Dockerfile.matrix
+	@echo '    && rm -rf /var/lib/apt/lists/*' >> Dockerfile.matrix
+	@echo '' >> Dockerfile.matrix
+	@echo '# Copy requirements and install dependencies' >> Dockerfile.matrix
+	@echo 'COPY requirements.txt .' >> Dockerfile.matrix
+	@echo 'RUN pip install -r requirements.txt' >> Dockerfile.matrix
+	@echo 'RUN pip install pytest-xdist' >> Dockerfile.matrix
+	@echo '' >> Dockerfile.matrix
+	@echo '# Copy source code and tests' >> Dockerfile.matrix
+	@echo 'COPY src/ /app/src/' >> Dockerfile.matrix
+	@echo 'COPY tests/ /app/tests/' >> Dockerfile.matrix
+	@echo 'COPY pyproject.toml pytest.ini mypy.ini ./' >> Dockerfile.matrix
+	@echo '' >> Dockerfile.matrix
+	@echo '# Install the package in development mode' >> Dockerfile.matrix
+	@echo 'RUN pip install -e .' >> Dockerfile.matrix
+	@echo '' >> Dockerfile.matrix
+	@echo '# Set environment variables for consistent test behavior' >> Dockerfile.matrix
+	@echo 'ENV PYTHONPATH=/app' >> Dockerfile.matrix
+	@echo 'ENV PYTHONDONTWRITEBYTECODE=1' >> Dockerfile.matrix
+	@echo 'ENV PYTHONUNBUFFERED=1' >> Dockerfile.matrix
+	@echo '' >> Dockerfile.matrix
+	@echo '# Run tests by default' >> Dockerfile.matrix
+	@echo 'ENTRYPOINT ["python", "-m", "pytest"]' >> Dockerfile.matrix
+	@echo 'CMD ["tests/"]' >> Dockerfile.matrix
 
 test-docker: docker-build
 	$(DOCKER) run --rm $(DOCKER_TAG) $(PYTEST)
 
-test-docker-unit: docker-build
+test-docker-unit:
 	$(DOCKER) run --rm $(DOCKER_TAG) tests/unit/ -v
 
-test-docker-integration: docker-build
+test-docker-integration:
 	$(DOCKER) run --rm $(DOCKER_TAG) tests/integration/ -v
 
-test-docker-file: docker-build
+test-docker-file:
 	$(DOCKER) run --rm $(DOCKER_TAG) $(FILE)
+
+# Convenience targets for local matrix testing
+test-matrix-python: docker-create-matrix-file docker-build-matrix
+	$(DOCKER) run --rm lluminary-test:matrix tests/ -v
+
+# Full set of local CI simulation
+test-ci-local: lint type-check docker-build test-docker-unit test-docker-integration
 
 # Building targets
 build: clean
