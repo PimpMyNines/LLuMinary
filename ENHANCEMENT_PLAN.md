@@ -12,7 +12,7 @@ This document outlines the enhancement plan for the LLuMinary project, focusing 
    - [x] Ensure docker-build-matrix-cached target properly uses Dockerfile.matrix
    - [x] Add detailed documentation for CODECOV_TOKEN setup
    - [x] Implement error detection and reporting for missing CODECOV_TOKEN
-   - [ ] Add custom workflow to handle direct-to-main PRs for collaborators
+   - [x] Add custom workflow to handle direct-to-main PRs for collaborators
 
 2. **Issue #3: Implement unified type definitions across providers**
    - [ ] Finish implementation in `src/lluminary/models/types.py`
