@@ -1,0 +1,52 @@
+# GitHub Project Management Tool Configuration
+
+# Authentication settings
+auth:
+  # Authentication method: token or app
+  method: token
+  
+  # Personal access token
+  # You can also set GITHUB_TOKEN environment variable instead
+  token: "your-github-token"
+  
+  # GitHub App settings (optional)
+  app:
+    app_id: 12345
+    installation_id: 67890
+    private_key_path: ~/.github-pm/private-key.pem
+
+# Default repository settings
+defaults:
+  # Default repository in format owner/repo
+  repository: owner/repo
+  
+  # Default organization
+  organization: your-org
+  
+  # Default labels to apply to created issues
+  labels:
+    - bug
+    - enhancement
+  
+  # Default project settings
+  project:
+    template: basic
+
+# API settings
+api:
+  # Rate limit handling
+  rate_limit:
+    enabled: true
+    sleep_on_limit: true
+  
+  # Retry settings
+  retry:
+    max_attempts: 3
+    backoff_factor: 2
+    status_forcelist: [500, 502, 503, 504]
+
+# Logging settings
+logging:
+  level: INFO
+  file: ~/.github-pm/logs/github-pm.log
+  format: "%(asctime)s [%(levelname)s] %(message)s"

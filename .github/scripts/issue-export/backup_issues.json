@@ -1,0 +1,1040 @@
+{
+  "repository": {
+    "name": "LLuMinary",
+    "full_name": "PimpMyNines/LLuMinary"
+  },
+  "delete_existing_labels": false,
+  "delete_existing_milestones": false,
+  "labels": [
+    {
+      "color": "d73a4a",
+      "description": "Something isn't working",
+      "name": "bug"
+    },
+    {
+      "color": "0075ca",
+      "description": "Improvements or additions to documentation",
+      "name": "documentation"
+    },
+    {
+      "color": "cfd3d7",
+      "description": "This issue or pull request already exists",
+      "name": "duplicate"
+    },
+    {
+      "color": "a2eeef",
+      "description": "New feature or request",
+      "name": "enhancement"
+    },
+    {
+      "color": "7057ff",
+      "description": "Good for newcomers",
+      "name": "good first issue"
+    },
+    {
+      "color": "008672",
+      "description": "Extra attention is needed",
+      "name": "help wanted"
+    },
+    {
+      "color": "e4e669",
+      "description": "This doesn't seem right",
+      "name": "invalid"
+    },
+    {
+      "color": "d876e3",
+      "description": "Further information is requested",
+      "name": "question"
+    },
+    {
+      "color": "ffffff",
+      "description": "This will not be worked on",
+      "name": "wontfix"
+    },
+    {
+      "color": "0366d6",
+      "description": "Pull requests that update a dependency file",
+      "name": "dependencies"
+    },
+    {
+      "color": "2b67c6",
+      "description": "Pull requests that update python code",
+      "name": "python"
+    },
+    {
+      "color": "0366d6",
+      "description": "Infrastructure related issues",
+      "name": "area:infrastructure"
+    },
+    {
+      "color": "0366d6",
+      "description": "LLM provider implementation issues",
+      "name": "area:providers"
+    },
+    {
+      "color": "0366d6",
+      "description": "Type system related issues",
+      "name": "area:typing"
+    },
+    {
+      "color": "0366d6",
+      "description": "Testing related issues",
+      "name": "area:testing"
+    },
+    {
+      "color": "b60205",
+      "description": "Highest priority, must be fixed immediately",
+      "name": "priority:p0"
+    },
+    {
+      "color": "d93f0b",
+      "description": "High priority, should be addressed soon",
+      "name": "priority:p1"
+    },
+    {
+      "color": "fbca04",
+      "description": "Medium priority, address when convenient",
+      "name": "priority:p2"
+    },
+    {
+      "color": "c5def5",
+      "description": "Low priority, nice to have",
+      "name": "priority:p3"
+    },
+    {
+      "color": "0e8a16",
+      "description": "Small task (1-3 story points)",
+      "name": "size:small"
+    },
+    {
+      "color": "fbca04",
+      "description": "Medium task (5-8 story points)",
+      "name": "size:medium"
+    },
+    {
+      "color": "d93f0b",
+      "description": "Large task (13+ story points)",
+      "name": "size:large"
+    },
+    {
+      "color": "b60205",
+      "description": "Work is blocked by another issue",
+      "name": "status:blocked"
+    },
+    {
+      "color": "0e8a16",
+      "description": "Ready for implementation",
+      "name": "status:ready"
+    },
+    {
+      "color": "5319e7",
+      "description": "Issues addressing technical debt",
+      "name": "technical-debt"
+    },
+    {
+      "color": "5319e7",
+      "description": "Performance related issues",
+      "name": "performance"
+    },
+    {
+      "color": "b60205",
+      "description": "Security related issues",
+      "name": "security"
+    }
+  ],
+  "milestones": [],
+  "issues": [
+    {
+      "id": 1,
+      "title": "Configure CODECOV_TOKEN in GitHub repository secrets",
+      "body": "## Description\n\nThe GitHub Actions workflow requires CODECOV_TOKEN to be set in repository secrets for coverage reporting. This issue tracks setting up the required secret.\n\n## Tasks\n- [ ] Generate CODECOV_TOKEN from Codecov dashboard\n- [ ] Add token to GitHub repository secrets\n- [ ] Verify token works correctly with GitHub Actions workflow\n- [ ] Document coverage reporting setup for future maintainers\n\n## Impact\nMedium - Resolving this will enable code coverage reporting, providing insights into test quality.",
+      "labels": [
+        "enhancement",
+        "area:infrastructure",
+        "priority:p2",
+        "size:small",
+        "status:ready"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "depends_on": []
+    },
+    {
+      "id": 2,
+      "title": "Ensure consistency in Docker-based testing setup",
+      "body": "## Description\n\nThe project uses multiple Docker testing approaches (standard, matrix, provider-specific) that need to be standardized for consistent behavior across environments.\n\n## Tasks\n- [ ] Audit all Docker-based testing approaches in the project\n- [ ] Identify inconsistencies and pain points across different test methods\n- [ ] Standardize Docker test execution patterns\n- [ ] Update documentation to reflect the standardized approach\n- [ ] Create examples of how to run tests locally that mirror CI execution\n\n## Impact\nMedium - Resolving this will make local testing more reliable and consistent with CI environment.",
+      "labels": [
+        "enhancement",
+        "area:infrastructure",
+        "priority:p2",
+        "size:medium",
+        "status:blocked",
+        "technical-debt"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Testing Infrastructure Improvements",
+      "type": "Task",
+      "depends_on": []
+    },
+    {
+      "id": 3,
+      "title": "Implement Mistral AI Provider Support",
+      "body": "## Description\nAdd support for the Mistral AI provider to LLuMinary.\n\n## Acceptance Criteria\n- Mistral API integrated with unified interface\n- Authentication and error handling implemented\n- Streaming and tool calling supported\n- Comprehensive unit and integration tests\n- Documentation and examples updated\n\n## Size\nMedium\n\n## Effort Estimate\n12-16 hours (1.5-2 days)\n\n## Dependencies\n- #3: Implement unified type definitions across providers\n- #4: Enhance streaming support for tool/function calling\n\n## Story Points\n10",
+      "labels": [
+        "area:providers",
+        "priority:p2",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Provider Expansion",
+      "type": "Task",
+      "story_points": 10,
+      "depends_on": []
+    },
+    {
+      "id": 4,
+      "title": "Add Vector Database Integration Support",
+      "body": "## Description\nImplement vector database integration to support efficient similarity search and retrieval.\n\n## Acceptance Criteria\n- Abstract vector storage interface implemented\n- At least two backends supported (FAISS, Pinecone)\n- Seamless integration with embedding functionality\n- Performance benchmarks for different sizes\n- Comprehensive documentation and examples\n\n## Size\nLarge\n\n## Effort Estimate\n24-32 hours (3-4 days)\n\n## Dependencies\n- #3: Implement unified type definitions across providers\n\n## Story Points\n16",
+      "labels": [
+        "area:providers",
+        "priority:p2",
+        "size:large"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Features",
+      "type": "Task",
+      "story_points": 16,
+      "depends_on": []
+    },
+    {
+      "id": 5,
+      "title": "Create integration tests for streaming tool calls",
+      "body": "## Description\nCreate integration tests to verify streaming tool/function call behavior across providers.\n\n## Acceptance Criteria\n- Tests verify streaming tool behavior across providers\n- Edge cases are covered (timeouts, errors, etc.)\n- Tests run reliably in CI\n\n## Parent Issue\nPart of #4: Enhance streaming support for tool/function calling\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:testing",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Task",
+      "parent_id": 49,
+      "depends_on": []
+    },
+    {
+      "id": 6,
+      "title": "Implement fallback for providers without native streaming tools",
+      "body": "## Description\nImplement a fallback mechanism for providers that don't natively support streaming tool calls.\n\n## Acceptance Criteria\n- All providers support tools via streaming interface\n- Fallback mechanism is transparent to users\n- Performance impact is documented\n\n## Parent Issue\nPart of #4: Enhance streaming support for tool/function calling\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:providers",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Task",
+      "parent_id": 49,
+      "depends_on": []
+    },
+    {
+      "id": 7,
+      "title": "Implement Anthropic streaming tool support",
+      "body": "## Description\nImplement streaming tool/function call support for the Anthropic provider.\n\n## Acceptance Criteria\n- Anthropic provider supports streaming tool calls\n- Implementation follows the unified interface design\n- Performance overhead is minimal\n\n## Parent Issue\nPart of #4: Enhance streaming support for tool/function calling\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Task",
+      "parent_id": 49,
+      "depends_on": []
+    },
+    {
+      "id": 8,
+      "title": "Implement OpenAI streaming tool support",
+      "body": "## Description\nImplement streaming tool/function call support for the OpenAI provider.\n\n## Acceptance Criteria\n- OpenAI provider supports streaming tool calls\n- Implementation follows the unified interface design\n- Performance overhead is minimal\n\n## Parent Issue\nPart of #4: Enhance streaming support for tool/function calling\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Task",
+      "parent_id": 49,
+      "depends_on": []
+    },
+    {
+      "id": 9,
+      "title": "Design unified streaming interface for tools/functions",
+      "body": "## Description\nDesign a unified interface for streaming tool/function calls across all providers.\n\n## Acceptance Criteria\n- Interface design document with sequence diagrams\n- Clear API contract for all provider implementations\n- Design considers backward compatibility\n\n## Parent Issue\nPart of #4: Enhance streaming support for tool/function calling\n\n## Estimate\n5 story points",
+      "labels": [
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Task",
+      "parent_id": 49,
+      "depends_on": []
+    },
+    {
+      "id": 10,
+      "title": "Create comprehensive type checking tests",
+      "body": "## Description\nCreate comprehensive tests to validate type compatibility across providers.\n\n## Acceptance Criteria\n- Tests validate type compatibility across providers\n- Test coverage for all major type interfaces\n- Integration with CI to ensure type safety\n\n## Parent Issue\nPart of #3: Implement unified type definitions across providers\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:typing",
+        "area:testing",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Task",
+      "parent_id": 50,
+      "depends_on": []
+    },
+    {
+      "id": 11,
+      "title": "Implement Bedrock provider with unified types",
+      "body": "## Description\nUpdate the Bedrock provider implementation to use the new unified type system.\n\n## Acceptance Criteria\n- Bedrock provider updated with new type system\n- All methods use correct type annotations\n- No type checking errors with mypy --strict\n\n## Parent Issue\nPart of #3: Implement unified type definitions across providers\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:typing",
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Task",
+      "parent_id": 50,
+      "depends_on": []
+    },
+    {
+      "id": 12,
+      "title": "Implement Anthropic provider with unified types",
+      "body": "## Description\nUpdate the Anthropic provider implementation to use the new unified type system.\n\n## Acceptance Criteria\n- Anthropic provider updated with new type system\n- All methods use correct type annotations\n- No type checking errors with mypy --strict\n\n## Parent Issue\nPart of #3: Implement unified type definitions across providers\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:typing",
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Task",
+      "parent_id": 50,
+      "depends_on": []
+    },
+    {
+      "id": 13,
+      "title": "Implement OpenAI provider with unified types",
+      "body": "## Description\nUpdate the OpenAI provider implementation to use the new unified type system.\n\n## Acceptance Criteria\n- OpenAI provider updated with new type system\n- All methods use correct type annotations\n- No type checking errors with mypy --strict\n\n## Parent Issue\nPart of #3: Implement unified type definitions across providers\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:typing",
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Task",
+      "parent_id": 50,
+      "depends_on": []
+    },
+    {
+      "id": 14,
+      "title": "Design core type interfaces for all providers",
+      "body": "## Description\nDesign and implement the core type interfaces that will be used across all providers.\n\n## Acceptance Criteria\n- Type interfaces defined for all shared functionality\n- Types are well-documented with comments\n- Type hierarchy is clear and logical\n\n## Parent Issue\nPart of #3: Implement unified type definitions across providers\n\n## Estimate\n5 story points",
+      "labels": [
+        "area:typing",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Task",
+      "parent_id": 50,
+      "depends_on": []
+    },
+    {
+      "id": 15,
+      "title": "Create separate GitHub Actions jobs for each provider",
+      "body": "## Description\nRefactor the GitHub Actions workflow to have separate jobs for each provider's tests.\n\n## Acceptance Criteria\n- Each provider has a dedicated workflow job\n- Jobs can run in parallel for faster CI\n- Clear reporting of which provider tests failed\n\n## Parent Issue\nPart of #15: Improve provider test execution logic in CI\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:infrastructure",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 41,
+      "depends_on": []
+    },
+    {
+      "id": 16,
+      "title": "Implement conditional logic for provider-specific tests",
+      "body": "## Description\nImplement logic to conditionally run provider-specific tests based on changes made in a PR.\n\n## Acceptance Criteria\n- Tests only run for changed providers\n- Detection mechanism is reliable\n- Time savings are measurable in CI runs\n\n## Parent Issue\nPart of #15: Improve provider test execution logic in CI\n\n## Estimate\n4 story points",
+      "labels": [
+        "area:infrastructure",
+        "area:testing",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 41,
+      "depends_on": []
+    },
+    {
+      "id": 17,
+      "title": "Fix FILE parameter handling in test-docker-file command",
+      "body": "## Description\nFix issues with the FILE parameter not being correctly passed to the Docker container in the test-docker-file command.\n\n## Acceptance Criteria\n- FILE parameter correctly passes to Docker container\n- Test execution targets the right files\n- Parameters with special characters are handled correctly\n\n## Parent Issue\nPart of #15: Improve provider test execution logic in CI\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:infrastructure",
+        "area:testing",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 41,
+      "depends_on": []
+    },
+    {
+      "id": 18,
+      "title": "Update GitHub Actions to properly use Dockerfile.matrix",
+      "body": "## Description\nUpdate the GitHub Actions workflow to correctly reference and use the generated Dockerfile.matrix.\n\n## Acceptance Criteria\n- GitHub Actions workflow uses correct Docker file\n- Build process completes successfully\n- Docker build logs show correct file being used\n\n## Parent Issue\nPart of #13: Fix Dockerfile.matrix handling in GitHub Actions workflow\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:infrastructure",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 43,
+      "depends_on": []
+    },
+    {
+      "id": 19,
+      "title": "Implement fixes for Dockerfile.matrix generation",
+      "body": "## Description\nFix the identified issues with Dockerfile.matrix generation to ensure it's created correctly.\n\n## Acceptance Criteria\n- Dockerfile.matrix is generated correctly\n- Generation process is reliable and consistent\n- Failures are properly handled with clear error messages\n\n## Parent Issue\nPart of #13: Fix Dockerfile.matrix handling in GitHub Actions workflow\n\n## Estimate\n4 story points",
+      "labels": [
+        "area:infrastructure",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 43,
+      "depends_on": []
+    },
+    {
+      "id": 20,
+      "title": "Analyze current Dockerfile.matrix generation issues",
+      "body": "## Description\nAnalyze the root causes of the current issues with Dockerfile.matrix generation in the CI pipeline.\n\n## Acceptance Criteria\n- Document all failing scenarios and root causes\n- Identify specific workflow steps that are failing\n- Analysis includes recommendations for fixes\n\n## Parent Issue\nPart of #13: Fix Dockerfile.matrix handling in GitHub Actions workflow\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:infrastructure",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 43,
+      "depends_on": []
+    },
+    {
+      "id": 21,
+      "title": "Add Vector Database Integration Support",
+      "body": "## Description\nImplement vector database integration to support efficient similarity search and retrieval.\n\n## Acceptance Criteria\n- Abstract vector storage interface implemented\n- At least two backends supported (FAISS, Pinecone)\n- Seamless integration with embedding functionality\n- Performance benchmarks for different sizes\n- Comprehensive documentation and examples\n\n## Size\nLarge\n\n## Effort Estimate\n24-32 hours (3-4 days)\n\n## Dependencies\n- #3: Implement unified type definitions across providers\n\n## Story Points\n16",
+      "labels": [
+        "area:providers",
+        "priority:p2",
+        "size:large"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Features",
+      "type": "Task",
+      "story_points": 16,
+      "depends_on": []
+    },
+    {
+      "id": 22,
+      "title": "Implement Mistral AI Provider Support",
+      "body": "## Description\nAdd support for the Mistral AI provider to LLuMinary.\n\n## Acceptance Criteria\n- Mistral API integrated with unified interface\n- Authentication and error handling implemented\n- Streaming and tool calling supported\n- Comprehensive unit and integration tests\n- Documentation and examples updated\n\n## Size\nMedium\n\n## Effort Estimate\n12-16 hours (1.5-2 days)\n\n## Dependencies\n- #3: Implement unified type definitions across providers\n- #4: Enhance streaming support for tool/function calling\n\n## Story Points\n10",
+      "labels": [
+        "area:providers",
+        "priority:p2",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Provider Expansion",
+      "type": "Task",
+      "story_points": 10,
+      "depends_on": []
+    },
+    {
+      "id": 23,
+      "title": "Create integration tests for streaming tool calls",
+      "body": "## Description\nCreate integration tests to verify streaming tool/function call behavior across providers.\n\n## Acceptance Criteria\n- Tests verify streaming tool behavior across providers\n- Edge cases are covered (timeouts, errors, etc.)\n- Tests run reliably in CI\n\n## Parent Issue\nPart of #4: Enhance streaming support for tool/function calling\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:testing",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Task",
+      "parent_id": 49,
+      "depends_on": []
+    },
+    {
+      "id": 24,
+      "title": "Implement fallback for providers without native streaming tools",
+      "body": "## Description\nImplement a fallback mechanism for providers that don't natively support streaming tool calls.\n\n## Acceptance Criteria\n- All providers support tools via streaming interface\n- Fallback mechanism is transparent to users\n- Performance impact is documented\n\n## Parent Issue\nPart of #4: Enhance streaming support for tool/function calling\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:providers",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Task",
+      "parent_id": 49,
+      "depends_on": []
+    },
+    {
+      "id": 25,
+      "title": "Implement Anthropic streaming tool support",
+      "body": "## Description\nImplement streaming tool/function call support for the Anthropic provider.\n\n## Acceptance Criteria\n- Anthropic provider supports streaming tool calls\n- Implementation follows the unified interface design\n- Performance overhead is minimal\n\n## Parent Issue\nPart of #4: Enhance streaming support for tool/function calling\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Task",
+      "parent_id": 49,
+      "depends_on": []
+    },
+    {
+      "id": 26,
+      "title": "Implement OpenAI streaming tool support",
+      "body": "## Description\nImplement streaming tool/function call support for the OpenAI provider.\n\n## Acceptance Criteria\n- OpenAI provider supports streaming tool calls\n- Implementation follows the unified interface design\n- Performance overhead is minimal\n\n## Parent Issue\nPart of #4: Enhance streaming support for tool/function calling\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Task",
+      "parent_id": 49,
+      "depends_on": []
+    },
+    {
+      "id": 27,
+      "title": "Design unified streaming interface for tools/functions",
+      "body": "## Description\nDesign a unified interface for streaming tool/function calls across all providers.\n\n## Acceptance Criteria\n- Interface design document with sequence diagrams\n- Clear API contract for all provider implementations\n- Design considers backward compatibility\n\n## Parent Issue\nPart of #4: Enhance streaming support for tool/function calling\n\n## Estimate\n5 story points",
+      "labels": [
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Task",
+      "parent_id": 49,
+      "depends_on": []
+    },
+    {
+      "id": 28,
+      "title": "Create comprehensive type checking tests",
+      "body": "## Description\nCreate comprehensive tests to validate type compatibility across providers.\n\n## Acceptance Criteria\n- Tests validate type compatibility across providers\n- Test coverage for all major type interfaces\n- Integration with CI to ensure type safety\n\n## Parent Issue\nPart of #3: Implement unified type definitions across providers\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:typing",
+        "area:testing",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Task",
+      "parent_id": 50,
+      "depends_on": []
+    },
+    {
+      "id": 29,
+      "title": "Implement Bedrock provider with unified types",
+      "body": "## Description\nUpdate the Bedrock provider implementation to use the new unified type system.\n\n## Acceptance Criteria\n- Bedrock provider updated with new type system\n- All methods use correct type annotations\n- No type checking errors with mypy --strict\n\n## Parent Issue\nPart of #3: Implement unified type definitions across providers\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:typing",
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Task",
+      "parent_id": 50,
+      "depends_on": []
+    },
+    {
+      "id": 30,
+      "title": "Implement Anthropic provider with unified types",
+      "body": "## Description\nUpdate the Anthropic provider implementation to use the new unified type system.\n\n## Acceptance Criteria\n- Anthropic provider updated with new type system\n- All methods use correct type annotations\n- No type checking errors with mypy --strict\n\n## Parent Issue\nPart of #3: Implement unified type definitions across providers\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:typing",
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Task",
+      "parent_id": 50,
+      "depends_on": []
+    },
+    {
+      "id": 31,
+      "title": "Implement OpenAI provider with unified types",
+      "body": "## Description\nUpdate the OpenAI provider implementation to use the new unified type system.\n\n## Acceptance Criteria\n- OpenAI provider updated with new type system\n- All methods use correct type annotations\n- No type checking errors with mypy --strict\n\n## Parent Issue\nPart of #3: Implement unified type definitions across providers\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:typing",
+        "area:providers",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Task",
+      "parent_id": 50,
+      "depends_on": []
+    },
+    {
+      "id": 32,
+      "title": "Design core type interfaces for all providers",
+      "body": "## Description\nDesign and implement the core type interfaces that will be used across all providers.\n\n## Acceptance Criteria\n- Type interfaces defined for all shared functionality\n- Types are well-documented with comments\n- Type hierarchy is clear and logical\n\n## Parent Issue\nPart of #3: Implement unified type definitions across providers\n\n## Estimate\n5 story points",
+      "labels": [
+        "area:typing",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Task",
+      "parent_id": 50,
+      "depends_on": []
+    },
+    {
+      "id": 33,
+      "title": "Create separate GitHub Actions jobs for each provider",
+      "body": "## Description\nRefactor the GitHub Actions workflow to have separate jobs for each provider's tests.\n\n## Acceptance Criteria\n- Each provider has a dedicated workflow job\n- Jobs can run in parallel for faster CI\n- Clear reporting of which provider tests failed\n\n## Parent Issue\nPart of #15: Improve provider test execution logic in CI\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:infrastructure",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 41,
+      "depends_on": []
+    },
+    {
+      "id": 34,
+      "title": "Implement conditional logic for provider-specific tests",
+      "body": "## Description\nImplement logic to conditionally run provider-specific tests based on changes made in a PR.\n\n## Acceptance Criteria\n- Tests only run for changed providers\n- Detection mechanism is reliable\n- Time savings are measurable in CI runs\n\n## Parent Issue\nPart of #15: Improve provider test execution logic in CI\n\n## Estimate\n4 story points",
+      "labels": [
+        "area:infrastructure",
+        "area:testing",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 41,
+      "depends_on": []
+    },
+    {
+      "id": 35,
+      "title": "Fix FILE parameter handling in test-docker-file command",
+      "body": "## Description\nFix issues with the FILE parameter not being correctly passed to the Docker container in the test-docker-file command.\n\n## Acceptance Criteria\n- FILE parameter correctly passes to Docker container\n- Test execution targets the right files\n- Parameters with special characters are handled correctly\n\n## Parent Issue\nPart of #15: Improve provider test execution logic in CI\n\n## Estimate\n3 story points",
+      "labels": [
+        "area:infrastructure",
+        "area:testing",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 41,
+      "depends_on": []
+    },
+    {
+      "id": 36,
+      "title": "Update GitHub Actions to properly use Dockerfile.matrix",
+      "body": "## Description\nUpdate the GitHub Actions workflow to correctly reference and use the generated Dockerfile.matrix.\n\n## Acceptance Criteria\n- GitHub Actions workflow uses correct Docker file\n- Build process completes successfully\n- Docker build logs show correct file being used\n\n## Parent Issue\nPart of #13: Fix Dockerfile.matrix handling in GitHub Actions workflow\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:infrastructure",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 43,
+      "depends_on": []
+    },
+    {
+      "id": 37,
+      "title": "Implement fixes for Dockerfile.matrix generation",
+      "body": "## Description\nFix the identified issues with Dockerfile.matrix generation to ensure it's created correctly.\n\n## Acceptance Criteria\n- Dockerfile.matrix is generated correctly\n- Generation process is reliable and consistent\n- Failures are properly handled with clear error messages\n\n## Parent Issue\nPart of #13: Fix Dockerfile.matrix handling in GitHub Actions workflow\n\n## Estimate\n4 story points",
+      "labels": [
+        "area:infrastructure",
+        "size:medium"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 43,
+      "depends_on": []
+    },
+    {
+      "id": 38,
+      "title": "Analyze current Dockerfile.matrix generation issues",
+      "body": "## Description\nAnalyze the root causes of the current issues with Dockerfile.matrix generation in the CI pipeline.\n\n## Acceptance Criteria\n- Document all failing scenarios and root causes\n- Identify specific workflow steps that are failing\n- Analysis includes recommendations for fixes\n\n## Parent Issue\nPart of #13: Fix Dockerfile.matrix handling in GitHub Actions workflow\n\n## Estimate\n2 story points",
+      "labels": [
+        "area:infrastructure",
+        "size:small"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "parent_id": 43,
+      "depends_on": []
+    },
+    {
+      "id": 39,
+      "title": "Ensure consistency in Docker-based testing setup",
+      "body": "## Description\n\nThe project uses multiple Docker testing approaches (standard, matrix, provider-specific) that need to be standardized for consistent behavior across environments.\n\n## Tasks\n- [ ] Audit all Docker-based testing approaches in the project\n- [ ] Identify inconsistencies and pain points across different test methods\n- [ ] Standardize Docker test execution patterns\n- [ ] Update documentation to reflect the standardized approach\n- [ ] Create examples of how to run tests locally that mirror CI execution\n\n## Impact\nMedium - Resolving this will make local testing more reliable and consistent with CI environment.",
+      "labels": [
+        "enhancement",
+        "area:infrastructure",
+        "priority:p2",
+        "size:medium",
+        "status:blocked",
+        "technical-debt"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Testing Infrastructure Improvements",
+      "type": "Task",
+      "depends_on": []
+    },
+    {
+      "id": 40,
+      "title": "Configure CODECOV_TOKEN in GitHub repository secrets",
+      "body": "## Description\n\nThe GitHub Actions workflow requires CODECOV_TOKEN to be set in repository secrets for coverage reporting. This issue tracks setting up the required secret.\n\n## Tasks\n- [ ] Generate CODECOV_TOKEN from Codecov dashboard\n- [ ] Add token to GitHub repository secrets\n- [ ] Verify token works correctly with GitHub Actions workflow\n- [ ] Document coverage reporting setup for future maintainers\n\n## Impact\nMedium - Resolving this will enable code coverage reporting, providing insights into test quality.",
+      "labels": [
+        "enhancement",
+        "area:infrastructure",
+        "priority:p2",
+        "size:small",
+        "status:ready"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "depends_on": []
+    },
+    {
+      "id": 41,
+      "title": "Improve provider test execution logic in CI",
+      "body": "## Description\n\nThe conditional logic for provider-specific tests in the GitHub Actions workflow needs improvement, and the FILE parameter may not be correctly passed to the test-docker-file command.\n\n## Tasks\n- [ ] Review provider test execution logic in matrix-docker-tests.yml\n- [ ] Fix conditional execution for provider-specific tests\n- [ ] Ensure FILE parameter is correctly passed to test-docker-file command\n- [ ] Add test cases to verify provider-specific test execution\n- [ ] Document changes for future maintainers\n\n## Impact\nHigh - Resolving this will ensure all provider tests run correctly in CI, improving code quality.",
+      "labels": [
+        "bug",
+        "area:infrastructure",
+        "priority:p0",
+        "size:medium",
+        "status:blocked",
+        "technical-debt"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "depends_on": [],
+      "parent_issue": true
+    },
+    {
+      "id": 42,
+      "title": "Fix docker-build-matrix-cached target in Makefile",
+      "body": "## Description\n\nThe docker-build-matrix-cached target in the Makefile needs to properly reference Dockerfile.matrix. This issue tracks updating the Makefile to ensure build consistency.\n\n## Tasks\n- [ ] Review Makefile docker-build-matrix-cached target\n- [ ] Update target to correctly reference Dockerfile.matrix\n- [ ] Test changes to ensure caching works correctly\n- [ ] Document changes for future maintainers\n\n## Impact\nMedium - Resolving this will improve CI/CD performance by properly utilizing Docker layer caching.",
+      "labels": [
+        "bug",
+        "area:infrastructure",
+        "priority:p2",
+        "size:small",
+        "status:blocked",
+        "technical-debt"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "depends_on": []
+    },
+    {
+      "id": 43,
+      "title": "Fix Dockerfile.matrix handling in GitHub Actions workflow",
+      "body": "## Description\n\nThe GitHub Actions workflow dynamically creates Dockerfile.matrix but has inconsistencies with how it's used. This issue tracks fixing those inconsistencies to ensure proper CI execution.\n\n## Tasks\n- [ ] Review matrix-docker-tests.yml workflow and identify specific issues with Dockerfile.matrix\n- [ ] Update workflow to properly handle the dynamically created file\n- [ ] Test workflow changes to ensure they work properly\n- [ ] Document changes made to help future maintainers\n\n## Impact\nHigh - Resolving this will fix CI/CD pipeline failures and ensure consistent test execution.",
+      "labels": [
+        "bug",
+        "area:infrastructure",
+        "priority:p0",
+        "size:medium",
+        "status:ready",
+        "technical-debt"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "CI Infrastructure Stabilization",
+      "type": "Task",
+      "depends_on": [],
+      "parent_issue": true
+    },
+    {
+      "id": 44,
+      "title": "Add advanced observability and monitoring",
+      "body": "## Description\nImplement comprehensive observability and monitoring capabilities for tracking LLM usage, performance, and costs in production environments.\n\n## Acceptance Criteria\n- [ ] Create a metrics collection system\n- [ ] Add OpenTelemetry integration for distributed tracing\n- [ ] Implement Prometheus metrics export\n- [ ] Add structured logging with configurable levels\n- [ ] Create dashboards for monitoring usage and performance\n- [ ] Add cost tracking and budget alerts\n- [ ] Implement rate limit monitoring and adaptive throttling\n- [ ] Create documentation for monitoring setup and configuration\n\n## Related Components\n- src/lluminary/monitoring/ (new directory)\n- src/lluminary/monitoring/metrics.py (new)\n- src/lluminary/monitoring/tracing.py (new)\n- src/lluminary/monitoring/logging.py (new)\n- src/lluminary/monitoring/cost.py (new)\n- examples/monitoring_setup.py (new)\n\n## Testing Requirements\n- Unit tests for metrics collection\n- Integration tests with monitoring systems\n- Load testing to verify monitoring accuracy\n\n## Priority\nLow\n\n## Estimated Complexity\nHigh",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "type": "Task",
+      "depends_on": []
+    },
+    {
+      "id": 45,
+      "title": "Implement agent framework",
+      "body": "## Description\nCreate an agent framework built on top of the LLM abstraction to enable complex workflows, planning, and tool use with memory.\n\n## Acceptance Criteria\n- [ ] Design agent architecture and interfaces\n- [ ] Implement AgentExecutor for orchestrating agent steps\n- [ ] Create memory systems for storing conversation history and context\n- [ ] Implement planning capabilities for multi-step reasoning\n- [ ] Add tool registry for agent tool use\n- [ ] Create standard agent types (ReAct, ReflexionAgent, PlanAndExecute)\n- [ ] Add comprehensive documentation and tutorials\n- [ ] Create example applications showcasing agent capabilities\n\n## Related Components\n- src/lluminary/agents/ (new directory)\n- src/lluminary/agents/base.py (new)\n- src/lluminary/agents/executor.py (new)\n- src/lluminary/agents/memory.py (new)\n- src/lluminary/agents/planner.py (new)\n- examples/agent_examples/ (new directory)\n\n## Testing Requirements\n- Unit tests for all agent components\n- Integration tests for complex workflows\n- Benchmarks against standard agent challenges\n\n## Priority\nMedium\n\n## Estimated Complexity\nVery High",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "type": "Task",
+      "depends_on": []
+    },
+    {
+      "id": 46,
+      "title": "Add support for local models via Ollama",
+      "body": "## Description\nImplement support for local models via Ollama integration to enable offline usage and reduce API costs.\n\n## Acceptance Criteria\n- [ ] Implement OllamaLLM provider class\n- [ ] Support text generation with proper message formatting\n- [ ] Support for streaming responses\n- [ ] Handle Ollama-specific error messages\n- [ ] Add documentation for setup and configuration\n- [ ] Create examples for offline usage\n- [ ] Add unit and integration tests\n\n## Related Components\n- src/lluminary/models/providers/ollama.py (new)\n- tests/unit/test_ollama_provider.py (new)\n- examples/ollama_example.py (new)\n\n## Testing Requirements\n- Unit tests for all functionalities\n- Integration tests with actual Ollama instance\n- Performance comparison with cloud models\n\n## Priority\nLow\n\n## Estimated Complexity\nMedium",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "type": "Task",
+      "depends_on": []
+    },
+    {
+      "id": 47,
+      "title": "Implement robust caching mechanism",
+      "body": "## Description\nCreate a caching system to reduce duplicate API calls and improve performance by caching responses based on semantic similarity as well as exact matches.\n\n## Acceptance Criteria\n- [ ] Design a flexible caching interface\n- [ ] Implement in-memory cache\n- [ ] Implement disk-based cache\n- [ ] Add Redis integration for distributed caching\n- [ ] Implement semantic similarity-based cache matching\n- [ ] Add cache invalidation mechanisms (TTL, manual, semantic drift)\n- [ ] Create configuration options for cache behavior\n- [ ] Add metrics for cache hit/miss rates\n- [ ] Add documentation and examples\n\n## Related Components\n- src/lluminary/cache/ (new directory)\n- src/lluminary/cache/base.py (new)\n- src/lluminary/cache/memory.py (new)\n- src/lluminary/cache/disk.py (new)\n- src/lluminary/cache/redis.py (new)\n- examples/caching_example.py (new)\n\n## Testing Requirements\n- Unit tests for all cache operations\n- Performance tests for different cache sizes and types\n- Thread safety tests for concurrent access\n\n## Priority\nMedium\n\n## Estimated Complexity\nHigh",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "type": "Task",
+      "depends_on": []
+    },
+    {
+      "id": 48,
+      "title": "Add vector database integration support",
+      "body": "## Description\nAdd support for integrating with vector databases (FAISS, Pinecone, etc.) to enable semantic search and retrieval capabilities.\n\n## Acceptance Criteria\n- [ ] Create vector storage abstraction layer\n- [ ] Implement FAISS integration for local vector storage\n- [ ] Implement Pinecone integration for cloud vector storage\n- [ ] Add utilities for chunking and preprocessing text\n- [ ] Create methods for semantic search across vector stores\n- [ ] Add example for RAG (Retrieval Augmented Generation) pattern\n- [ ] Add comprehensive documentation\n- [ ] Add unit and integration tests\n\n## Related Components\n- src/lluminary/vector/ (new directory)\n- src/lluminary/vector/base.py (new)\n- src/lluminary/vector/faiss.py (new)\n- src/lluminary/vector/pinecone.py (new)\n- examples/vector_search.py (new)\n- examples/rag_example.py (new)\n\n## Testing Requirements\n- Unit tests for vector operations\n- Integration tests with actual vector databases\n- Performance benchmarks for different vector sizes\n\n## Priority\nMedium\n\n## Estimated Complexity\nHigh",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "type": "Task",
+      "depends_on": []
+    },
+    {
+      "id": 49,
+      "title": "Enhance streaming support for tool/function calling",
+      "body": "## Description\nImprove the streaming API to support tool/function calling in streaming mode across all providers that support it.\n\n## Acceptance Criteria\n- [ ] Update base LLM class to support tool calls in streaming mode\n- [ ] Implement streaming tool calls in OpenAI provider\n- [ ] Implement streaming tool calls in Anthropic provider\n- [ ] Implement streaming tool calls in Bedrock provider (for Claude models)\n- [ ] Add proper type definitions for streaming tool calls\n- [ ] Create examples demonstrating streaming tool usage\n- [ ] Update documentation\n\n## Related Components\n- src/lluminary/models/base.py\n- src/lluminary/models/providers/openai.py\n- src/lluminary/models/providers/anthropic.py\n- src/lluminary/models/providers/bedrock.py\n- examples/streaming_tool_calls.py (new)\n\n## Testing Requirements\n- Unit tests for all streaming tool implementations\n- Verify consistent behavior across providers\n- Test with various tool definitions and outputs\n\n## Priority\nMedium\n\n## Estimated Complexity\nHigh",
+      "labels": [
+        "enhancement",
+        "area:providers",
+        "priority:p2",
+        "size:large",
+        "status:blocked"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Advanced Streaming Support",
+      "type": "Feature",
+      "depends_on": [],
+      "parent_issue": true
+    },
+    {
+      "id": 50,
+      "title": "Implement unified type definitions across providers",
+      "body": "## Description\nCreate a central types.py module with standardized TypedDict definitions that can be used across all providers to ensure consistent typing and improve type safety.\n\n## Acceptance Criteria\n- [ ] Create a central types.py module in src/lluminary/models/\n- [ ] Define common TypedDict structures for:\n  - Message formats (text, image, tool content)\n  - API request/response structures\n  - Usage statistics\n  - Error details\n- [ ] Update all providers to use these shared types\n- [ ] Add comprehensive type checking tests\n- [ ] Update documentation with type system explanation\n\n## Related Components\n- src/lluminary/models/types.py (new)\n- src/lluminary/models/providers/* (all provider files)\n- tests/unit/test_types.py (new)\n\n## Testing Requirements\n- Verify type compatibility with mypy --strict\n- Ensure no regression in existing functionality\n- Test type inference in IDE environments\n\n## Priority\nHigh\n\n## Estimated Complexity\nMedium-High",
+      "labels": [
+        "enhancement",
+        "area:typing",
+        "priority:p1",
+        "size:large",
+        "status:blocked"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "milestone": "Type System Overhaul",
+      "type": "Feature",
+      "depends_on": [],
+      "parent_issue": true
+    },
+    {
+      "id": 51,
+      "title": "Add support for Mistral AI provider",
+      "body": "## Description\nImplement a provider for Mistral AI models.\n\n## Acceptance Criteria\n- [ ] Implement MistralLLM class extending the base LLM class\n- [ ] Support authentication via API key\n- [ ] Support text generation with proper message formatting\n- [ ] Support streaming responses\n- [ ] Implement proper error handling and mapping\n- [ ] Add token counting and cost estimation\n- [ ] Add comprehensive unit tests\n- [ ] Add documentation and examples\n\n## Related Components\n- src/lluminary/models/providers/mistral.py (new)\n- tests/unit/test_mistral_provider.py (new)\n- examples/mistral_example.py (new)\n\n## Testing Requirements\n- Unit tests for all functionalities (auth, generation, streaming, error handling)\n- Integration tests with actual API calls (optional)\n\n## Priority\nMedium\n\n## Estimated Complexity\nMedium",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "assignees": [
+        "shawnlopresto"
+      ],
+      "type": "Task",
+      "depends_on": []
+    }
+  ]
+}

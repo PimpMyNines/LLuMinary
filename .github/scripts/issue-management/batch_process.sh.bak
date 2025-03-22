@@ -1,0 +1,190 @@
+#!/bin/bash
+# Batch processing script for LLuMinary GitHub Issue Management Tools
+
+# Check if GITHUB_TOKEN is set
+if [ -z "$GITHUB_TOKEN" ]; then
+  echo "Error: GITHUB_TOKEN environment variable is not set."
+  echo "Please set it with: export GITHUB_TOKEN='your_github_token'"
+  exit 1
+fi
+
+# Get repository information from git config
+REPO_OWNER=$(git config --get remote.origin.url | sed -n 's/.*github.com[:/]\([^/]*\)\/\([^.]*\).*/\1/p')
+REPO_NAME=$(git config --get remote.origin.url | sed -n 's/.*github.com[:/]\([^/]*\)\/\([^.]*\).*/\2/p')
+
+# If we couldn't get the repo info from git, use default
+if [ -z "$REPO_OWNER" ] || [ -z "$REPO_NAME" ]; then
+  echo "Warning: Could not determine repository from git config."
+  echo "Using default repository: PimpMyNines/LLuMinary"
+  REPO="PimpMyNines/LLuMinary"
+else
+  REPO="$REPO_OWNER/$REPO_NAME"
+  echo "Using repository: $REPO"
+fi
+
+# Display help if no arguments provided
+if [ $# -eq 0 ]; then
+    echo "LLuMinary GitHub Issue Management Batch Processing"
+    echo ""
+    echo "Usage: $0 [options]"
+    echo ""
+    echo "Options:"
+    echo "  -q, --query <query>     Search query to find issues (e.g., 'label:enhancement')"
+    echo "  -l, --limit <number>    Maximum number of issues to process (default: 10)"
+    echo "  -d, --dry-run           Show what would be done without making changes"
+    echo "  -h, --help              Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0 -q 'label:enhancement' -l 5"
+    echo "  $0 -q 'is:open has:tasks' --dry-run"
+    echo ""
+    exit 0
+fi
+
+# Default values
+QUERY=""
+LIMIT=10
+DRY_RUN=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -q|--query)
+            QUERY="$2"
+            shift 2
+            ;;
+        -l|--limit)
+            LIMIT="$2"
+            shift 2
+            ;;
+        -d|--dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -h|--help)
+            echo "LLuMinary GitHub Issue Management Batch Processing"
+            echo ""
+            echo "Usage: $0 [options]"
+            echo ""
+            echo "Options:"
+            echo "  -q, --query <query>     Search query to find issues (e.g., 'label:enhancement')"
+            echo "  -l, --limit <number>    Maximum number of issues to process (default: 10)"
+            echo "  -d, --dry-run           Show what would be done without making changes"
+            echo "  -h, --help              Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0 -q 'label:enhancement' -l 5"
+            echo "  $0 -q 'is:open has:tasks' --dry-run"
+            echo ""
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown option '$1'"
+            echo "Run '$0 --help' for usage information."
+            exit 1
+            ;;
+    esac
+done
+
+# Check if query is provided
+if [ -z "$QUERY" ]; then
+    echo "Error: No search query provided."
+    echo "Please provide a search query with -q or --query."
+    exit 1
+fi
+
+# Ensure query includes 'is:issue' if not already present
+if ! echo "$QUERY" | grep -q "is:issue"; then
+    QUERY="$QUERY+is:issue"
+fi
+
+echo "Searching for issues with query: $QUERY"
+echo "Limit: $LIMIT issues"
+if [ "$DRY_RUN" = true ]; then
+    echo "Dry run: No changes will be made"
+fi
+echo ""
+
+# Search for issues using the repos API instead of search API
+issues=$(curl -s \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  "https://api.github.com/repos/$REPO/issues?state=open&per_page=$LIMIT")
+
+# Check if the response is valid JSON
+if ! echo "$issues" | jq -e '.' > /dev/null 2>&1; then
+    echo "Error: Invalid JSON response from GitHub API."
+    echo "Response: $issues"
+    exit 1
+fi
+
+# Check if the response contains an error message
+if echo "$issues" | jq -e '.message' > /dev/null 2>&1; then
+    error_message=$(echo "$issues" | jq -r '.message')
+    echo "Error from GitHub API: $error_message"
+
+    # Check for specific error messages and provide helpful suggestions
+    if [[ "$error_message" == *"API rate limit exceeded"* ]]; then
+        echo "Suggestion: Wait for a while before trying again, or use a token with higher rate limits."
+    elif [[ "$error_message" == *"Bad credentials"* ]]; then
+        echo "Suggestion: Check that your GitHub token is valid and has the necessary permissions."
+    else
+        echo "Suggestion: Check your query syntax and try again with a simpler query."
+    fi
+
+    exit 1
+fi
+
+# Filter issues based on the query
+if [ ! -z "$QUERY" ]; then
+    echo "Filtering issues based on query: $QUERY"
+    # Convert the query to lowercase for case-insensitive matching
+    query_lower=$(echo "$QUERY" | tr '[:upper:]' '[:lower:]')
+
+    # Filter issues based on the query
+    filtered_issues=$(echo "$issues" | jq -c --arg q "$query_lower" '[.[] | select(.title | ascii_downcase | contains($q) or .body | ascii_downcase | contains($q))]')
+
+    # Use the filtered issues for processing
+    issues=$filtered_issues
+fi
+
+# Count the number of issues
+issue_count=$(echo "$issues" | jq -r 'length')
+if [ "$issue_count" -eq 0 ]; then
+    echo "No issues found matching the query."
+    exit 0
+fi
+
+echo "Found $issue_count issues matching the query."
+echo "Processing up to $LIMIT issues..."
+echo ""
+
+# Process each issue
+if [ "$issue_count" -gt 0 ]; then
+    echo "$issues" | jq -r '.[] | {number: .number, title: .title, body: .body}' | jq -c '.' | while read -r issue_json; do
+        issue_number=$(echo "$issue_json" | jq -r '.number')
+        issue_title=$(echo "$issue_json" | jq -r '.title')
+        issue_body=$(echo "$issue_json" | jq -r '.body')
+
+        # Check if issue has tasks
+        if echo "$issue_body" | grep -q "\- \[ \]"; then
+            task_count=$(echo "$issue_body" | grep -c "\- \[ \]")
+            echo "Issue #$issue_number: $issue_title"
+            echo "  Has $task_count tasks"
+
+            if [ "$DRY_RUN" = false ]; then
+                echo "  Creating sub-issues..."
+                ./create_sub_issues.sh "$issue_number"
+            else
+                echo "  Would create $task_count sub-issues (dry run)"
+            fi
+        else
+            echo "Issue #$issue_number: $issue_title"
+            echo "  No tasks found, skipping"
+        fi
+        echo ""
+    done
+fi
+
+echo "Batch processing complete!"

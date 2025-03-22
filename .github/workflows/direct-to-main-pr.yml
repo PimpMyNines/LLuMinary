@@ -1,0 +1,201 @@
+name: Direct-to-Main PR Workflow
+
+# Specialized workflow for handling PRs directly targeting the main branch
+# from collaborators with appropriate permissions.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize]
+
+jobs:
+  check-permissions:
+    name: Check Permissions
+    runs-on: ubuntu-latest
+    outputs:
+      is_collaborator: ${{ steps.check-collab.outputs.is_collaborator }}
+
+    steps:
+    - name: Check if PR author is a collaborator
+      id: check-collab
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const author = context.payload.pull_request.user.login;
+          try {
+            // Check if the PR author is a collaborator with at least write permission
+            const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: author
+            });
+            
+            const allowedLevels = ['admin', 'maintain', 'write'];
+            const isCollaborator = allowedLevels.includes(permission.permission);
+            
+            console.log(`PR author ${author} has permission level: ${permission.permission}`);
+            console.log(`Is authorized collaborator: ${isCollaborator}`);
+            
+            core.setOutput('is_collaborator', isCollaborator);
+          } catch (error) {
+            console.error(`Error checking collaborator status: ${error}`);
+            core.setOutput('is_collaborator', false);
+          }
+
+  branch-check:
+    name: Check Branch Requirements
+    needs: check-permissions
+    if: needs.check-permissions.outputs.is_collaborator == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Generate branch report
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const prBranch = context.payload.pull_request.head.ref;
+          const baseBranch = context.payload.pull_request.base.ref;
+          
+          let body = `## Direct-to-Main PR Branch Check\n\n`;
+          body += `This PR is targeting the \`${baseBranch}\` branch directly.\n\n`;
+          body += `### Branch Requirements\n`;
+          body += `- PR made by an authorized collaborator: ✅\n`;
+          body += `- Branch name: \`${prBranch}\`\n\n`;
+          
+          // Add warning about the direct-to-main PR
+          body += `⚠️ **Important:** Direct PRs to \`main\` should only be used for:\n`;
+          body += `- Critical hotfixes\n`;
+          body += `- Documentation updates\n`;
+          body += `- Release preparation\n\n`;
+          
+          body += `For feature development, please target the \`develop\` branch instead.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
+
+  comprehensive-checks:
+    name: Comprehensive Validation
+    needs: [check-permissions, branch-check]
+    if: needs.check-permissions.outputs.is_collaborator == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+        pip install semver
+
+    - name: Version check for main branch
+      run: |
+        # Extract version from the PR branch
+        PR_VERSION=$(grep -Po '(?<=__version__ = ")[^"]*' src/lluminary/version.py)
+        echo "PR version: $PR_VERSION"
+
+        # Checkout the base branch to compare version
+        git checkout main
+        MAIN_VERSION=$(grep -Po '(?<=__version__ = ")[^"]*' src/lluminary/version.py)
+        echo "Main version: $MAIN_VERSION"
+        git checkout -
+
+        # Compare versions using semver
+        python -c "
+        import semver
+
+        pr_ver = semver.VersionInfo.parse('$PR_VERSION')
+        main_ver = semver.VersionInfo.parse('$MAIN_VERSION')
+
+        if pr_ver <= main_ver:
+          print('❌ Error: Version in PR branch ($PR_VERSION) must be higher than in main branch ($MAIN_VERSION)')
+          exit(1)
+        else:
+          print('✅ Version correctly bumped from $MAIN_VERSION to $PR_VERSION')
+        "
+
+    - name: Run comprehensive checks
+      run: |
+        # Run linting
+        python -m ruff check src/ tests/
+        
+        # Run type checking
+        python -m mypy src/
+        
+        # Run unit tests
+        python -m pytest tests/unit/
+
+    - name: Send validation report
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## Validation Report for Direct-to-Main PR
+
+            ✅ **Collaborator check passed**
+            ✅ **Version properly incremented**
+            ✅ **Code linting passed**
+            ✅ **Type checking passed**
+            ✅ **Unit tests passed**
+
+            This PR has been validated for direct merging to main branch.
+            
+            Please ensure you have:
+            - [ ] Updated CHANGELOG.md
+            - [ ] Added/updated documentation as needed
+            - [ ] Received approval from at least one other collaborator
+            
+            🔔 @${context.repo.owner} - A direct-to-main PR is ready for review.`
+          });
+
+  notify-non-collaborator:
+    name: Notify Non-Collaborator
+    needs: check-permissions
+    if: needs.check-permissions.outputs.is_collaborator != 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Notify about permission issue
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## ⚠️ Direct-to-Main PR Permission Notice
+
+            This PR is targeting the \`main\` branch directly, but the PR author does not have collaborator permission.
+
+            ### Please note:
+            - Direct PRs to \`main\` are restricted to repository collaborators only
+            - For external contributors, please target the \`develop\` branch instead
+            - A maintainer will review and merge your changes to \`main\` when appropriate
+
+            Thank you for your contribution!`
+          });
