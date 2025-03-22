@@ -351,12 +351,34 @@ The AWS Bedrock integration has been enhanced with the following features:
    - Added examples for streaming, multi-turn conversation, and thinking budget
    - Included proper error handling and authentication instructions
 
+## CI/CD Commit Guidelines
+
+When making commits through Claude or other AI assistants, follow these guidelines:
+
+1. **DO NOT include AI attribution**
+   - Never add the following text to commit messages:
+     - "🤖 Generated with [Claude Code](https://claude.ai/code)"
+     - "Co-Authored-By: Claude <noreply@anthropic.com>"
+   - All commits should appear as regular developer contributions
+
+2. **Use standard commit message format**
+   - Follow the format: `type: short description`
+   - Types: fix, feat, chore, docs, style, refactor, perf, test
+   - Keep the first line under 72 characters
+   - Add bullet points for complex changes
+
+3. **Update CLAUDE.md after completing tasks**
+   - Document completed work in the Session Notes section
+   - Include lessons learned and challenges encountered
+   - Provide guidance for the next priority tasks
+
 ## Session Notes
 
 | Date         | Notes                                                          |
 |--------------|----------------------------------------------------------------|
 | 2025-03-10   | Identified Issues #3 and #4 as highest priorities; began work on types.py |
 | 2025-03-17   | Consolidated development notes into CLAUDE.md; fixed CI workflow issues in progress |
+| 2025-03-22   | Completed GitHub Actions workflow fixes (Priority 1.1 from ENHANCEMENT_PLAN.md):<br>- Fixed Dockerfile.matrix handling with build args<br>- Improved provider test conditional execution<br>- Enhanced coverage reporting with proper dependencies<br>- Added documentation on required secrets<br>- Next priority: Implement unified type definitions (Priority 1.2) |
 
 ---
 
