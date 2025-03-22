@@ -107,9 +107,38 @@ When run on a PR, the workflow adds:
 
 For the CI workflows to function correctly, the following GitHub repository secrets must be configured:
 
-- `CODECOV_TOKEN` - Token for uploading test coverage data to codecov.io
-  - Generate a token at [codecov.io](https://codecov.io)
-  - Add it to repository secrets in GitHub Settings > Secrets > Actions > New repository secret
+### CODECOV_TOKEN Configuration (REQUIRED)
+
+The CODECOV_TOKEN is required for uploading test coverage data to Codecov. Without this token, coverage reporting will fail.
+
+To configure CODECOV_TOKEN:
+
+1. Sign up or log in to [codecov.io](https://codecov.io) using your GitHub account
+2. Add your repository to Codecov by selecting it from the list
+3. Navigate to Repository Settings > General > Repository Upload Token
+4. Copy the generated token
+5. In your GitHub repository:
+   - Go to Settings > Secrets and variables > Actions
+   - Click on "New repository secret"
+   - Name: `CODECOV_TOKEN`
+   - Value: [paste the token copied from Codecov]
+   - Click "Add secret"
+
+⚠️ **IMPORTANT**: This token must be added before running the matrix-docker-tests workflow, as both the main test jobs and provider-specific test jobs depend on it for coverage reporting.
+
+### Verification Script
+
+You can verify that your CODECOV_TOKEN is properly configured by running:
+
+```bash
+# Check if CODECOV_TOKEN exists in GitHub repository secrets
+gh secret list | grep CODECOV_TOKEN
+
+# Or when using GitHub CLI
+gh api /repos/OWNER/REPO/actions/secrets | jq '.secrets[] | select(.name=="CODECOV_TOKEN")'
+```
+
+If the token is not present, the coverage reporting steps in the workflow will fail with an error message indicating that the CODECOV_TOKEN secret is missing.
 
 ## Using CI Workflows Locally
 

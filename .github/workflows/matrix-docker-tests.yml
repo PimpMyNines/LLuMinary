@@ -56,41 +56,14 @@ jobs:
           ${{ runner.os }}-buildx-py${{ matrix.python-version }}-
           ${{ runner.os }}-buildx-
 
-    # Create a temporary Dockerfile with the specific Python version
-    - name: Create Python ${{ matrix.python-version }} Dockerfile
+    # Use the existing Dockerfile.matrix with ARG
+    - name: Check Dockerfile.matrix exists
       run: |
-        cat > Dockerfile.matrix << EOF
-        FROM python:${{ matrix.python-version }}-slim
-
-        WORKDIR /app
-
-        # Install development dependencies
-        RUN apt-get update && apt-get install -y \\
-            git \\
-            && rm -rf /var/lib/apt/lists/*
-
-        # Copy requirements and install dependencies
-        COPY requirements.txt .
-        RUN pip install -r requirements.txt
-        RUN pip install pytest-xdist pytest-asyncio pytest-cov
-
-        # Copy source code and tests
-        COPY src/ /app/src/
-        COPY tests/ /app/tests/
-        COPY pyproject.toml pytest.ini mypy.ini ./
-
-        # Install the package in development mode
-        RUN pip install -e .
-
-        # Set environment variables for consistent test behavior
-        ENV PYTHONPATH=/app
-        ENV PYTHONDONTWRITEBYTECODE=1
-        ENV PYTHONUNBUFFERED=1
-
-        # Run tests by default
-        ENTRYPOINT ["python", "-m", "pytest"]
-        CMD ["tests/"]
-        EOF
+        if [ ! -f Dockerfile.matrix ]; then
+          echo "::error::Dockerfile.matrix is missing!"
+          exit 1
+        fi
+        echo "Using existing Dockerfile.matrix with PYTHON_VERSION=${{ matrix.python-version }}"
 
     - name: Build Docker image for Python ${{ matrix.python-version }}
       run: |
@@ -123,6 +96,14 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: python${{ matrix.python-version }},unittests,integrationtests
         name: py${{ matrix.python-version }}-coverage
+      
+    # Verify CODECOV_TOKEN exists and show helpful error if it doesn't
+    - name: Check CODECOV_TOKEN configuration
+      if: ${{ !secrets.CODECOV_TOKEN && (success() || failure()) }}
+      run: |
+        echo "::error::CODECOV_TOKEN secret is not configured in repository settings!"
+        echo "::error::Please see .github/workflows/README.md for detailed instructions on setting up CODECOV_TOKEN"
+        echo "::error::Coverage reports will not be uploaded until CODECOV_TOKEN is configured"
 
     # Move cache to avoid growing cache size
     - name: Move cache
@@ -134,11 +115,17 @@ jobs:
   provider-tests:
     name: ${{ matrix.provider }} Provider Tests
     runs-on: ubuntu-latest
-    # Improved condition to ensure proper execution
+    # Fixed condition to ensure proper execution of provider tests
     if: |
       (github.event_name == 'workflow_dispatch' && inputs.run-provider-tests == true) ||
-      (github.event_name == 'pull_request' && contains(join(github.event.pull_request.files.*.filename, ' '), matrix.file_pattern)) ||
-      (github.event_name == 'push' && contains(github.event.head_commit.message, matrix.provider))
+      (github.event_name == 'pull_request' && (
+          contains(join(github.event.pull_request.files.*.filename, ' '), matrix.file_pattern) ||
+          contains(join(github.event.pull_request.files.*.filename, ' '), format('tests/unit/test_{0}_', lower(matrix.provider)))
+      )) ||
+      (github.event_name == 'push' && (
+          contains(github.event.head_commit.message, matrix.provider) ||
+          contains(github.event.head_commit.message, format('test_{0}_', lower(matrix.provider)))
+      ))
     strategy:
       fail-fast: false
       matrix:
@@ -237,6 +224,14 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ matrix.provider }},unittests
         name: ${{ matrix.provider }}-coverage
+        
+    # Verify CODECOV_TOKEN exists and show helpful error if it doesn't
+    - name: Check CODECOV_TOKEN configuration
+      if: ${{ !secrets.CODECOV_TOKEN && (success() || failure()) }}
+      run: |
+        echo "::error::CODECOV_TOKEN secret is not configured in repository settings!"
+        echo "::error::Please see .github/workflows/README.md for detailed instructions on setting up CODECOV_TOKEN"
+        echo "::error::Coverage reports will not be uploaded until CODECOV_TOKEN is configured"
 
     # Move cache to avoid growing cache size
     - name: Move cache
