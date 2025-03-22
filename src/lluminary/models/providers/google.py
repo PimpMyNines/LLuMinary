@@ -49,26 +49,37 @@ Content(
 - Compatible with experimental "thinking" models
 """
 
+import asyncio
+import datetime
+import json
 import logging
 import pathlib
+import time
+import uuid
 import warnings
 from io import BytesIO
 from typing import (
     Any,
     Callable,
+    ClassVar,
     Dict,
     Iterator,
     List,
     Literal,
     Optional,
     Protocol,
+    Set,
     Tuple,
-    TypedDict,
+    Type,
+    TypeVar,
     Union,
+    cast,
+    TypedDict,
 )
 
 import requests
-from google import genai
+import google
+import google.genai as genai
 from google.genai import types
 from PIL import Image
 
@@ -81,149 +92,152 @@ from ...exceptions import (
     LLMRateLimitError,
     LLMServiceUnavailableError,
     LLMToolError,
+    LLMProviderError,
 )
 from ...utils.aws import get_secret
 from ..base import LLM
+from ..types import (
+    BaseAuthConfig,
+    BaseAPIRequest,
+    BaseGenerationOptions,
+    BaseMessage,
+    BaseUserMessage,
+    BaseAssistantMessage,
+    BaseToolDefinition,
+    BaseFunctionDefinition,
+    BaseToolCall,
+    BaseUsageStatistics,
+    Provider,
+    ContentType,
+    RoleType,
+    ToolType,
+    StandardMessageInput,
+    StandardMessageOutput,
+    ErrorDetails,
+    BaseTextContent,
+    BaseImageContent,
+    BaseToolUseContent,
+    BaseToolResultContent,
+    BaseThinkingContent,
+    BaseParameters,
+    BaseParameterProperty,
+)
 
 # Define aliases for compatibility with internal used names
-AuthenticationError = LLMAuthenticationError
-ServiceUnavailableError = LLMServiceUnavailableError
-ConfigurationError = LLMConfigurationError
-RateLimitError = LLMRateLimitError
 
 
 # Type definitions for Google API structures
-class GooglePartBase(Protocol):
-    """Protocol for Google API Part objects."""
-
-    text: Optional[str]
-    function_call: Optional[Any]
-    function_response: Optional[Any]
-
-
-class GoogleContent(Protocol):
-    """Protocol for Google API Content objects."""
-
-    role: str
-    parts: List[Any]
+class GoogleTextContent(TypedDict):
+    """Google-specific text content part."""
+    
+    type: Literal["text"]
+    text: str
 
 
-class GoogleFunction(Protocol):
-    """Protocol for Google API Function objects."""
+class GoogleImageSource(TypedDict):
+    """Google-specific image source structure."""
+    
+    url: Optional[str]
+    base64: Optional[str]
+    file_path: Optional[str]
+    mime_type: Optional[str]
 
+
+class GoogleImageContent(TypedDict):
+    """Google-specific image content part."""
+    
+    type: Literal["image"]
+    source: Union[str, GoogleImageSource]
+
+
+class GoogleFunctionCall(TypedDict):
+    """Google-specific function call data."""
+    
     name: str
     args: Dict[str, Any]
 
 
-class GoogleFunctionResponse(Protocol):
-    """Protocol for Google API Function Response objects."""
-
+class GoogleFunctionResponse(TypedDict):
+    """Google-specific function response data."""
+    
     name: str
     response: Dict[str, Any]
 
 
-class GoogleUsageMetadata(Protocol):
-    """Protocol for Google API Usage Metadata."""
-
+class GoogleUsageMetadata(TypedDict):
+    """Google-specific usage metadata."""
+    
     prompt_token_count: int
     candidates_token_count: int
     total_token_count: int
 
 
-class GoogleAPIResponse(Protocol):
-    """Protocol for Google API Generation Response."""
-
+class GoogleAPIResponse(TypedDict):
+    """Google-specific API response structure."""
+    
     text: str
     usage_metadata: GoogleUsageMetadata
-    function_calls: List[Any]
-
-
-# TypedDict definitions for standardized structures
-class GoogleMessageDict(TypedDict):
-    """Standard message format used across the handler."""
-
-    message_type: str
-    message: Optional[str]
-    image_paths: Optional[List[str]]
-    image_urls: Optional[List[str]]
-    tool_use: Optional[Dict[str, Any]]
-    tool_result: Optional[Dict[str, Any]]
+    function_calls: List[GoogleFunctionCall]
 
 
 class GoogleToolUse(TypedDict):
-    """Tool use information format."""
-
+    """Google-specific tool use data."""
+    
+    type: Literal["tool_use"]
     name: str
     input: Dict[str, Any]
+    tool_id: Optional[str]
 
 
 class GoogleToolResult(TypedDict):
-    """Tool result information format."""
-
+    """Google-specific tool result data."""
+    
+    type: Literal["tool_result"]
     tool_id: str
-    success: bool
-    result: Optional[Any]
-    error: Optional[str]
+    result: Dict[str, Any]
 
 
 class GoogleFunctionDict(TypedDict):
-    """Function definition dictionary structure."""
-
+    """Google-specific function definition."""
+    
     name: str
     description: str
     parameters: Dict[str, Any]
+    required: Optional[bool]
 
 
 class GoogleToolUseData(TypedDict):
-    """Data structure for extracted tool usage."""
-
-    id: str
+    """Google-specific tool call data."""
+    
     name: str
     input: Dict[str, Any]
+    id: Optional[str]
+    type: Optional[ToolType]
 
 
-class GoogleUsageStatsDict(TypedDict):
-    """Usage statistics dictionary structure."""
+class GoogleStreamingUsage(TypedDict):
+    """Usage information during streaming for Google models."""
 
+    is_complete: bool
+    tool_use: Optional[Dict[str, Any]]
     read_tokens: int
     write_tokens: int
-    images: int
     total_tokens: int
     read_cost: float
     write_cost: float
-    image_cost: float
     total_cost: float
-    tool_use: Optional[GoogleToolUseData]
-
-
-class GooglePartialUsageDict(TypedDict):
-    """Partial usage information during streaming."""
-
-    event_id: str
-    model: str
-    read_tokens: int
-    write_tokens: int
     images: int
-    total_tokens: int
-    is_complete: bool
-    tool_use: Dict[str, Any]
-
-
-class GoogleFinalUsageDict(TypedDict):
-    """Complete usage information after streaming completion."""
-
-    event_id: str
-    model: str
-    read_tokens: int
-    write_tokens: int
-    images: int
-    total_tokens: int
-    read_cost: float
-    write_cost: float
     image_cost: float
-    total_cost: float
-    is_complete: bool
-    tool_use: Dict[str, Any]
+    provider: str
+    model: str
+    successful: bool
+    error: Optional[str]
+    error_type: Optional[str]
+    retry_count: int
+    event_id: str
+    request_timestamp: Optional[float]
+    response_timestamp: Optional[float]
+    latency_ms: Optional[float]
 
 
 class GoogleModelCosts(TypedDict):
@@ -232,6 +246,48 @@ class GoogleModelCosts(TypedDict):
     read_token: float
     write_token: float
     image_cost: float
+
+
+class GoogleParameterProperty(TypedDict, total=False):
+    """Google-specific parameter property structure."""
+    
+    type: str
+    description: Optional[str]
+    enum: Optional[List[str]]
+    format: Optional[str]
+    minimum: Optional[int]
+    maximum: Optional[int]
+    default: Optional[Any]
+    items: Optional[Dict[str, Any]]
+    properties: Optional[Dict[str, Any]]
+    required: Optional[List[str]]
+
+
+class GoogleParameters(TypedDict, total=False):
+    """Google-specific parameters structure."""
+    
+    type: str
+    properties: Dict[str, GoogleParameterProperty]
+    required: List[str]
+    description: Optional[str]
+
+
+class GoogleFunctionDefinition(TypedDict):
+    """Google-specific function definition."""
+    
+    name: str
+    description: str
+    parameters: GoogleParameters
+    required: Optional[bool]
+
+
+class GoogleToolDefinition(TypedDict):
+    """Google-specific tool definition."""
+    
+    name: str
+    description: str
+    input_schema: GoogleParameters
+    required: Optional[bool]
 
 
 class GoogleToolCallData(TypedDict):
@@ -262,11 +318,15 @@ class GoogleLLM(LLM):
     LLM handler message format and Google's content/part structure.
 
     Attributes:
+        PROVIDER_ID: Provider identifier from the Provider enum
         SUPPORTED_MODELS: List of Gemini models supported by this implementation
         CONTEXT_WINDOW: Maximum token limits for each model
         SUPPORTS_IMAGES: Whether this provider supports image inputs
         COST_PER_MODEL: Cost information per token for each model
     """
+    
+    # Provider identifier for type-safe provider reference
+    PROVIDER_ID = Provider.GOOGLE
 
     SUPPORTED_MODELS = [
         "gemini-2.0-flash",
@@ -319,78 +379,82 @@ class GoogleLLM(LLM):
         """
         super().__init__(model_name, **kwargs)
         self.client = None
+        self.timeout = kwargs.get("timeout", 60)
+        self.api_base = kwargs.get("api_base", None)
+        
+        # Set provider identifier for consistent provider identification
+        self.provider = self.PROVIDER_ID
+
+    def _validate_provider_config(self, config: Dict[str, Any]) -> None:
+        """
+        Validate Google provider configuration.
+        
+        Args:
+            config: Provider configuration dictionary
+            
+        Raises:
+            LLMLLMConfigurationError: If configuration is invalid
+        """
+        # Google-specific configuration validation
+        if "api_base" in config and not isinstance(config["api_base"], (str, type(None))):
+            raise LLMConfigurationError(
+                message="api_base must be a string or None",
+                provider=Provider.GOOGLE.value,
+                details={"provided_type": type(config["api_base"]).__name__}
+            )
+            
+        if "timeout" in config and not isinstance(config["timeout"], (int, float)):
+            raise LLMConfigurationError(
+                message="timeout must be a number",
+                provider=Provider.GOOGLE.value,
+                details={"provided_type": type(config["timeout"]).__name__}
+            )
+        
+        if "service_account_file" in config and not isinstance(config["service_account_file"], (str, type(None))):
+            raise LLMConfigurationError(
+                message="service_account_file must be a string or None",
+                provider=Provider.GOOGLE.value,
+                details={"provided_type": type(config["service_account_file"]).__name__}
+            )
+        
+        if "project_id" in config and not isinstance(config["project_id"], (str, type(None))):
+            raise LLMConfigurationError(
+                message="project_id must be a string or None",
+                provider=Provider.GOOGLE.value,
+                details={"provided_type": type(config["project_id"]).__name__}
+            )
+
+    def _initialize_client(self) -> None:
+        """Initialize the Google API client."""
+        try:
+            genai.configure(api_key=self.api_key)
+            self._client = genai
+            
+            # Test connection by accessing models (will raise if auth fails)
+            test = self._client.list_models()
+            if not test:
+                raise LLMProviderError(
+                    message="Failed to connect to Google API",
+                    provider=self.PROVIDER_ID.value,
+                    details={"error": "No models returned"},
+                )
+                
+        except Exception as e:
+            # Map the error to an appropriate exception type
+            raise self._map_google_error(e)
 
     def auth(self) -> None:
         """
-        Authenticate with Google using API key from AWS Secrets Manager.
-
-        This method retrieves the Google API key from the environment or AWS Secrets Manager,
-        then initializes the Google Gemini client with the appropriate API version.
+        Initialize the Google AI API client.
 
         Raises:
-            AuthenticationError: If authentication fails
+            LLMLLMAuthenticationError: If authentication with Google API fails
+            LLMLLMConfigurationError: If the API key is missing or client initialization fails
         """
-        from ...exceptions import AuthenticationError
-
         try:
-            # Try to get API key from environment variables first
-            import os
-
-            api_key = os.environ.get("GOOGLE_API_KEY")
-
-            # If not in environment, get from Secrets Manager
-            if not api_key:
-                try:
-                    secret = get_secret("google_api_key", required_keys=["api_key"])
-                    api_key = secret["api_key"]
-                except Exception as secret_error:
-                    raise LLMAuthenticationError(
-                        message=f"Failed to retrieve Google API key: {secret_error!s}",
-                        provider="GoogleLLM",
-                        details={
-                            "original_error": str(secret_error),
-                            "message": "API key not found in environment or secrets manager",
-                        },
-                    )
-
-            if not api_key:
-                raise LLMAuthenticationError(
-                    message="Google API key not found in environment or secrets manager",
-                    provider="GoogleLLM",
-                    details={
-                        "source_checked": ["GOOGLE_API_KEY", "AWS Secrets Manager"]
-                    },
-                )
-
-            # Initialize the Google client with appropriate API version
-            # Note: Experimental models may require different API versions
-            try:
-                if self.model_name == "gemini-2.0-flash-thinking-exp-01-21":
-                    self.client = genai.Client(
-                        api_key=api_key, http_options={"api_version": "v1alpha"}
-                    )
-                else:
-                    self.client = genai.Client(api_key=api_key)
-            except Exception as client_error:
-                raise LLMAuthenticationError(
-                    message=f"Failed to initialize Google client: {client_error!s}",
-                    provider="GoogleLLM",
-                    details={
-                        "original_error": str(client_error),
-                        "model": self.model_name,
-                    },
-                )
-
-        except AuthenticationError:
-            # Re-raise authentication errors directly
-            raise
+            self._initialize_client()
         except Exception as e:
-            # Map generic errors to authentication errors
-            raise LLMAuthenticationError(
-                message=f"Google authentication failed: {e!s}",
-                provider="GoogleLLM",
-                details={"original_error": str(e)},
-            )
+            raise self._map_google_error(e)
 
     def _process_image(self, image_source: str, is_url: bool = False) -> Image.Image:
         """
@@ -407,12 +471,8 @@ class GoogleLLM(LLM):
             PIL.Image.Image: Processed image for the API
 
         Raises:
-            ContentError: If the image content is invalid or unsupported
             LLMMistake: If image processing fails due to other reasons
         """
-        from ...exceptions import LLMContentError as ContentError
-        from ...exceptions import LLMMistake
-
         try:
             if is_url:
                 # For URLs, fetch the image content first
@@ -518,7 +578,7 @@ class GoogleLLM(LLM):
                         },
                     )
 
-        except (LLMMistake, ContentError):
+        except (LLMMistake, LLMContentError):
             # Re-raise our custom exceptions directly
             raise
         except Exception as e:
@@ -533,33 +593,32 @@ class GoogleLLM(LLM):
 
     def _format_messages_for_model(self, messages: List[Dict[str, Any]]) -> List[Any]:
         """
-        Format messages for Google's API.
-
-        Converts the standardized message format used across all providers
-        to Google's specific content/part structure. Each message is converted
-        to a Content object with appropriate role and parts (text, images, function calls).
+        Format standard messages into Google's API format.
 
         Args:
-            messages: List of messages in the standard format
+            messages: List of standardized message dictionaries
 
         Returns:
-            List[Content]: Messages formatted for Google's API
-
-        Raises:
-            Exception: If formatting fails, particularly during image processing
+            List of formatted messages ready for Google's API
         """
-        # Convert general Dict to more specific GoogleMessageDict for internal use
-        typed_messages: List[GoogleMessageDict] = []
-        for msg in messages:
-            typed_message: GoogleMessageDict = {
-                "message_type": msg.get("message_type", "human"),
-                "message": msg.get("message"),
-                "image_paths": msg.get("image_paths", []),
-                "image_urls": msg.get("image_urls", []),
-                "tool_use": msg.get("tool_use"),
-                "tool_result": msg.get("tool_result"),
+        from google.genai import types
+
+        # Convert general Dict to more specific TypedDict for internal use
+        typed_messages: List[Dict[str, Any]] = []
+
+        for message in messages:
+            typed_message: Dict[str, Any] = {
+                "message_type": message.get("message_type", ""),
+                "message": message.get("message", ""),
+                "image_paths": message.get("image_paths", []),
+                "image_urls": message.get("image_urls", []),
+                "tool_use": message.get("tool_use", None),
+                "tool_result": message.get("tool_result", None),
+                "thinking": message.get("thinking", None),
+                "name": message.get("name", None),
             }
             typed_messages.append(typed_message)
+
         formatted_contents = []
 
         for message in typed_messages:
@@ -595,7 +654,6 @@ class GoogleLLM(LLM):
                         raise
                     except Exception as e:
                         # Convert to LLMMistake if not already
-                        from ...exceptions import LLMMistake
 
                         raise LLMMistake(
                             message=f"Failed to process image file {image_path}: {e!s}",
@@ -616,7 +674,6 @@ class GoogleLLM(LLM):
                         raise
                     except Exception as e:
                         # Convert to LLMMistake if not already
-                        from ...exceptions import LLMMistake
 
                         raise LLMMistake(
                             message=f"Failed to process image URL {image_url}: {e!s}",
@@ -664,151 +721,61 @@ class GoogleLLM(LLM):
 
     def _map_google_error(self, error: Exception) -> Exception:
         """
-        Map a Google API exception to an appropriate LLuMinary exception.
-
-        This method examines the error message and type to determine the most
-        appropriate custom exception to raise, providing standardized error
-        handling across providers.
+        Map Google API errors to our standard exception types.
 
         Args:
-            error: Original Google API exception
+            error: Original exception from Google API
 
         Returns:
-            Exception: Appropriate LLuMinary exception
+            Mapped exception
         """
-        from ...exceptions import LLMMistake
+        error_str = str(error).lower()
 
-        error_message = str(error).lower()
-        error_type = type(error).__name__
-
-        # Authentication and permission errors
-        if (
-            "api key" in error_message
-            or "authentication" in error_message
-            or "credential" in error_message
-            or "permission" in error_message
-            or "authorization" in error_message
-            or "unauthenticated" in error_message
-            or "access denied" in error_message
-        ):
-            return LLMAuthenticationError(
-                message=f"Google authentication failed: {error!s}",
-                provider="GoogleLLM",
-                details={"original_error": str(error), "error_type": error_type},
-            )
-
-        # Rate limit errors
-        if (
-            "rate limit" in error_message
-            or "quota" in error_message
-            or "too many requests" in error_message
-            or "request rate" in error_message
-            or "resource exhausted" in error_message
-            or "limit exceeded" in error_message
-        ):
-            # Extract retry-after value if available, or use default
-            retry_after = 60  # Default retry delay in seconds
-            if hasattr(error, "retry_after"):
-                retry_after = error.retry_after
-            elif "retry after" in error_message:
-                # Try to extract retry time from message
-                try:
-                    # Simple extraction; might need refinement for different formats
-                    import re
-
-                    match = re.search(r"retry after (\d+)", error_message)
-                    if match:
-                        retry_after = int(match.group(1))
-                except (ValueError, IndexError):
-                    pass
-
+        # Rate limit or quota exceeded
+        if any(term in error_str for term in ["quota", "rate limit", "too many requests", "resource exhausted"]):
             return LLMRateLimitError(
-                message=f"Google API rate limit exceeded: {error!s}",
-                provider="GoogleLLM",
-                retry_after=retry_after,
-                details={"original_error": str(error), "error_type": error_type},
+                message=f"Google API rate limit exceeded: {str(error)}",
+                provider=self.PROVIDER_ID.value,
+                details={"error": str(error)},
             )
 
-        # Service availability errors
-        if (
-            "unavailable" in error_message
-            or "server error" in error_message
-            or "service error" in error_message
-            or "internal server error" in error_message
-            or "503" in error_message
-            or "502" in error_message
-            or "500" in error_message
-            or "backend error" in error_message
-            or "deadline exceeded" in error_message
-            or "timeout" in error_message
-        ):
+        # Authentication errors
+        if any(term in error_str for term in ["unauthorized", "authentication", "permission", "credentials"]):
+            return LLMAuthenticationError(
+                message=f"Google API authentication error: {str(error)}",
+                provider=self.PROVIDER_ID.value,
+                details={"error": str(error)},
+            )
+
+        # Service unavailable
+        if any(term in error_str for term in ["unavailable", "server error", "timeout", "connection"]):
             return LLMServiceUnavailableError(
-                message=f"Google API service unavailable: {error!s}",
-                provider="GoogleLLM",
-                details={"original_error": str(error), "error_type": error_type},
+                message=f"Google API service error: {str(error)}",
+                provider=self.PROVIDER_ID.value,
+                details={"error": str(error)},
+            )
+
+        # Content filtering
+        if any(term in error_str for term in ["content filter", "safety", "harmful", "blocked"]):
+            return LLMContentError(
+                message=f"Content blocked by Google safety filters: {str(error)}",
+                provider=self.PROVIDER_ID.value,
+                details={"error": str(error)},
             )
 
         # Configuration errors
-        if (
-            "invalid model" in error_message
-            or "model not found" in error_message
-            or "configuration" in error_message
-            or "invalid parameter" in error_message
-            or "invalid value" in error_message
-            or "incorrect request" in error_message
-            or "unsupported" in error_message
-        ):
+        if any(term in error_str for term in ["invalid", "parameter", "configuration"]):
             return LLMConfigurationError(
-                message=f"Google API configuration error: {error!s}",
-                provider="GoogleLLM",
-                details={"original_error": str(error), "error_type": error_type},
+                message=f"Invalid configuration or parameters: {str(error)}",
+                provider=self.PROVIDER_ID.value,
+                details={"error": str(error)},
             )
 
-        # Content moderation/policy violations
-        if (
-            "content" in error_message
-            and "policy" in error_message
-            or "safety" in error_message
-            or "harmful" in error_message
-            or "inappropriate" in error_message
-            or "blocked" in error_message
-            or "violation" in error_message
-            or "moderation" in error_message
-        ):
-            return LLMContentError(
-                message=f"Google API content policy violation: {error!s}",
-                provider="GoogleLLM",
-                details={"original_error": str(error), "error_type": error_type},
-            )
-
-        # Format errors
-        if (
-            "format" in error_message
-            or "invalid json" in error_message
-            or "parse error" in error_message
-            or "serialization" in error_message
-            or "deserialization" in error_message
-        ):
-            return LLMFormatError(
-                message=f"Google API format error: {error!s}",
-                provider="GoogleLLM",
-                details={"original_error": str(error), "error_type": error_type},
-            )
-
-        # Tool/function errors
-        if "function" in error_message or "tool" in error_message:
-            return LLMToolError(
-                message=f"Google API tool error: {error!s}",
-                provider="GoogleLLM",
-                details={"original_error": str(error), "error_type": error_type},
-            )
-
-        # Default case: general LLMMistake
-        return LLMMistake(
-            message=f"Google API error: {error!s}",
-            error_type="api_error",
-            provider="GoogleLLM",
-            details={"original_error": str(error), "error_type": error_type},
+        # Default to provider error
+        return LLMProviderError(
+            message=f"Google API error: {str(error)}",
+            provider=self.PROVIDER_ID.value,
+            details={"error": str(error)},
         )
 
     def _call_with_retry(self, func, *args, max_retries=3, retry_delay=1, **kwargs):
@@ -835,7 +802,7 @@ class GoogleLLM(LLM):
         import random
         import time
 
-        from ...exceptions import RateLimitError, ServiceUnavailableError
+        # Using LLMRateLimitError and LLMServiceUnavailableError from top imports
 
         attempts = 0
         last_error = None
@@ -843,7 +810,7 @@ class GoogleLLM(LLM):
         while attempts <= max_retries:
             try:
                 return func(*args, **kwargs)
-            except (RateLimitError, ServiceUnavailableError) as e:
+            except (LLMRateLimitError, LLMServiceUnavailableError) as e:
                 last_error = e
                 attempts += 1
 
@@ -853,7 +820,7 @@ class GoogleLLM(LLM):
 
                 # Determine retry delay with exponential backoff and jitter
                 # If the error provides a retry_after value, use that
-                if isinstance(e, RateLimitError) and e.retry_after:
+                if isinstance(e, LLMRateLimitError) and e.retry_after:
                     delay = e.retry_after
                 else:
                     # Otherwise, use exponential backoff with jitter
@@ -912,9 +879,9 @@ class GoogleLLM(LLM):
 
         Raises:
             LLMMistake: If the API call fails with a recoverable error
-            AuthenticationError: If authentication fails
-            RateLimitError: If rate limits are exceeded
-            ServiceUnavailableError: If the service is unavailable
+            LLMAuthenticationError: If authentication fails
+            LLMRateLimitError: If rate limits are exceeded
+            LLMServiceUnavailableError: If the service is unavailable
         """
         # Convert tools to GoogleFunctionDict if needed
         google_tools = None
@@ -929,11 +896,11 @@ class GoogleLLM(LLM):
                 }
                 google_tools.append(google_tool)
         from ...exceptions import (
-            AuthenticationError,
-            ConfigurationError,
+            LLMAuthenticationError,
+            LLMConfigurationError,
             LLMMistake,
-            RateLimitError,
-            ServiceUnavailableError,
+            LLMRateLimitError,
+            LLMServiceUnavailableError,
         )
 
         try:
@@ -997,9 +964,9 @@ class GoogleLLM(LLM):
                 if isinstance(
                     e,
                     (
-                        AuthenticationError,
-                        RateLimitError,
-                        ServiceUnavailableError,
+                        LLMAuthenticationError,
+                        LLMRateLimitError,
+                        LLMServiceUnavailableError,
                         LLMMistake,
                     ),
                 ):
@@ -1072,7 +1039,7 @@ class GoogleLLM(LLM):
                 tool_use = getattr(response, "function_calls", None) or []
                 if tool_use:
                     # Format tool use information in a standardized way
-                    tool_use_data: GoogleToolUseData = {
+                    tool_use_data: GoogleToolCallData = {
                         "id": tool_use[0].id,
                         "name": tool_use[0].name,
                         "input": tool_use[0].args,
@@ -1087,13 +1054,13 @@ class GoogleLLM(LLM):
             return response_text, dict(usage_stats)
 
         except (
-            AuthenticationError,
-            ConfigurationError,
-            RateLimitError,
-            ServiceUnavailableError,
+            LLMAuthenticationError,
+            LLMConfigurationError,
+            LLMRateLimitError,
+            LLMServiceUnavailableError,
             LLMMistake,
-        ):
-            # Re-raise already mapped exceptions
+        ) as e:
+            # Known exceptions, just re-raise
             raise
         except Exception as e:
             # Catch-all for any other exceptions
@@ -1164,15 +1131,15 @@ class GoogleLLM(LLM):
 
         Raises:
             LLMMistake: If the API call fails with a recoverable error
-            AuthenticationError: If authentication fails
-            RateLimitError: If rate limits are exceeded
-            ServiceUnavailableError: If the service is unavailable
+            LLMAuthenticationError: If authentication fails
+            LLMRateLimitError: If rate limits are exceeded
+            LLMServiceUnavailableError: If the service is unavailable
             ImportError: If the Google Generative AI package is not installed
         """
         # Convert to more specific typed messages for internal use
-        typed_messages: List[GoogleMessageDict] = []
+        typed_messages: List[Dict[str, Any]] = []
         for msg in messages:
-            typed_message: GoogleMessageDict = {
+            typed_message: Dict[str, Any] = {
                 "message_type": msg.get("message_type", "human"),
                 "message": msg.get("message"),
                 "image_paths": msg.get("image_paths", []),
@@ -1183,11 +1150,11 @@ class GoogleLLM(LLM):
             typed_messages.append(typed_message)
         # Import required exceptions
         from ...exceptions import (
-            AuthenticationError,
-            ConfigurationError,
+            LLMAuthenticationError,
+            LLMConfigurationError,
             LLMMistake,
-            RateLimitError,
-            ServiceUnavailableError,
+            LLMRateLimitError,
+            LLMServiceUnavailableError,
         )
 
         # Import Google Generative AI here to avoid import errors if not installed
@@ -1246,7 +1213,7 @@ class GoogleLLM(LLM):
         except Exception as e:
             raise LLMToolError(
                 message=f"Failed to prepare function declarations for Google streaming: {e!s}",
-                provider="GoogleLLM",
+                provider=self.PROVIDER_ID,
                 details={"original_error": str(e)},
             )
 
@@ -1273,7 +1240,7 @@ class GoogleLLM(LLM):
         except Exception as e:
             raise LLMConfigurationError(
                 message=f"Failed to configure system prompt for Google streaming: {e!s}",
-                provider="GoogleLLM",
+                provider=self.PROVIDER_ID,
                 details={"original_error": str(e)},
             )
 
@@ -1446,15 +1413,48 @@ class GoogleLLM(LLM):
             yield "", final_usage
 
         except (
-            AuthenticationError,
-            ConfigurationError,
-            RateLimitError,
-            ServiceUnavailableError,
+            LLMAuthenticationError,
+            LLMConfigurationError,
+            LLMRateLimitError,
+            LLMServiceUnavailableError,
             LLMMistake,
-        ):
-            # Re-raise already mapped exceptions
+        ) as e:
+            # Known exceptions, just re-raise
             raise
         except Exception as e:
             # Map to appropriate exception type via the error mapper
             mapped_error = self._map_google_error(e)
             raise mapped_error
+
+    def _catch_exceptions(self, func: Callable) -> Callable:
+        """
+        Decorator to catch exceptions from Google API calls and map them to our exception types.
+
+        Args:
+            func: Function to wrap
+
+        Returns:
+            Wrapped function
+        """
+
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            try:
+                return await func(*args, **kwargs)
+            except (
+                LLMAuthenticationError,
+                LLMConfigurationError,
+                LLMRateLimitError,
+                LLMServiceUnavailableError,
+                LLMContentError,
+                LLMProviderError,
+                LLMToolError,
+            ) as e:
+                # Re-raise known exceptions
+                raise e
+            except Exception as e:
+                # Map other exceptions
+                mapped_error = self._map_google_error(e)
+                raise mapped_error
+
+        return wrapper
+

@@ -6,15 +6,189 @@ import base64
 import json
 import os
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Tuple, Type, cast
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, TypedDict, Union, cast
 
 import requests
 from PIL import Image
 
-from ...exceptions import LLMMistake
+from ...exceptions import LLMMistake, LLMConfigurationError
 from ...utils.aws import get_secret
 from ..base import LLM
 from ..router import register_provider
+from ..types import (
+    BaseAuthConfig,
+    BaseAPIRequest,
+    BaseGenerationOptions,
+    BaseMessage,
+    BaseUserMessage,
+    BaseAssistantMessage,
+    BaseToolDefinition,
+    BaseFunctionDefinition,
+    BaseToolCall,
+    BaseUsageStatistics,
+    Provider,
+    ContentType,
+    RoleType,
+    ToolType,
+    StandardMessageInput,
+    StandardMessageOutput,
+    ErrorDetails,
+    BaseTextContent,
+    BaseImageContent,
+    BaseImageSource,
+    BaseToolUseContent,
+    BaseToolResultContent,
+    BaseParameters,
+    BaseParameterProperty,
+    BaseEmbeddingRequest,
+    BaseEmbeddingResponse,
+    BaseEmbeddingData,
+    BaseRerankingRequest,
+    BaseRerankingResponse,
+    BaseRerankingResult
+)
+
+
+# Cohere-specific type definitions
+class CohereTextContent(TypedDict):
+    """Cohere-specific text content part."""
+    
+    type: Literal["text"]
+    text: str
+
+
+class CohereImageSource(TypedDict):
+    """Cohere-specific image source structure."""
+    
+    url: Optional[str]
+    base64: Optional[str]
+
+
+class CohereImageContent(TypedDict):
+    """Cohere-specific image content part."""
+    
+    type: Literal["image"]
+    source: Union[str, CohereImageSource]
+
+
+class CohereParameterProperty(TypedDict, total=False):
+    """Cohere-specific parameter property definition."""
+    
+    type: str
+    description: Optional[str]
+    enum: Optional[List[str]]
+    format: Optional[str]
+    minimum: Optional[int]
+    maximum: Optional[int]
+    default: Optional[Any]
+    items: Optional[Dict[str, Any]]
+    properties: Optional[Dict[str, Any]]
+    required: Optional[List[str]]
+
+
+class CohereParameters(TypedDict, total=False):
+    """Cohere-specific parameters structure."""
+    
+    type: str
+    properties: Dict[str, CohereParameterProperty]
+    required: List[str]
+    description: Optional[str]
+
+
+class CohereToolDefinition(TypedDict):
+    """Cohere-specific tool definition."""
+    
+    name: str
+    description: str
+    input_schema: CohereParameters
+
+
+class CohereToolCall(TypedDict):
+    """Cohere-specific tool call data."""
+    
+    name: str
+    input: Dict[str, Any]
+
+
+class CohereUsageStatistics(TypedDict):
+    """Cohere-specific usage statistics."""
+    
+    read_tokens: int
+    write_tokens: int
+    total_tokens: int
+    read_cost: float
+    write_cost: float
+    total_cost: float
+    provider: str
+    model: str
+    successful: bool
+    retry_count: int
+    event_id: str
+
+
+class CohereEmbeddingRequest(TypedDict, total=False):
+    """Cohere-specific embedding request parameters."""
+    
+    model: str
+    input: Union[str, List[str]]
+    truncate: Optional[Literal["NONE", "START", "END"]]
+    input_type: Optional[Literal["search_document", "search_query", "classification", "clustering"]]
+
+
+class CohereEmbeddingResponse(TypedDict):
+    """Cohere-specific embedding response structure."""
+    
+    id: str
+    object: str
+    model: str
+    data: List[Dict[str, Any]]
+    usage: Dict[str, int]
+    provider: str
+
+
+class CohereEmbeddingData(TypedDict):
+    """Cohere-specific embedding data structure."""
+    
+    object: str
+    embedding: List[float]
+    index: int
+
+
+class CohereRerankingRequest(TypedDict, total=False):
+    """Cohere-specific reranking request parameters."""
+    
+    model: str
+    query: str
+    documents: List[str]
+    top_n: Optional[int]
+    return_documents: Optional[bool]
+
+
+class CohereRerankingResponse(TypedDict):
+    """Cohere-specific reranking response structure."""
+    
+    id: str
+    model: str
+    results: List[Dict[str, Any]]
+    usage: Dict[str, int]
+    provider: str
+
+
+class CohereRerankingResult(TypedDict):
+    """Cohere-specific reranking result structure."""
+    
+    document: Optional[str]
+    index: int
+    relevance_score: float
+    document_id: Optional[str]
+
+
+class CohereModelCosts(TypedDict):
+    """Cost structure for a Cohere model."""
+    
+    read_token: float
+    write_token: float
+    image_token: float
 
 
 class CohereLLM(LLM):
@@ -22,6 +196,9 @@ class CohereLLM(LLM):
     Implementation of the LLM interface for the Cohere API.
     Supports Cohere's command and chat models.
     """
+
+    # Provider identifier for type-safe provider reference
+    PROVIDER_ID = Provider.COHERE
 
     # Define context window sizes for Cohere models
     CONTEXT_WINDOW = {
@@ -103,6 +280,48 @@ class CohereLLM(LLM):
         self.api_base = kwargs.get("api_base", "https://api.cohere.ai/v1")
         self.timeout = kwargs.get("timeout", 60)
         self.api_version = kwargs.get("api_version", "2023-05-01")
+        
+        # Set provider identifier
+        self.provider = Provider.COHERE
+        
+    def _validate_provider_config(self, config: Dict[str, Any]) -> None:
+        """
+        Validate Cohere provider configuration.
+        
+        Args:
+            config: Provider configuration dictionary
+            
+        Raises:
+            LLMConfigurationError: If configuration is invalid
+        """
+        # Cohere-specific configuration validation
+        if "api_base" in config and not isinstance(config["api_base"], (str, type(None))):
+            raise LLMConfigurationError(
+                message="api_base must be a string or None",
+                provider=Provider.COHERE.value,
+                details={"provided_type": type(config["api_base"]).__name__}
+            )
+            
+        if "timeout" in config and not isinstance(config["timeout"], (int, float)):
+            raise LLMConfigurationError(
+                message="timeout must be a number",
+                provider=Provider.COHERE.value,
+                details={"provided_type": type(config["timeout"]).__name__}
+            )
+            
+        if "api_version" in config and not isinstance(config["api_version"], (str, type(None))):
+            raise LLMConfigurationError(
+                message="api_version must be a string or None",
+                provider=Provider.COHERE.value,
+                details={"provided_type": type(config["api_version"]).__name__}
+            )
+            
+        if "aws_secret_name" in config and not isinstance(config["aws_secret_name"], (str, type(None))):
+            raise LLMConfigurationError(
+                message="aws_secret_name must be a string or None",
+                provider=Provider.COHERE.value,
+                details={"provided_type": type(config["aws_secret_name"]).__name__}
+            )
 
     def auth(self) -> None:
         """

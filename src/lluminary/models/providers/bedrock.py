@@ -114,6 +114,33 @@ from ...exceptions import (
     LLMServiceUnavailableError,
 )
 from ..base import LLM
+from ..types import (
+    BaseAuthConfig,
+    BaseAPIRequest,
+    BaseGenerationOptions,
+    BaseMessage,
+    BaseUserMessage,
+    BaseAssistantMessage,
+    BaseToolDefinition,
+    BaseFunctionDefinition,
+    BaseToolCall,
+    BaseUsageStatistics,
+    Provider,
+    ContentType,
+    RoleType,
+    ToolType,
+    StandardMessageInput,
+    StandardMessageOutput,
+    ErrorDetails,
+    BaseTextContent,
+    BaseImageContent,
+    BaseImageSource,
+    BaseToolUseContent,
+    BaseToolResultContent,
+    BaseThinkingContent,
+    BaseParameters,
+    BaseParameterProperty,
+)
 
 
 # Protocol definition for boto3 client to help with type checking
@@ -143,7 +170,7 @@ class BedrockImageSource(TypedDict):
 
     This defines how the image binary data is provided to the API.
     """
-
+    
     type: Literal["base64"]
     media_type: Literal["image/png"]
     data: str
@@ -155,7 +182,7 @@ class BedrockImageContent(TypedDict):
 
     This is used for including images in messages sent to Bedrock.
     """
-
+    
     type: Literal["image"]
     source: BedrockImageSource
 
@@ -166,7 +193,7 @@ class BedrockToolUseContent(TypedDict):
 
     This is used when the model decides to call a tool/function.
     """
-
+    
     type: Literal["toolUse"]
     toolUseId: str
     name: str
@@ -179,7 +206,7 @@ class BedrockToolResultContent(TypedDict):
 
     This is used to provide the results of a tool call back to the model.
     """
-
+    
     type: Literal["toolResult"]
     toolUseId: str
     content: List[Dict[str, Any]]
@@ -202,9 +229,26 @@ class BedrockReasoningContent(TypedDict):
     This is used for Claude 3.7's thinking capabilities, allowing the model to show
     its reasoning process separately from the response.
     """
-
+    
     type: Literal["reasoningContent"]
     reasoningText: BedrockReasoningText
+
+
+class BedrockParameterProperty(TypedDict, total=False):
+    """
+    Represents a parameter property in Bedrock API.
+    """
+    
+    type: str
+    description: Optional[str]
+    enum: Optional[List[str]]
+    format: Optional[str]
+    minimum: Optional[int]
+    maximum: Optional[int]
+    default: Optional[Any]
+    items: Optional[Dict[str, Any]]
+    properties: Optional[Dict[str, Any]]
+    required: Optional[List[str]]
 
 
 class BedrockInputSchema(TypedDict):
@@ -213,7 +257,7 @@ class BedrockInputSchema(TypedDict):
 
     This follows the OpenAPI schema format for defining tool parameters.
     """
-
+    
     type: Literal["object"]
     properties: Dict[str, Dict[str, str]]
     required: List[str]
@@ -225,7 +269,7 @@ class BedrockTool(TypedDict):
 
     Tools are functions that the model can call during generation.
     """
-
+    
     name: str
     description: str
     input_schema: BedrockInputSchema
@@ -237,15 +281,12 @@ class BedrockMessage(TypedDict):
 
     Messages are the primary way to interact with Bedrock models.
     """
-
+    
     role: Literal["user", "assistant"]
     content: List[
         Union[
-            BedrockTextContent,
-            BedrockImageContent,
-            BedrockToolUseContent,
-            BedrockToolResultContent,
-            BedrockReasoningContent,
+            Dict[str, str],  # Simple text content: {"text": "message"}
+            Dict[str, Dict[str, Any]],  # Image, tool use, tool result, or reasoning
         ]
     ]
 
@@ -256,9 +297,15 @@ class BedrockUsage(TypedDict):
 
     This tracks the token consumption for billing and monitoring.
     """
-
+    
     input_tokens: int
     output_tokens: int
+    provider: str
+    model: str
+    total_tokens: int
+    read_cost: float
+    write_cost: float
+    total_cost: float
 
 
 class BedrockAPIRequest(TypedDict, total=False):
@@ -266,9 +313,8 @@ class BedrockAPIRequest(TypedDict, total=False):
     Represents a complete API request to the Bedrock service.
 
     This is the top-level structure sent to the Bedrock API for generation.
-    This is defined with total=False to make all fields optional.
     """
-
+    
     anthropic_version: str
     max_tokens: int
     system: str
@@ -286,7 +332,7 @@ class BedrockAPIResponse(TypedDict):
     """
 
     id: str
-    content: List[Union[BedrockTextContent, BedrockToolUseContent]]
+    content: List[Union[Dict[str, str], Dict[str, Dict[str, Any]]]]
     usage: BedrockUsage
     stop_reason: str
     stop_sequence: Optional[str]
@@ -332,6 +378,9 @@ class BedrockLLM(LLM):
         })
         response = bedrock.generate("Generate a story about a robot learning to cook.")
     """
+
+    # Provider identifier for type-safe provider reference
+    PROVIDER_ID = Provider.BEDROCK
 
     # Define class variables with ClassVar for correct typing
     THINKING_MODELS: ClassVar[List[str]] = [
@@ -556,59 +605,60 @@ class BedrockLLM(LLM):
 
     def _validate_provider_config(self, config: Dict[str, Any]) -> None:
         """
-        Validate the configuration for this provider.
-
+        Validate AWS Bedrock provider configuration.
+        
         Args:
-            config: Configuration dictionary
-
+            config: Provider configuration dictionary
+            
         Raises:
             LLMConfigurationError: If configuration is invalid
         """
-        # Validate AWS region if specified
-        if "aws_region" in config and not isinstance(config["aws_region"], str):
+        # AWS region validation
+        if "aws_region" in config and not isinstance(config["aws_region"], (str, type(None))):
             raise LLMConfigurationError(
-                "aws_region must be a string",
-                details={"provided_type": type(config["aws_region"]).__name__},
+                message="aws_region must be a string or None",
+                provider=Provider.BEDROCK.value,
+                details={"provided_type": type(config["aws_region"]).__name__}
             )
-
-        # Validate credentials if specified
-        if "aws_access_key_id" in config:
-            if not isinstance(config["aws_access_key_id"], str):
-                raise LLMConfigurationError(
-                    "aws_access_key_id must be a string",
-                    details={
-                        "provided_type": type(config["aws_access_key_id"]).__name__
-                    },
-                )
-
-            # Secret key is required when access key is provided
-            if "aws_secret_access_key" not in config:
-                raise LLMConfigurationError(
-                    "aws_secret_access_key is required when aws_access_key_id is provided"
-                )
-
-            if not isinstance(config["aws_secret_access_key"], str):
-                raise LLMConfigurationError(
-                    "aws_secret_access_key must be a string",
-                    details={
-                        "provided_type": type(config["aws_secret_access_key"]).__name__
-                    },
-                )
-
-        # Validate session token if specified
-        if "aws_session_token" in config and not isinstance(
-            config["aws_session_token"], str
-        ):
+            
+        # AWS profile validation
+        if "aws_profile" in config and not isinstance(config["aws_profile"], (str, type(None))):
             raise LLMConfigurationError(
-                "aws_session_token must be a string",
-                details={"provided_type": type(config["aws_session_token"]).__name__},
+                message="aws_profile must be a string or None",
+                provider=Provider.BEDROCK.value,
+                details={"provided_type": type(config["aws_profile"]).__name__}
             )
-
-        # Validate AWS profile if specified
-        if "aws_profile" in config and not isinstance(config["aws_profile"], str):
+            
+        # AWS access key validation
+        if "aws_access_key_id" in config and not isinstance(config["aws_access_key_id"], (str, type(None))):
             raise LLMConfigurationError(
-                "aws_profile must be a string",
-                details={"provided_type": type(config["aws_profile"]).__name__},
+                message="aws_access_key_id must be a string or None",
+                provider=Provider.BEDROCK.value,
+                details={"provided_type": type(config["aws_access_key_id"]).__name__}
+            )
+            
+        # AWS secret key validation
+        if "aws_secret_access_key" in config and not isinstance(config["aws_secret_access_key"], (str, type(None))):
+            raise LLMConfigurationError(
+                message="aws_secret_access_key must be a string or None",
+                provider=Provider.BEDROCK.value,
+                details={"provided_type": type(config["aws_secret_access_key"]).__name__}
+            )
+            
+        # AWS session token validation
+        if "aws_session_token" in config and not isinstance(config["aws_session_token"], (str, type(None))):
+            raise LLMConfigurationError(
+                message="aws_session_token must be a string or None",
+                provider=Provider.BEDROCK.value,
+                details={"provided_type": type(config["aws_session_token"]).__name__}
+            )
+            
+        # AWS role ARN validation
+        if "assume_role_arn" in config and not isinstance(config["assume_role_arn"], (str, type(None))):
+            raise LLMConfigurationError(
+                message="assume_role_arn must be a string or None",
+                provider=Provider.BEDROCK.value,
+                details={"provided_type": type(config["assume_role_arn"]).__name__}
             )
 
     def _resize_image(self, image: Image.Image, max_size: int = 2048) -> Image.Image:
